@@ -113,7 +113,7 @@ Load skills first:
    - tests/auth/login.test.ts (5 cases)
    - tests/billing/charges.test.ts (4 cases)
 
-   Run `/ce:execute [plan-path]` to implement against these tests.
+   Run `/execute [plan-path]` to implement against these tests.
    ```
 
 ## Rules

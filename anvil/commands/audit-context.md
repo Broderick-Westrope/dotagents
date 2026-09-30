@@ -206,7 +206,7 @@ The enhanced CLAUDE.md now includes human context on:
 - ${CATEGORY_2}
 - ${CATEGORY_3}
 
-Run `/ce:audit-context` again anytime to identify new gaps.
+Run `/audit-context` again anytime to identify new gaps.
 ```
 
 ## Error Handling

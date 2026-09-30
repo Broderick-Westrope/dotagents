@@ -216,7 +216,7 @@ Load the architecture skill with appropriate reference if keywords match.
 
 **User override:**
 
-- Accept full path as first argument: `/ce:draft-tsd path/to/custom-name.md <topic>`
+- Accept full path as first argument: `/draft-tsd path/to/custom-name.md <topic>`
 - Validate path is within project (no `../` escapes outside project root)
 - If path is outside project, fail with error
 
@@ -242,8 +242,8 @@ Once exploration is complete (or skipped for well-formed topics), write the draf
 
 | Command | Behavior |
 |---------|----------|
-| `/ce:draft-tsd improve API error handling` | Detects rough idea -> runs exploration -> asks questions -> generates options -> devils-advocate -> drafts TSD |
-| `/ce:draft-tsd Migrate external API from JWT to OAuth2` | Detects well-formed -> loads relevant skills -> drafts directly |
-| `/ce:draft-tsd implement Stripe webhooks` | Detects rough (no target system) -> asks for clarification -> runs exploration |
-| `/ce:draft-tsd --skip-exploration better auth` | Forces direct drafting despite rough input |
-| `/ce:draft-tsd --skills=euc-go,euc-sql add database pooling` | Uses explicitly specified skills, skips auto-detection |
+| `/draft-tsd improve API error handling` | Detects rough idea -> runs exploration -> asks questions -> generates options -> devils-advocate -> drafts TSD |
+| `/draft-tsd Migrate external API from JWT to OAuth2` | Detects well-formed -> loads relevant skills -> drafts directly |
+| `/draft-tsd implement Stripe webhooks` | Detects rough (no target system) -> asks for clarification -> runs exploration |
+| `/draft-tsd --skip-exploration better auth` | Forces direct drafting despite rough input |
+| `/draft-tsd --skills=euc-go,euc-sql add database pooling` | Uses explicitly specified skills, skips auto-detection |

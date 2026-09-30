@@ -3,20 +3,13 @@
 
 # Except these directories
 !/assets/
-!/docs/
-!/plugins/
-!/.claude-plugin/
-!/opencode/
-!/CLAUDE.md
 !/plans/
-!/scripts/
+!/skills/
 !/anvil/
-!/anvil-plugin.json
 
 # And these files
+!anvil-plugin.json
 !LICENSE.md
 !README.md
-!package.json
 !.gitignore
 .DS_Store
-!/reload.sh

@@ -13,7 +13,7 @@ Create a git commit using the appropriate path based on your current knowledge.
 - The intent of the change is unambiguous
 
 **Delegate to haiku agent** if ambiguous:
-- User invoked `/ce:commit` without prior context in this conversation
+- User invoked `/commit` without prior context in this conversation
 - You're unsure what changes exist or their purpose
 - The user is asking about changes you didn't make
 

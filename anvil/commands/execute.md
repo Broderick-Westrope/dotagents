@@ -69,7 +69,7 @@ Load the **executing-plans** skill first.
 
 2. **Detect scaffolded tests (TDD mode):**
    - Check if the plan contains a `## Test Contract` section
-   - If present, this plan has pre-scaffolded tests from `/ce:scaffold-tests`
+   - If present, this plan has pre-scaffolded tests from `/scaffold-tests`
    - Note the test files and their locations — these become the **primary verification mechanism** for each task group
    - Tell the user: "This plan has scaffolded tests. I'll use them to verify each task group as I go."
    - During execution, after completing each task group, run its scaffolded tests. If tests fail, the task group is not done — fix until green.

@@ -29,7 +29,7 @@ Interactive review session. The human reads the diff and asks questions; you ans
 
 ## Initial Assessment
 
-**If a `/ce:review` was already run in this session:** Skip exploration. The autonomous review already covered the broad strokes. Say you're ready for questions.
+**If a `/review` was already run in this session:** Skip exploration. The autonomous review already covered the broad strokes. Say you're ready for questions.
 
 **If this is a fresh session (no prior review):** Do a brief exploration:
 - Scan the diff for the 2-3 most structurally significant changes

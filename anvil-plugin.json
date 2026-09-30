@@ -1,6 +1,6 @@
 {
   "name": "ce",
-  "skills": "plugins/ce/skills",
+  "skills": "skills",
   "commands": "anvil/commands",
   "agents": "anvil/agents"
 }

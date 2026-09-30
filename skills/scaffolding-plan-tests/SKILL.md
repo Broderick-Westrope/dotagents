@@ -15,7 +15,7 @@ Read a plan's tasks and success criteria, then produce **real test files** that:
 - Fail on run (nothing implemented yet)
 - Assert on **behavior and outcomes**, not implementation details
 
-Tests become the verification mechanism during `/ce:execute`. When all scaffolded tests pass, the task is complete.
+Tests become the verification mechanism during `/execute`. When all scaffolded tests pass, the task is complete.
 
 ## Existing Test Coverage
 
@@ -131,4 +131,4 @@ Before finalizing scaffolded tests:
 - **Plan structure and task sizing:** **writing-plans**
 - **Executing with scaffolded tests:** **executing-plans**
 
-When used via `/ce:scaffold-tests`, the command handles user review, plan file updates, and workflow orchestration.
+When used via `/scaffold-tests`, the command handles user review, plan file updates, and workflow orchestration.
