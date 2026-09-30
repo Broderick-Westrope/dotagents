@@ -1,6 +1,6 @@
-# Claude Essentials
+# dotagents
 
-A development plugin for **[Anvil](https://github.com/Broderick-Westrope/anvil)** with essential commands, skills, and specialized agents under the `ce` namespace.
+Personal commands, skills, and specialist agents for AI coding harnesses, like dotfiles for agents. The prompts are meant to outlast any particular harness; harness-specific wiring lives in its own folder (currently `anvil/` for [Anvil](https://github.com/Broderick-Westrope/anvil)).
 
 NOTE: This is a fork, to customise my workflow. All credit for the original files goes to https://github.com/rileyhilliard
 
@@ -139,7 +139,7 @@ Add the plugin to your `anvil.json`:
 ```jsonc
 {
   "plugins": [
-    {"path": "~/path/to/claude-essentials"}
+    {"path": "~/path/to/dotagents"}
   ]
 }
 ```
@@ -199,7 +199,7 @@ See [ANVIL.md](ANVIL.md) for the full plugin format reference.
 ## Project Structure
 
 ```
-claude-essentials/
+dotagents/
 ├── anvil-plugin.json   # Anvil plugin manifest
 ├── anvil/
 │   ├── commands/       # Slash commands
