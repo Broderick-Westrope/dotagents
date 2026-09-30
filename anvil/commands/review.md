@@ -1,26 +1,26 @@
 ---
-description: Multi-model code review with Sonnet and Astra general and convention reviewers in parallel, deduplicates findings
+description: Multi-model code review with Sonnet and Opus general reviewers plus default and Sol convention reviewers in parallel, deduplicates findings
 argument_hint: "[instructions]"
 ---
 
-Run four code reviews in parallel: general reviews on Sonnet and Astra, plus convention reviews on the convention agent's default model and Astra. Deduplicate and merge their findings into a single unified review.
+Run four code reviews in parallel: general reviews on Sonnet and Opus, plus convention reviews on the convention agent's default model and Sol. Deduplicate and merge their findings into a single unified review.
 
 **Dispatch requirement:** The first reviewer dispatch must contain all four reviews in one parallel batch. Prepare all four calls before submitting any of them. Calling one reviewer, waiting for its result, then calling the next is a workflow failure, even if all four eventually run.
 
 ## Model Configuration
 
 Run both `reviewer` and `convention-reviewer` twice for different model perspectives.
-The general reviews use explicit Sonnet and Astra overrides. The first convention
-review uses the agent's configured model; the second explicitly uses Astra.
+The general reviews use explicit Sonnet and Opus overrides. The first convention
+review uses the agent's configured model; the second explicitly uses Sol.
 
 | Reviewer | Agent | Model Override |
 |----------|-------|----------------|
 | Sonnet | `reviewer` | `anthropic/claude-sonnet-5` |
-| Astra | `reviewer` | `openai/gpt-6-astra` |
+| Opus | `reviewer` | `anthropic/claude-opus-5-5` |
 | Convention (default) | `convention-reviewer` | none (agent default) |
-| Convention (Astra) | `convention-reviewer` | `openai/gpt-6-astra` |
+| Convention (Sol) | `convention-reviewer` | `openai/gpt-6.1-sol` |
 
-Use exact `provider/model` IDs, not aliases like `astra`. An ID that does not
+Use exact `provider/model` IDs, not aliases like `sol`. An ID that does not
 resolve is ignored and the agent's configured model is used instead, so a stale
 pin degrades silently rather than erroring.
 
@@ -47,9 +47,9 @@ pin degrades silently rather than erroring.
 Finish shared scope discovery first, then construct one review prompt and all four `task` calls. The following list specifies the contents of a single batch, **not four sequential steps**:
 
 - `task(subagent_type="reviewer", model="anthropic/claude-sonnet-5")`: **Sonnet**, general review
-- `task(subagent_type="reviewer", model="openai/gpt-6-astra")`: **Astra**, general review
+- `task(subagent_type="reviewer", model="anthropic/claude-opus-5-5")`: **Opus**, general review
 - `task(subagent_type="convention-reviewer")`: **Convention (default)**, convention compliance
-- `task(subagent_type="convention-reviewer", model="openai/gpt-6-astra")`: **Convention (Astra)**, convention compliance
+- `task(subagent_type="convention-reviewer", model="openai/gpt-6.1-sol")`: **Convention (Sol)**, convention compliance
 
 **Before dispatch, count the calls: exactly four, one per table row, with identical review instructions.** Submit them together in one `multi_tool_use.parallel` call when that tool is available. Otherwise emit all four `task` tool calls in the same assistant message. Do not send a standalone reviewer call, run a trial reviewer, or wait for any reviewer result before dispatching the others.
 
@@ -77,8 +77,8 @@ Two findings match when they reference the **same file and line** (or overlappin
 
 | Scenario | Action |
 |----------|--------|
-| Multiple reviewers found the same issue | Single entry, mark with combined attribution (e.g. `[Sonnet + Astra]`, `[Convention (default) + Convention (Astra)]`, `[Astra + Convention (Astra)]`) — higher confidence |
-| Only one reviewer found it | Single entry, mark with `[Sonnet]`, `[Astra]`, `[Convention (default)]`, or `[Convention (Astra)]` |
+| Multiple reviewers found the same issue | Single entry, mark with combined attribution (e.g. `[Sonnet + Opus]`, `[Convention (default) + Convention (Sol)]`, `[Opus + Convention (Sol)]`) — higher confidence |
+| Only one reviewer found it | Single entry, mark with `[Sonnet]`, `[Opus]`, `[Convention (default)]`, or `[Convention (Sol)]` |
 | Reviewers disagree on severity | Use the higher severity, note the disagreement |
 | Reviewers contradict each other | Include both perspectives inline, let user decide |
 
@@ -99,19 +99,19 @@ Output the merged review using this format:
 - **Files changed**: X files (+Y/-Z lines)
 - **Change type**: [Feature | Bug Fix | Refactor | Enhancement]
 - **Scope**: [Brief 1-2 sentence description]
-- **Reviewers**: Sonnet + Astra + Convention (default) + Convention (Astra) (parallel; list only completed reviews)
+- **Reviewers**: Sonnet + Opus + Convention (default) + Convention (Sol) (parallel; list only completed reviews)
 - **Agreement**: X of Y findings confirmed by multiple reviewers
 
 ## Critical Issues ⛔
 
-- `[Sonnet + Astra]` `file.ts:123` - [Issue description]
-- `[Astra]` `file.ts:456` - [Issue only Astra caught]
+- `[Sonnet + Opus]` `file.ts:123` - [Issue description]
+- `[Opus]` `file.ts:456` - [Issue only Opus caught]
 
 ## Important Issues ⚠️
 
-- `[Sonnet + Astra]` `file.ts:789` - [Issue description]
+- `[Sonnet + Opus]` `file.ts:789` - [Issue description]
 - `[Convention (default)]` `file.ts:012` - [Convention violation only the default convention reviewer caught]
-- `[Convention (Astra)]` `file.ts:345` - [Convention violation only the Astra convention reviewer caught]
+- `[Convention (Sol)]` `file.ts:345` - [Convention violation only the Sol convention reviewer caught]
 
 ## Product & UX Issues 🎯
 
@@ -153,8 +153,8 @@ After presenting the unified review:
    a. Extract all Critical and Important issues into a checklist:
    ```
    Review Findings - [branch/scope]:
-   - [ ] [CRITICAL] [Sonnet + Astra] file.ts:123 - Description
-   - [ ] [IMPORTANT] [Astra] file.ts:456 - Description
+   - [ ] [CRITICAL] [Sonnet + Opus] file.ts:123 - Description
+   - [ ] [IMPORTANT] [Opus] file.ts:456 - Description
    - [ ] [IMPORTANT] [Convention (default)] file.ts:789 - Description
    ```
 

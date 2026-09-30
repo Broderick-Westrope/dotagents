@@ -1,5 +1,5 @@
 ---
-model: anthropic/claude-fable-5
+model: anthropic/claude-opus-5-5
 delegates_to: []
 role: Strategic technical advisor for high-stakes decisions and complex debugging
 delegate_when: >

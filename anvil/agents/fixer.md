@@ -1,5 +1,5 @@
 ---
-model: openai/gpt-6-astra
+model: openai/gpt-6.1-sol
 delegates_to: []
 role: Fast bounded implementation specialist
 delegate_when: >

@@ -1,5 +1,5 @@
 ---
-model: openai/gpt-6-astra
+model: anthropic/claude-opus-5-5
 delegates_to: [devils-advocate]
 role: Feature planning and specification writing specialist
 delegate_when: >
