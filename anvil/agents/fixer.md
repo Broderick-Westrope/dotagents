@@ -1,5 +1,5 @@
 ---
-model: openai/gpt-6.1-sol
+model: anthropic/claude-opus-5-5
 delegates_to: []
 role: Fast bounded implementation specialist
 delegate_when: >

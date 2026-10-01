@@ -1,9 +1,9 @@
 ---
-description: Multi-model code review with Sonnet and Opus general reviewers plus default and Sol convention reviewers in parallel, deduplicates findings
+description: Multi-model code review with Sonnet and Opus general reviewers plus default and Opus convention reviewers in parallel, deduplicates findings
 argument_hint: "[instructions]"
 ---
 
-Run four code reviews in parallel: general reviews on Sonnet and Opus, plus convention reviews on the convention agent's default model and Sol. Deduplicate and merge their findings into a single unified review.
+Run four code reviews in parallel: general reviews on Sonnet and Opus, plus convention reviews on the convention agent's default model and Opus. Deduplicate and merge their findings into a single unified review.
 
 **Dispatch requirement:** The first reviewer dispatch must contain all four reviews in one parallel batch. Prepare all four calls before submitting any of them. Calling one reviewer, waiting for its result, then calling the next is a workflow failure, even if all four eventually run.
 
@@ -11,16 +11,16 @@ Run four code reviews in parallel: general reviews on Sonnet and Opus, plus conv
 
 Run both `reviewer` and `convention-reviewer` twice for different model perspectives.
 The general reviews use explicit Sonnet and Opus overrides. The first convention
-review uses the agent's configured model; the second explicitly uses Sol.
+review uses the agent's configured model; the second explicitly uses Opus.
 
 | Reviewer | Agent | Model Override |
 |----------|-------|----------------|
 | Sonnet | `reviewer` | `anthropic/claude-sonnet-5` |
 | Opus | `reviewer` | `anthropic/claude-opus-5-5` |
 | Convention (default) | `convention-reviewer` | none (agent default) |
-| Convention (Sol) | `convention-reviewer` | `openai/gpt-6.1-sol` |
+| Convention (Opus) | `convention-reviewer` | `anthropic/claude-opus-5-5` |
 
-Use exact `provider/model` IDs, not aliases like `sol`. An ID that does not
+Use exact `provider/model` IDs, not aliases like `opus`. An ID that does not
 resolve is ignored and the agent's configured model is used instead, so a stale
 pin degrades silently rather than erroring.
 
@@ -49,7 +49,7 @@ Finish shared scope discovery first, then construct one review prompt and all fo
 - `task(subagent_type="reviewer", model="anthropic/claude-sonnet-5")`: **Sonnet**, general review
 - `task(subagent_type="reviewer", model="anthropic/claude-opus-5-5")`: **Opus**, general review
 - `task(subagent_type="convention-reviewer")`: **Convention (default)**, convention compliance
-- `task(subagent_type="convention-reviewer", model="openai/gpt-6.1-sol")`: **Convention (Sol)**, convention compliance
+- `task(subagent_type="convention-reviewer", model="anthropic/claude-opus-5-5")`: **Convention (Opus)**, convention compliance
 
 **Before dispatch, count the calls: exactly four, one per table row, with identical review instructions.** Submit them together in one `multi_tool_use.parallel` call when that tool is available. Otherwise emit all four `task` tool calls in the same assistant message. Do not send a standalone reviewer call, run a trial reviewer, or wait for any reviewer result before dispatching the others.
 
@@ -77,8 +77,8 @@ Two findings match when they reference the **same file and line** (or overlappin
 
 | Scenario | Action |
 |----------|--------|
-| Multiple reviewers found the same issue | Single entry, mark with combined attribution (e.g. `[Sonnet + Opus]`, `[Convention (default) + Convention (Sol)]`, `[Opus + Convention (Sol)]`) — higher confidence |
-| Only one reviewer found it | Single entry, mark with `[Sonnet]`, `[Opus]`, `[Convention (default)]`, or `[Convention (Sol)]` |
+| Multiple reviewers found the same issue | Single entry, mark with combined attribution (e.g. `[Sonnet + Opus]`, `[Convention (default) + Convention (Opus)]`, `[Opus + Convention (Opus)]`) — higher confidence |
+| Only one reviewer found it | Single entry, mark with `[Sonnet]`, `[Opus]`, `[Convention (default)]`, or `[Convention (Opus)]` |
 | Reviewers disagree on severity | Use the higher severity, note the disagreement |
 | Reviewers contradict each other | Include both perspectives inline, let user decide |
 
@@ -99,7 +99,7 @@ Output the merged review using this format:
 - **Files changed**: X files (+Y/-Z lines)
 - **Change type**: [Feature | Bug Fix | Refactor | Enhancement]
 - **Scope**: [Brief 1-2 sentence description]
-- **Reviewers**: Sonnet + Opus + Convention (default) + Convention (Sol) (parallel; list only completed reviews)
+- **Reviewers**: Sonnet + Opus + Convention (default) + Convention (Opus) (parallel; list only completed reviews)
 - **Agreement**: X of Y findings confirmed by multiple reviewers
 
 ## Critical Issues ⛔
@@ -111,7 +111,7 @@ Output the merged review using this format:
 
 - `[Sonnet + Opus]` `file.ts:789` - [Issue description]
 - `[Convention (default)]` `file.ts:012` - [Convention violation only the default convention reviewer caught]
-- `[Convention (Sol)]` `file.ts:345` - [Convention violation only the Sol convention reviewer caught]
+- `[Convention (Opus)]` `file.ts:345` - [Convention violation only the Opus convention reviewer caught]
 
 ## Product & UX Issues 🎯
 
