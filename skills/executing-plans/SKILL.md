@@ -11,7 +11,7 @@ description: Executes implementation plans with smart task grouping. Groups rela
 
 **Work in a linked worktree on a feature branch.** Load the **using-git-worktrees** skill and follow it to find or create one.
 
-**Clarify ambiguity upfront:** If the plan has unclear requirements or meaningful tradeoffs, ask the user before starting. Present options with descriptions explaining the tradeoffs. Use `multiSelect: true` for independent features that can be combined; use single-select for mutually exclusive choices. Don't guess when the user can clarify in 10 seconds.
+**Clarify ambiguity upfront:** If the plan has unclear requirements or meaningful tradeoffs, ask the user before starting. Ask one concise question listing the options with their tradeoffs, saying which can be combined and which are mutually exclusive. Don't guess when the user can clarify in 10 seconds.
 
 **Track progress with tasks:** Create tasks for each major work item from the plan. Update task status as work progresses (`in_progress` when starting, `completed` when done). This makes execution visible to the user and persists across context compactions.
 
