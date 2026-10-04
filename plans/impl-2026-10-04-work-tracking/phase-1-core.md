@@ -328,7 +328,7 @@ These scenarios check agent behaviour, so they're acceptance checks, not determi
 
 1. Create a sandbox. Back up and restore `~/.config/anvil/anvil.json` from `$S/anvil.json.bak` rather than editing it back by hand. Check first that no other Anvil sessions depend on the plugin path, since the swap affects every session:
    ```bash
-   S="$HOME/dev/helse/wip-e2e"; mkdir -p "$S"/{initiatives,worktrees}
+   S="$HOME/dev/helse/wip-e2e"; mkdir -p "$S"/{initiatives,worktrees} && git init -q "$S/initiatives"
    git init -q "$S/repo" && git -C "$S/repo" commit -q --allow-empty -m init
    git -C "$S/repo" worktree add -q "$S/worktrees/wt a" -b wt-a
    git -C "$S/repo" worktree add -q "$S/worktrees/wt-c" -b wt-c
@@ -377,6 +377,31 @@ These scenarios check agent behaviour, so they're acceptance checks, not determi
     - `rm -rf ~/dev/topics/wip-scratch`.
 
 **Verify:** record each outcome, the paths written and transcript excerpts as a checklist at the bottom of this file.
+
+#### Task 4 results (2026-10-04)
+
+Run with the plugin path in `~/.config/anvil/anvil.json` pointed at this worktree, then restored byte-for-byte from the backup. Every session's first prompt printed the sandbox `WIP_DIR`. The sandbox and scratch topic were removed afterwards.
+
+- [x] **Worktree.** `/goodbye` in `wt a` offered enrolment with a proposed slug, title and links. On acceptance it created `app-greeting`, linked the worktree and session, wrote a `### wt-a` section, and set `implementing`. Git status in `wt a` was unchanged and nothing was written inside the worktree. Outside the sandbox, only Anvil's own `.anvil/logs` changed.
+  - Finding: the sandbox sat inside `~/dev`, which is itself a git repo, so the first `wip new` refused ("make it a repo of its own"). The agent stopped and asked rather than running `git init` itself. After a manual `git init` it carried on. The real `~/.agents` isn't inside a repo, so this doesn't affect normal use, but the sandbox setup should `git init "$S/initiatives"` or live outside any repo.
+- [x] **Repeat.** A hand-edited gotcha line and a new `## Mine` section were left untouched on a second `/goodbye`, which reported nothing new and said `wip` would commit the edits next time. A later `wip` call committed them as "record edits made outside wip".
+- [x] **Multi-worktree.** Started in `$S` and edited both worktrees. The agent linked `wt-c` because the user said it was the same work, and `/goodbye` added a `### wt-c` section, rewrote `### wt-a` from the diff, recorded the decision, and raised an open question about a stray line. `## Mine` survived.
+- [x] **Topic, discussion only.** In the scratch topic, `/goodbye` updated the topic's `log.md`, made no enrolment offer, and asked whether to apply the discussion to `app-greeting`. On "yes" it moved the open question into Decisions and updated the `wt-a` section.
+- [x] **Declined.** In `wt-d` with an edit, `/goodbye` offered new, attach or don't track. "Don't track" created nothing, made no commit and asked nothing further.
+- [x] **Research-only.** In `wt-d` before any edit, `/goodbye` said there was nothing to record.
+- [x] **Privacy.** A dummy `SECRET_TOKEN=abc123` given in chat was refused and never written: no match in the sandbox, the scratch topic, or the initiatives repo's full history (`git log -p`). The decision from the same message was recorded.
+- [x] **Resume.** `anvil --session <id> --there` started from `$S` reopened the session in `wt a`. The `cd '<worktree>' && anvil --session <id>` form opened it in `wt-c`. A fresh session in `wt a` asked "what's left on this branch?" ran `wip which .` and `wip show`, and answered from the `### wt-a` section.
+  - Finding: `wip show` printed 12 resume lines for 4 sessions and 2 worktrees (every session crossed with every worktree). It's correct but noisy.
+- [x] **Removal.** `finishing-a-development-branch` Option 1 for `wt-c` merged it, followed the "Worktree about to be removed" event (folded the branch section into Decisions and deleted it), removed the worktree and branch, then ran `wip unlink` and `wip sync`. `wip show` no longer listed `wt-c`.
+- [x] **Teardown.** `anvil.json` restored and checked with `cmp`; worktrees, `$S` and `~/dev/topics/wip-scratch` removed.
+
+**History check.** The sandbox initiatives repo ended with 16 commits that alternate cleanly: each `wip <command>` commit was preceded by a "record edits made outside wip" commit whenever an agent had edited the body first.
+
+**Findings to act on:**
+
+1. Every agent edit to an initiative file outside the session's cwd triggers an Anvil permission prompt ("path outside working directory"). Adding a permission rule for `~/.agents/initiatives/*.md` would remove it.
+2. `wip show` resume output is noisy (see Resume above). Printing the `cd` variants only for the most recent session would cut it to one line per session plus one per worktree.
+3. Fix the sandbox setup step so `$S/initiatives` is its own repo (see Worktree above).
 
 ### Task 5: User setup (after Task 4 passes)
 
