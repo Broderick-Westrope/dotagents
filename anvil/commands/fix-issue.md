@@ -47,6 +47,6 @@ Process:
    - Explain the approach taken
    - Note any follow-up items or considerations
 
-Do not automatically commit or create a PR. Let the user review the changes first and decide when to commit.
+Do not create a PR. Let the user review the changes and decide when to open one. In a linked worktree, commit as you go. In the repository's root worktree, do not commit.
 
 If the issue number is not provided or the issue cannot be found, ask for clarification.
