@@ -22,6 +22,8 @@ When a spec file path is provided (from the grilling skill or by the user), read
 
 **Save to:** `**/plans/impl-YYYY-MM-DD-<feature-name>.md`. Commit the plan file(s) to git.
 
+If the **tracking-work** skill is available, load it and apply the "Implementation plan written" row of its Events table.
+
 ## Phase Gate
 
 Decide **before writing any tasks** whether this is a single-file plan or a phased plan. Count the independent domains the spec touches (e.g., config, agent core, UI, database, API, infra). A domain is independent if a reviewer could evaluate it without understanding the other domains.

@@ -143,6 +143,8 @@ When the user is still figuring out what to build, help them converge on a direc
 
 Format the shared understanding into this structure and save to `plans/design-YYYY-MM-DD-<topic>.md` (user preferences for spec location override this default). Commit the spec file to git.
 
+If the **tracking-work** skill is available, load it and apply the "Design doc written" row of its Events table.
+
 ```markdown
 # [Topic] Design Spec
 

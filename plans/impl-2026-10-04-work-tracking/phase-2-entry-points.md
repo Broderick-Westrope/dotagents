@@ -14,7 +14,7 @@ read skills/writing-plans/SKILL.md           # writes plans/impl-*.md
 read skills/executing-plans/SKILL.md         # "## 1. Setup"
 read skills/using-git-worktrees/SKILL.md     # "## Creation Steps"
 read anvil/commands/pr/COMMAND.md
-read anvil/agents/planner.md                 # writes plans/<feature>-spec.md, which differs from grilling's design-*.md naming
+read anvil/agents/planner.md                 # writes the design spec; renamed to grilling's design-*.md naming
 read "/Users/broderick.westrope/Library/Application Support/wtp/worktrees/eucalyptusvc/skills/skill-paths-hook/NOTES.local.md"
 ```
 
@@ -42,9 +42,8 @@ The skill offers enrolment once per session when no ticket matches. If the user 
 - Modify: `anvil/commands/pr/COMMAND.md`. `/pr` delegates the work to a Haiku subagent. Add the "PR opened" paragraph to the command body, outside the subagent prompt, to run after the subagent reports a created PR URL. Do nothing if no URL comes back.
 - Modify: `anvil/agents/planner.md`, in two places:
   - add `tracking-work` to its `skills:` allow-list (Anvil filters the skills advertised to an agent by this list);
-  - where it writes `plans/<feature>-spec.md`, apply "Design doc written".
-
-  Also record in this plan's review notes that its naming differs from grilling's `design-*.md`. Don't rename it here.
+  - rename its spec from `plans/<feature>-spec.md` to `plans/design-YYYY-MM-DD-<feature-name>.md`, matching grilling, so design docs and `impl-` plans share one naming scheme (user decision, 2026-10-04);
+  - after the spec is stable, apply "Design doc written".
 
 **Steps:**
 
@@ -64,7 +63,7 @@ grep -rln "wip.py\|tickets/" skills/grilling skills/writing-plans skills/executi
 
 **Steps:**
 
-1. [ ] Run `wip import-pins` and show the user the proposed slugs, titles and reasons. Then run `wip import-pins --apply <session-id>...` with only the IDs they approve. The pinned sessions themselves are left as they are.
+1. [ ] Run `wip import-pins`, then `wip import-pins --apply` with every proposed ID (user decision, 2026-10-04: import all, then prune at the end). The pinned sessions themselves are left as they are.
 2. [ ] Create the ticket for the work that produced this plan:
    - run `wip new agent-conventions --title "Agent convention factory"`;
    - link the worktrees `…/eucalyptusvc/skills/skill-paths-hook`, `…/Broderick-Westrope/anvil/subagent-hooks` and `…/Broderick-Westrope/dotagents/goodbye-command`;
