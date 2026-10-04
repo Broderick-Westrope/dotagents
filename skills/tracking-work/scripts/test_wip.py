@@ -39,7 +39,7 @@ class WipTest(unittest.TestCase):
         self.tmp = os.path.realpath(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         self.dirs = {}
-        for name in ("wip", "archive", "root", "work", "bin"):
+        for name in ("wip", "root", "work", "bin"):
             self.dirs[name] = os.path.join(self.tmp, name)
             os.mkdir(self.dirs[name])
         self.db = os.path.join(self.tmp, "anvil.db")
@@ -54,7 +54,6 @@ class WipTest(unittest.TestCase):
         }
         self.env.update(
             WIP_DIR=self.dirs["wip"],
-            WIP_ARCHIVE_DIR=self.dirs["archive"],
             WIP_WORKTREES_ROOT=self.dirs["root"],
             ANVIL_DB=self.db,
             WIP_GH=gh,
@@ -455,6 +454,12 @@ class TestWhich(WipTest):
         self.wip("link", "two", "worktree", self.wt)
         self.wip("link", "docs", "doc", self.docfile)
         self.wip("link", "docs", "session", "sess-1", "--cwd", self.tmp)
+        self.topic = os.path.join(self.dirs["work"], "topic")
+        self.topic_doc = os.path.join(self.topic, "AGENTS.md")
+        os.makedirs(self.topic)
+        open(self.topic_doc, "w").close()
+        self.wip("new", "ctx", "--title", "ctx")
+        self.wip("link", "ctx", "topic", self.topic)
 
     def test_cases(self):
         cases = {
@@ -464,6 +469,8 @@ class TestWhich(WipTest):
             "doc directory": ([os.path.dirname(self.docfile)], "one\ntwo\n"),
             "shared prefix sibling": ([self.sibling], ""),
             "unrelated": ([self.tmp], ""),
+            "topic root": ([self.topic], ""),
+            "file inside topic": ([self.topic_doc], ""),
             "session": (["--session", "sess-1"], "docs\n"),
             "unknown session": (["--session", "nope"], ""),
         }
@@ -592,51 +599,6 @@ class TestBoard(WipTest):
         os.rmdir(self.dirs["root"])
         out = self.wip().stdout
         self.assertIn("Initiatives\n  none", out)
-
-
-class TestArchiveNotes(WipTest):
-    def notes(self, wt, text="left: tests\n"):
-        with open(os.path.join(wt, "NOTES.local.md"), "w") as f:
-            f.write(text)
-
-    def test_colliding_names_differ(self):
-        a = self.worktree(self.repo(os.path.join(self.dirs["work"], "one", "app")), os.path.join(self.dirs["root"], "a"), "feat/x")
-        b = self.worktree(self.repo(os.path.join(self.dirs["work"], "two", "app")), os.path.join(self.dirs["root"], "b"), "feat/x")
-        self.notes(a, "a notes\n")
-        self.notes(b, "b notes\n")
-        dest_a = self.wip("archive-notes", a).stdout.strip()
-        dest_b = self.wip("archive-notes", b).stdout.strip()
-        dest_a2 = self.wip("archive-notes", a).stdout.strip()
-        self.assertEqual(len({dest_a, dest_b, dest_a2}), 3)
-        for dest in (dest_a, dest_b):
-            self.assertTrue(os.path.basename(dest).startswith(f"{TODAY}-app-feat-x-"))
-            self.assertEqual(os.path.dirname(dest), self.dirs["archive"])
-        self.assertTrue(dest_a2.endswith(os.path.basename(dest_a)[:-3] + "-2.md"))
-        with open(dest_b) as f:
-            self.assertEqual(f.read(), "b notes\n")
-
-    def test_path_with_spaces(self):
-        wt = self.worktree(self.repo(os.path.join(self.dirs["work"], "my app")), os.path.join(self.dirs["root"], "a b"), "main2")
-        self.notes(wt, "ünïcode\r\n")
-        dest = self.wip("archive-notes", wt).stdout.strip()
-        with open(dest, "rb") as f:
-            self.assertEqual(f.read(), "ünïcode\r\n".encode())
-        self.assertIn("-my app-main2-", dest)
-
-    def test_no_notes(self):
-        wt = self.worktree(self.repo(os.path.join(self.dirs["work"], "app")), os.path.join(self.dirs["root"], "a"), "b")
-        r = self.wip("archive-notes", wt)
-        self.assertEqual(r.stdout, "")
-        self.assertEqual(os.listdir(self.dirs["archive"]), [])
-
-    def test_unwritable_archive(self):
-        wt = self.worktree(self.repo(os.path.join(self.dirs["work"], "app")), os.path.join(self.dirs["root"], "a"), "b")
-        self.notes(wt)
-        os.chmod(self.dirs["archive"], 0o500)
-        self.addCleanup(os.chmod, self.dirs["archive"], 0o700)
-        r = self.wip("archive-notes", wt, ok=False)
-        self.assertEqual(r.stdout, "")
-        self.assertIn("could not archive", r.stderr)
 
 
 class TestImportPins(WipTest):
