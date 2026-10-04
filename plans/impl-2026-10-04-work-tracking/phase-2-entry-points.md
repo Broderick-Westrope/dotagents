@@ -47,8 +47,8 @@ The skill offers enrolment once per session when no ticket matches. If the user 
 
 **Steps:**
 
-1. [ ] Make each edit above: one paragraph, at the step named.
-2. [ ] Check that no edited file mentions `wip.py`, a phase name or `~/.agents/tickets` directly, apart from the event name.
+1. [x] Make each edit above: one paragraph, at the step named.
+2. [x] Check that no edited file mentions `wip.py`, a phase name or `~/.agents/tickets` directly, apart from the event name.
 
 **Verify:**
 ```bash
@@ -63,15 +63,15 @@ grep -rln "wip.py\|tickets/" skills/grilling skills/writing-plans skills/executi
 
 **Steps:**
 
-1. [ ] Run `wip import-pins`, then `wip import-pins --apply` with every proposed ID (user decision, 2026-10-04: import all, then prune at the end). The pinned sessions themselves are left as they are.
-2. [ ] Create the ticket for the work that produced this plan:
+1. [x] Run `wip import-pins`, then `wip import-pins --apply` with every proposed ID (user decision, 2026-10-04: import all, then prune at the end). The pinned sessions themselves are left as they are.
+2. [x] Create the ticket for the work that produced this plan:
    - run `wip new agent-conventions --title "Agent convention factory"`;
    - link the worktrees `…/eucalyptusvc/skills/skill-paths-hook`, `…/Broderick-Westrope/anvil/subagent-hooks` and `…/Broderick-Westrope/dotagents/goodbye-command`;
    - link PR `https://github.com/eucalyptusvc/skills/pull/235`;
    - link the docs `~/.agents/correction-ledger.md` and this plan's README;
    - link session `44330773-e820-4b13-90b6-73cf8cb722ad`;
    - set the phase to `implementing`, then run `wip sync`.
-3. [ ] Move the hand-written `NOTES.local.md` files into the ticket body. These are the skill-paths-hook worktree's file and this worktree's file:
+3. [x] Move the hand-written `NOTES.local.md` files into the ticket body. These are the skill-paths-hook worktree's file and this worktree's file:
    - cross-cutting sections go to Why, Decisions and Next (from skill-paths-hook: Next steps B to E, Baseline to re-measure);
    - branch-scoped content goes to that worktree's `### <branch>` section (for skill-paths-hook: open merge decisions for PR #235, known limits of the hook);
    - drop the copied git and PR state, since `wip show` gives it live;
@@ -84,10 +84,20 @@ grep -rln "wip.py\|tickets/" skills/grilling skills/writing-plans skills/executi
 
    Remove nothing without an explicit yes.
 
+   Deferred to the end of the rollout, at the user's request (2026-10-04).
+
 **Verify:**
 ```bash
 python3 skills/tracking-work/scripts/wip.py show agent-conventions   # 3 worktrees, PR #235 with a state, session line, a branch section per worktree
 ```
+
+#### Task 2 results (2026-10-04)
+
+- Imported all 10 pinned sessions as parked tickets, to be pruned later.
+- Created `agent-conventions` with the three worktrees from the plan plus this phase's `work-tracking-entry-points`, PR #235, the ledger, the plan README and both sessions. `wip sync` moved it to `review`, since PR #235 is open and not a draft.
+- Moved both `NOTES.local.md` files into its body and deleted them, with the user's approval. Facts were checked first: PR #235 is up to date with its remote, `subagent-hooks` still has no upstream, and the receiving-code-review half of item C is already done on main.
+- Finding: `gh` has two accounts, and the active one was the personal account, which can't see `eucalyptusvc/skills`. `wip sync` failed with "Could not resolve to a Repository" until run with `GH_TOKEN="$(gh auth token --user brodie-euc)"`. Recorded in the ticket's Context.
+- Finding: slugs from `import-pins` are cut at 46 characters mid-word (`...-lokalise-trans`, `...-muninn-s-capabil`).
 
 ### Task 3: Workflow end-to-end
 
