@@ -30,6 +30,7 @@ WIP_WORKTREES_ROOT = os.path.realpath(
 )
 ANVIL_DB = os.path.realpath(os.path.expanduser(os.environ.get("ANVIL_DB") or "~/.local/share/anvil/anvil.db"))
 WIP_GH = os.environ.get("WIP_GH") or "gh"
+GH_HOST = "github.com"
 COMMIT_MESSAGE = "wip " + shlex.join(sys.argv[1:])
 OUTSIDE_MESSAGE = "record edits made outside wip"
 GITIGNORE = ".lock\n.*.tmp\n"
@@ -438,20 +439,46 @@ def cmd_sync(args):
     targets = [(args.slug, *load(slug_path(args.slug))[1:])] if args.slug else load_all()
     urls = sorted({link["ref"] for _, meta, _ in targets for link in meta["links"] if link["kind"] == "pr"})
 
-    def fetch(url):
+    alternates = []
+    if urls:
         try:
-            r = subprocess.run(
-                [WIP_GH, "pr", "view", url, "--json", "state,isDraft"],
-                capture_output=True,
-                text=True,
-                timeout=GH_TIMEOUT,
+            status = subprocess.run(
+                [WIP_GH, "auth", "status", "--json", "hosts"], capture_output=True, text=True, timeout=GH_TIMEOUT
             )
-        except subprocess.TimeoutExpired:
-            return None, f"gh timed out after {GH_TIMEOUT}s"
-        except OSError as e:
-            return None, f"cannot run {WIP_GH}: {e.strerror}"
-        if r.returncode != 0:
-            return None, (r.stderr.strip().splitlines() or [f"gh exited {r.returncode}"])[-1]
+            for account in json.loads(status.stdout)["hosts"].get(GH_HOST, []):
+                if account.get("active") or account.get("state") != "success":
+                    continue
+                token = subprocess.run(
+                    [WIP_GH, "auth", "token", "--user", account["login"]],
+                    capture_output=True,
+                    text=True,
+                    timeout=GH_TIMEOUT,
+                ).stdout.strip()
+                if token:
+                    alternates.append(token)
+        except (OSError, subprocess.TimeoutExpired, ValueError, KeyError, TypeError, AttributeError):
+            alternates = []
+
+    def fetch(url):
+        error = None
+        for token in [None, *alternates]:
+            try:
+                r = subprocess.run(
+                    [WIP_GH, "pr", "view", url, "--json", "state,isDraft"],
+                    capture_output=True,
+                    text=True,
+                    timeout=GH_TIMEOUT,
+                    env=None if token is None else {**os.environ, "GH_TOKEN": token},
+                )
+            except subprocess.TimeoutExpired:
+                return None, f"gh timed out after {GH_TIMEOUT}s"
+            except OSError as e:
+                return None, f"cannot run {WIP_GH}: {e.strerror}"
+            if r.returncode == 0:
+                break
+            error = error or (r.stderr.strip().splitlines() or [f"gh exited {r.returncode}"])[-1]
+        else:
+            return None, error
         try:
             data = json.loads(r.stdout)
             state = {"MERGED": "merged", "CLOSED": "closed"}.get(data["state"])
