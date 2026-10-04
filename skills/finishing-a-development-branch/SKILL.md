@@ -166,7 +166,7 @@ If yes: load **tracking-work** and follow its "Worktree about to be removed" eve
 - **Fix:** Present exactly 4 structured options
 
 **Automatic worktree cleanup**
-- **Problem:** Remove worktree when might need it (Option 2, 3)
+- **Problem:** Cleaning up a worktree that's still needed (Option 2, 3)
 - **Fix:** Only cleanup for Options 1 and 4
 
 **No confirmation for discard**

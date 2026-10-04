@@ -318,6 +318,7 @@ SYNC_CASES = {
     "merged and closed is not done": ("review", "sync", [("merged", 1), ("closed", 2)], "implementing"),
     "PR reopened after done": ("done", "sync", [("open", 1)], "review"),
     "manual done gets an open PR": ("done", "manual", [("open", 1)], "review"),
+    "manual done with merged PR keeps its reason": ("done", "manual", [("merged", 1)], "done"),
     "parked with open PR": ("parked", "manual", [("open", 1)], "parked"),
 }
 
@@ -337,6 +338,9 @@ class TestSync(WipTest):
                     self.assertEqual((meta["phase_source"], meta["since"]), ("sync", TODAY))
                     if expected != "parked":
                         self.assertIsNone(meta["reason"])
+                else:
+                    self.assertEqual((meta["phase_source"], meta["since"]), (source, OLD))
+                    self.assertEqual(meta["reason"], extra.get("reason"))
                 states = {link["ref"]: link["state"] for link in meta["links"]}
                 for state, n in prs:
                     self.assertEqual(states[pr(n)], state or "unknown")
@@ -703,6 +707,8 @@ class TestConcurrency(WipTest):
             stdout=subprocess.PIPE,
             text=True,
         )
+        self.addCleanup(holder.stdout.close)
+        self.addCleanup(holder.wait)
         self.addCleanup(holder.kill)
         self.assertEqual(holder.stdout.readline().strip(), "locked")
         return holder
