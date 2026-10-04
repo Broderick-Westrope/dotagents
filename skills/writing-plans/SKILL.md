@@ -189,7 +189,7 @@ Split a plan into phases when a reviewer would need to context-switch between un
 
 **Execution model:**
 
-Phases are human-orchestrated. The human runs each phase independently (e.g., `/execute phase-1-foundation.md`), reviews the resulting PR, merges, then proceeds to the next phase. Each phase file should note "create PR for human review" rather than auto-merging, since the human controls the merge gate between phases.
+Phases are human-orchestrated. The human runs each phase independently (e.g., `/execute phase-1-foundation.md`), reviews the result, merges, then proceeds to the next phase. Each phase should end at a reviewable checkpoint (work committed on the feature branch) for human review rather than auto-merging, since the human controls the merge gate between phases. Don't instruct phases to create PRs.
 
 **Folder structure:**
 
