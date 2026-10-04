@@ -381,8 +381,9 @@ class TestSync(WipTest):
 
     def test_retries_with_other_gh_accounts(self):
         accounts = json.dumps({"hosts": {"github.com": [
-            {"login": "me", "active": True, "state": "success"},
-            {"login": "work", "active": False, "state": "success"},
+            {"login": "me", "active": False, "state": "success"},
+            {"login": "work", "active": True, "state": "success"},
+            {"login": "stale", "active": False, "state": "error"},
         ]}})
         env = {"FAKE_GH_1": GH["open"], "FAKE_GH_2": GH["draft"], "FAKE_GH_TOKEN_1": "tok-work"}
         cases = {
