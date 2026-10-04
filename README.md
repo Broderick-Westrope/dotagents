@@ -35,6 +35,7 @@ Quick workflows for everyday development tasks:
 | [/audit-context](anvil/commands/audit-context/COMMAND.md)   | Identify knowledge gaps in project context and collect human input |
 | [/post-mortem](anvil/commands/post-mortem/COMMAND.md)       | Review a session to assess execution and extract improvements      |
 | [/wtp-pruning](anvil/commands/wtp-pruning/COMMAND.md)       | Classify wtp worktrees and flag the stale ones                     |
+| [/goodbye](anvil/commands/goodbye/COMMAND.md)               | Record where this session's work stands so it can be closed and resumed later |
 
 ### Skills
 
@@ -114,6 +115,7 @@ Reusable development patterns:
 | [visualizing-topics](skills/visualizing-topics/SKILL.md)           | Build interactive HTML visualizations with animation |
 | [post-mortem](skills/post-mortem/SKILL.md)                         | Review sessions to extract actionable improvements   |
 | [mining-corrections](skills/mining-corrections/SKILL.md)           | Mine past sessions for repeated corrections into a ledger |
+| [tracking-work](skills/tracking-work/SKILL.md)                     | Track initiatives through workflow phases, and keep session and worktree notes |
 
 ### Agents
 
