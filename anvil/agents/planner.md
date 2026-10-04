@@ -21,6 +21,7 @@ tools:
 skills:
   - grilling
   - planning-products
+  - tracking-work
 mcps:
   muninn:
   linear:
@@ -65,6 +66,8 @@ Write the design doc in the format the **grilling** skill defines, to `plans/des
 ### Phase 4: Adversarial Review
 
 Delegate the completed design doc to devils-advocate. Incorporate valid findings. Revise. Do not hand off to building until the design doc is stable.
+
+If the **tracking-work** skill is available, load it and apply the "Design doc written" row of its Events table.
 
 ## Output Format
 
