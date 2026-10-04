@@ -23,7 +23,6 @@ import urllib.parse
 
 HOME = os.path.expanduser("~")
 WIP_DIR = os.path.realpath(os.path.expanduser(os.environ.get("WIP_DIR") or "~/.agents/initiatives"))
-WIP_ARCHIVE_DIR = os.path.realpath(os.path.expanduser(os.environ.get("WIP_ARCHIVE_DIR") or "~/.agents/notes/archive"))
 WIP_WORKTREES_ROOT = os.path.realpath(
     os.path.expanduser(os.environ.get("WIP_WORKTREES_ROOT") or "~/Library/Application Support/wtp/worktrees")
 )
@@ -51,7 +50,6 @@ NEXT_SECTION = re.compile(r"^##[ \t]+Next[ \t]*\r?$(.*?)(?=^##[ \t]|\Z)", re.M |
 TEMPLATE_BODY = b"\n## Why\n\n## Decisions\n\n## Next\n"
 OPEN_FM = b"---\n"
 CLOSE_FM = b"\n---\n"
-NOTES = "NOTES.local.md"
 SKIP_DIRS = {"node_modules"}
 DEFAULT_PIN_REASON = "pinned in Anvil"
 FALLBACK_SLUG = "pinned-session"
@@ -284,7 +282,7 @@ def cmd_which(args):
     for slug, meta, _ in load_all():
         for link in meta["links"]:
             kind, ref = link["kind"], link["ref"]
-            inside = path is not None and kind in ("worktree", "topic") and os.path.commonpath([path, ref]) == ref
+            inside = path is not None and kind == "worktree" and os.path.commonpath([path, ref]) == ref
             same_doc = path is not None and kind == "doc" and path == ref
             if inside or same_doc or (kind == "session" and ref == args.session):
                 found.add(slug)
@@ -449,36 +447,6 @@ def cmd_sync(args):
             if link["kind"] == "pr"
         )
         print(f"{slug}: {before} -> {after['phase']}; {prs}")
-
-
-def cmd_archive_notes(args):
-    wt = os.path.realpath(os.path.expanduser(args.worktree))
-    notes = os.path.join(wt, NOTES)
-    if not os.path.isfile(notes):
-        return
-    common = (git(wt, "rev-parse", "--path-format=absolute", "--git-common-dir") or "").strip()
-    repo = os.path.basename(os.path.dirname(common) if common.endswith("/.git") else common).removesuffix(".git")
-    branch = (git(wt, "branch", "--show-current") or "").strip() or "detached"
-    stem = "-".join([today(), repo or "unknown", branch.replace("/", "-"), hashlib.sha256(wt.encode()).hexdigest()[:8]])
-    with open(notes, "rb") as f:
-        data = f.read()
-    try:
-        os.makedirs(WIP_ARCHIVE_DIR, exist_ok=True)
-        n = 1
-        while True:
-            dest = os.path.join(WIP_ARCHIVE_DIR, stem + (f"-{n}" if n > 1 else "") + ".md")
-            try:
-                with open(dest, "xb") as f:
-                    f.write(data)
-                break
-            except FileExistsError:
-                n += 1
-        with open(dest, "rb") as f:
-            if f.read() != data:
-                raise WipError(f"archived copy {dest} does not match {notes}")
-    except OSError as e:
-        raise WipError(f"could not archive {notes}: {e.strerror or e}") from None
-    print(dest)
 
 
 def cmd_import_pins(args):
@@ -745,10 +713,6 @@ def main():
     p = sub.add_parser("sync", help="observe PR state with gh and derive phases")
     p.add_argument("slug", nargs="?")
     p.set_defaults(func=cmd_sync)
-
-    p = sub.add_parser("archive-notes", help=f"archive a worktree's {NOTES}")
-    p.add_argument("worktree")
-    p.set_defaults(func=cmd_archive_notes)
 
     p = sub.add_parser("import-pins", help="turn pinned Anvil sessions into parked initiatives")
     p.add_argument("--apply", nargs="+", metavar="SESSION_ID")
