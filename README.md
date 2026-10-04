@@ -31,7 +31,6 @@ Quick workflows for everyday development tasks:
 | [/plan](anvil/commands/plan/COMMAND.md)                     | Create a detailed implementation plan                              |
 | [/scaffold-tests](anvil/commands/scaffold-tests/COMMAND.md) | Generate failing tests from an implementation plan                 |
 | [/execute](anvil/commands/execute/COMMAND.md)               | Execute an implementation plan from the plans folder               |
-| [/init](anvil/commands/init/COMMAND.md)                     | Initialize or audit a repository's agent configuration             |
 | [/audit-context](anvil/commands/audit-context/COMMAND.md)   | Identify knowledge gaps in project context and collect human input |
 | [/post-mortem](anvil/commands/post-mortem/COMMAND.md)       | Review a session to assess execution and extract improvements      |
 | [/wtp-pruning](anvil/commands/wtp-pruning/COMMAND.md)       | Classify wtp worktrees and flag the stale ones                     |
