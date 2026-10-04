@@ -38,7 +38,7 @@ The skill offers enrolment once per session when no initiative matches. If the u
 - Modify: `skills/executing-plans/SKILL.md`. Under "## 1. Setup", apply "Execution starts".
 - Modify: `skills/using-git-worktrees/SKILL.md`, in two places:
   - after creation, apply "Worktree created";
-  - add one line: "Branch handoff notes live in `NOTES.local.md` at the worktree root (git-ignored globally); read it first when resuming."
+  - add one line: "When resuming in a worktree, apply tracking-work's 'Resuming' event to read its branch notes."
 - Modify: `anvil/commands/pr.md`. `/pr` delegates the work to a Haiku subagent. Add the "PR opened" paragraph to the command body, outside the subagent prompt, to run after the subagent reports a created PR URL. Do nothing if no URL comes back.
 - Modify: `anvil/agents/planner.md`, in two places:
   - add `tracking-work` to its `skills:` allow-list (Anvil filters the skills advertised to an agent by this list);
@@ -72,10 +72,12 @@ grep -rln "wip.py\|initiatives/" skills/grilling skills/writing-plans skills/exe
    - link the docs `~/.agents/correction-ledger.md` and this plan's README;
    - link session `44330773-e820-4b13-90b6-73cf8cb722ad`;
    - set the phase to `implementing`, then run `wip sync`.
-3. [ ] Move content out of the skill-paths-hook worktree's `NOTES.local.md`:
-   - its cross-cutting sections go to the initiative body (Why, Decisions, Next steps B to E, Baseline to re-measure);
-   - keep only branch-scoped content there (open merge decisions for PR #235, known limits of the hook), headed by the `Initiative:` line;
-   - drop the copied git and PR state, since `wip show` gives it live.
+3. [ ] Move the hand-written `NOTES.local.md` files into the initiative body. These are the skill-paths-hook worktree's file and this worktree's file:
+   - cross-cutting sections go to Why, Decisions and Next (from skill-paths-hook: Next steps B to E, Baseline to re-measure);
+   - branch-scoped content goes to that worktree's `### <branch>` section (for skill-paths-hook: open merge decisions for PR #235, known limits of the hook);
+   - drop the copied git and PR state, since `wip show` gives it live;
+   - durable domain facts go to the topic, following its `AGENTS.md`;
+   - show the user the result, then delete each `NOTES.local.md` only after an explicit yes.
 4. [ ] Show the user the board and the unclaimed worktrees list. Ask whether they want to:
    - link unclaimed worktrees to existing initiatives;
    - create initiatives for them;
@@ -85,8 +87,7 @@ grep -rln "wip.py\|initiatives/" skills/grilling skills/writing-plans skills/exe
 
 **Verify:**
 ```bash
-python3 skills/tracking-work/scripts/wip.py show agent-conventions   # 3 worktrees, PR #235 with a state, session line
-head -1 "/Users/broderick.westrope/Library/Application Support/wtp/worktrees/eucalyptusvc/skills/skill-paths-hook/NOTES.local.md"   # Initiative: ~/.agents/initiatives/agent-conventions.md
+python3 skills/tracking-work/scripts/wip.py show agent-conventions   # 3 worktrees, PR #235 with a state, session line, a branch section per worktree
 ```
 
 ### Task 3: Workflow end-to-end

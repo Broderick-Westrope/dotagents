@@ -18,9 +18,9 @@ Handoffs at the end of a session are written by hand, if at all.
 
 **Goal:**
 
-- Each initiative has one small file in `~/.agents/initiatives/` that records why it exists, its phase, its decisions and next steps, and links to its worktrees, PRs, topic, docs and sessions.
+- Each initiative has one small file in `~/.agents/initiatives/` that records why it exists, its phase, its decisions, its next steps and a handoff section per branch. It links its worktrees, PRs, docs and sessions, plus any topic it draws on.
 - A stdlib-only script, `wip`, owns the file's machine-readable part. It validates phase changes, derives the phases that depend on PRs, and prints a board built from live git and Anvil state plus the last-observed PR state (shown with its age).
-- Worktrees keep short branch-scoped notes in `NOTES.local.md`.
+- Topic folders keep their own docs and are never initiatives. A session in a topic updates the topic's docs, and updates initiatives only when the discussion changed them.
 - `/goodbye` and the existing workflow skills call `wip` at the moments state changes.
 - The user can close old sessions and skip early draft PRs: `wip` shows everything in flight, and each initiative records the session IDs to resume with `anvil --session <id> --there`.
 
@@ -54,9 +54,9 @@ Handoffs at the end of a session are written by hand, if at all.
    - All rules about phases, notes and file format live in that skill and the script.
    - When an event finds no initiative, the agent offers once to create or attach one, rather than skipping silently, so the system gets populated.
 4. **Where each kind of note goes:**
-   - The initiative file holds the cross-cutting part: why the work exists, decisions, next steps and links.
-   - `NOTES.local.md` holds only what's left on this branch and its gotchas. It opens with a pointer line per initiative. It doesn't copy git or PR state; `wip show` gives that live.
-   - A topic folder, if the initiative has one, holds the durable domain facts; the initiative links it.
+   - The initiative file holds everything about the work: why it exists, decisions, next steps, and a `### <branch>` section per worktree with what's left there and its gotchas. It doesn't copy git or PR state; `wip show` gives that live.
+   - There are no notes inside worktrees. One file per initiative means no archive step when a worktree is removed, no privacy check against committing notes, and no shared config change to load them. The cost is one `wip which .` call when a fresh session in a worktree asks what's left.
+   - A topic folder holds the durable domain facts, following its own `AGENTS.md`. An initiative may link it as background, but `wip which` never matches topic paths, so a topic session isn't pinned to any one initiative.
    - Each fact has one home.
 5. **Pinned sessions are left alone.**
    - `wip` reads pins from `anvil.db` read-only and flags pinned sessions no initiative links to.
@@ -76,11 +76,13 @@ Handoffs at the end of a session are written by hand, if at all.
 
 | # | File | Delivers | Depends on | Review focus |
 |---|------|----------|------------|--------------|
-| 1 | `phase-1-core.md` | `wip` script and tests, `tracking-work` skill, `/goodbye`, archiving notes on every worktree-removal path, then (after sandbox acceptance) notes read-back in the user's config | — | Metadata schema, transition matrix, lookup contract, locking, board latency, notes split |
+| 1 | `phase-1-core.md` | `wip` script and tests, `tracking-work` skill, `/goodbye`, routing every worktree-removal path through the skill, then (after sandbox acceptance) a pointer in the user's `~/dev/CLAUDE.md` | — | Metadata schema, transition matrix, lookup contract, locking, board latency, notes in the initiative body |
 | 2 | `phase-2-entry-points.md` | `tracking-work` events from `/grill`, `/plan`, `/execute`, `/pr`, the planner agent and `using-git-worktrees`; selective pin import; dogfooding on the current initiative | Phase 1 | Each workflow step records the right event, and declining enrolment leaves workflows exactly as today |
 
 ## Phase boundaries
 
-- **1 → 2:** Phase 1 can be used by itself (`wip` from a terminal, `/goodbye`, the archive step). It touches existing skills only where they remove worktrees, since that's where notes are lost today. Phase 2 changes skills every workflow runs through, so it's reviewed separately once the script's interface is settled.
+- **1 → 2:** Phase 1 can be used by itself (`wip` from a terminal, `/goodbye`, the removal event). It touches existing skills only where they remove worktrees, since that's where branch notes would otherwise be lost. Phase 2 changes skills every workflow runs through, so it's reviewed separately once the script's interface is settled.
 
 <!-- Review notes (devils-advocate, 2026-10-04, second pass): caught circular enrolment (new worktrees can't match `which`; now resolved from the source location or session, with a one-time offer); no contract for `which` with multiple matches or doc paths; closed-unmerged PRs counting towards done and other gaps in sync derivation (now a full matrix, with provenance and unknown-state handling); "board can't drift" overstating cached PR state; an exclusive-create lock that survives crashes (now `flock`, with network calls outside the lock and compare-and-swap writes); worktree-removal paths in `/execute` and `executing-plans` that bypassed the archive step; archive-name collisions and unlink-before-remove ordering; the hand-rolled YAML-ish format (now JSON front matter with a version); a fixed scan depth missing deep branch names and a serial worst case of minutes (now pruned walk, one `status --porcelain=v2 --branch` per worktree, bounded concurrency, a deadline); planner's skill allow-list omitting tracking-work; `/pr` being delegation-only; notes duplicating git state; all-or-nothing pin import; and the e2e not proving the env override reached the agent. Phase history and bulk import were cut or deferred. -->
+
+<!-- Revision (user, 2026-10-04, after Tasks 1 to 3 were built): topics are no longer initiatives or enrolment triggers, and `which` stops matching topic paths; `NOTES.local.md` is dropped in favour of branch sections in the initiative body, which removes `archive-notes`, `WIP_ARCHIVE_DIR`, the notes privacy check and the `context_paths` change. -->
