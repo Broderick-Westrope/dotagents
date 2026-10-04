@@ -77,7 +77,7 @@ Find the initiative first (see Rules). Then:
 | Implementation plan written | `wip phase <slug> planning --doc <path>` |
 | Execution starts | `wip phase <slug> implementing` |
 | PR opened | `wip link <slug> pr <url>`, then `wip sync <slug>` |
-| Worktree about to be removed | Run `wip archive-notes <path>`. If it fails, stop and don't remove the worktree. Otherwise remove the worktree, then run `wip unlink <slug> worktree <path>`, `wip link <slug> doc <printed archive path>` (if it printed one) and `wip sync <slug>` |
+| Worktree about to be removed | Run `wip archive-notes <path>`. If it fails, stop and don't remove the worktree. Otherwise remove the worktree (`git worktree remove <path>`), then run `wip unlink <slug> worktree <path>`, `wip link <slug> doc <printed archive path>` (if it printed one) and `wip sync <slug>` |
 | Waiting on something | `wip phase <slug> parked --reason "<what we're waiting for>"` |
 | Session ending | Follow "Ending a session" |
 

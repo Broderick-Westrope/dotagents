@@ -147,7 +147,7 @@ If the code review in step 4 produces fixes, commit those as separate commits (e
 
 After committing:
 - Merge branch to main (if using branches)
-- Remove worktree (if using worktrees)
+- If using worktrees, load **tracking-work** and follow its "Worktree about to be removed" event; it archives `NOTES.local.md` before removal and stops if archiving fails.
 - Mark plan file as COMPLETED
 - Move to `./plans/done/` if applicable
 

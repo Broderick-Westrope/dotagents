@@ -103,7 +103,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Keep the worktree for review follow-ups (Step 5)
 
 #### Option 3: Keep As-Is
 
@@ -135,19 +135,16 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options 1 and 4:**
 
 Check if in worktree:
 ```bash
 git worktree list | grep $(git branch --show-current)
 ```
 
-If yes:
-```bash
-git worktree remove <worktree-path>
-```
+If yes: load **tracking-work** and follow its "Worktree about to be removed" event; it archives `NOTES.local.md` before removal and stops if archiving fails.
 
-**For Option 3:** Keep worktree.
+**For Options 2 and 3:** Keep worktree.
 
 ## Quick Reference
 
