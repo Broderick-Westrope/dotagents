@@ -1,7 +1,6 @@
 ---
 name: optimizing-performance
 description: Measure-first performance optimization that balances gains against complexity. Use when addressing slow code, profiling issues, or evaluating optimization trade-offs.
-argument-hint: "[file-path-or-area]"
 ---
 
 # Optimizing Performance
