@@ -156,7 +156,9 @@ class TestFormat(WipTest):
         self.assertEqual(meta["since"], TODAY)
         self.assertIn("alpha · Alpha work · idea for 0d", out)
         self.assertIn(body.decode(), out)
-        self.assertIn("## Next", body.decode())
+        with open(os.path.join(os.path.dirname(os.path.dirname(SCRIPT)), "references", "body-template.md"), "rb") as f:
+            self.assertEqual(body, b"\n" + f.read())
+        self.assertNotIn("next:", out)
 
     def test_new_rejects(self):
         self.wip("new", "alpha", "--title", "Alpha")

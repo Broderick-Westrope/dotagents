@@ -241,7 +241,7 @@ time WIP_DIR=$(mktemp -d) python3 skills/tracking-work/scripts/wip.py   # real r
      - **Finding the initiative.** Run `wip which` on the event's path; if that finds nothing, on the cwd; if that finds nothing, run `wip which --session "$ANVIL_ROOT_SESSION_ID"`.
      - **Enrolment.** Only code work is enrolled (a worktree with changes, or a design doc or plan for code). If nothing matches, offer once per session: "Track this as an initiative?" Give a proposed slug, title and the locations to link, or the option to attach it to an existing slug. If the user declines, skip tracking for the rest of the session. Never offer it for topic edits or discussion.
    - **Writing the body.**
-     - A current snapshot: Why, Decisions, Next, then `## Branches` with one `### <branch>` section per linked worktree holding what's left there and its gotchas. No git or PR state.
+     - A current snapshot following the template: Why, Decisions, Next, Open questions, Context, then `## Branches` with one `### <branch>` section per linked worktree holding what's left there and its gotchas. No git or PR state. Delete lines that are no longer true; never append dated entries.
      - Read the file first. Update lines your evidence shows are stale. Keep lines you can't confirm, and list them in your report. Leave sections outside the template verbatim.
      - Durable domain facts go in the topic, following its `AGENTS.md`; the initiative links the topic.
      - `~/.agents/correction-ledger.md` gets single-line entries for corrections about how agents should work.
@@ -267,9 +267,9 @@ time WIP_DIR=$(mktemp -d) python3 skills/tracking-work/scripts/wip.py   # real r
      1. **List locations.** The locations this session edited, yours and sub-agents', plus the cwd, sorted into worktrees, topics and other files. For each git location, run `git status --short` and `git log -1 --format='%h %cs'`. With no edits and no decisions worth keeping, say there's nothing to record.
      2. **Topic docs.** Update each topic with edits or discussion following its `AGENTS.md`; without guidance, add a dated section at the top of `AGENTS.md`. No initiative for the topic itself.
      3. **Find initiatives.** From worktrees and code docs (with the enrolment offer for unfinished code work), from `wip which --session`, and, when code work was discussed without touching its worktrees, by listing active initiatives (those linking the topic first) and asking which ones the discussion changed.
-     4. **Update each initiative.** Why, Decisions, Next and the branch sections touched; link the session, docs written and the topic if relevant; apply unrecorded phase events. Done when `wip show <slug>` reflects the session.
+     4. **Update each initiative.** Why, Decisions, Next, Open questions, Context and the branch sections touched; link the session, docs written and the topic if relevant; apply unrecorded phase events. Done when `wip show <slug>` reflects the session.
      5. **Report.** `wip show` for each initiative touched; list each file written and lines kept unconfirmed. Don't commit or push.
-2. [ ] Write `skills/tracking-work/references/body-template.md`: `## Why`, `## Decisions`, `## Next` (the first line is what the board shows), and `## Branches` with one example `### <branch>` section giving the worktree path, **Left** and **Gotchas**.
+2. [ ] Write `skills/tracking-work/references/body-template.md`: `## Why`, `## Decisions`, `## Next` (the first line is what the board shows), `## Open questions` (removed once decided), `## Context` (where things are, cross-branch gotchas), and `## Branches` with one example `### <branch>` section giving the worktree path, **Left** and **Gotchas**. `wip new` and `import-pins` write this file as the new body, so there's one copy of the template, and the board skips `<placeholder>` lines under Next.
 3. [ ] Write `anvil/commands/goodbye.md`. It loads the skill by name, not through `skills:` preload, because preload drops the skill's location (`anvil/internal/skills/format.go:11-26`) and `<skill-dir>` wouldn't resolve:
    ```markdown
    ---

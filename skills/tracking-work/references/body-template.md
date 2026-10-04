@@ -10,6 +10,14 @@
 
 1. <the next concrete step, first line is shown on the board>
 
+## Open questions
+
+- <something waiting on the user; delete it once decided and record the answer under Decisions>
+
+## Context
+
+- <where things are, and gotchas that apply across branches>
+
 ## Branches
 
 ### <branch>
