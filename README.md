@@ -12,29 +12,29 @@ NOTE: This is a fork, to customise my workflow. All credit for the original file
 
 Quick workflows for everyday development tasks:
 
-| Command                                                  | Description                                                              |
-| -------------------------------------------------------- | ------------------------------------------------------------------------ |
-| [/test](anvil/commands/test.md)                          | Run tests and analyze failures                                           |
-| [/explain](anvil/commands/explain.md)                    | Break down code or concepts                                              |
-| [/debug](anvil/commands/debug.md)                        | Start a systematic debugging session                                     |
-| [/optimize](anvil/commands/optimize.md)                  | Find and fix performance issues                                          |
-| [/refactor](anvil/commands/refactor.md)                  | Refactor code following best practices                                   |
-| [/review](anvil/commands/review.md)                      | Multi-model code review with deduplicated findings                       |
-| [/review-with-me](anvil/commands/review-with-me.md)      | Interactive review where the human drives and AI provides context        |
-| [/commit](anvil/commands/commit.md)                      | Create a well-formatted git commit                                       |
-| [/deps](anvil/commands/deps.md)                          | Audit and upgrade dependencies                                           |
-| [/fix-issue](anvil/commands/fix-issue.md)                | Fix a GitHub issue by number                                             |
-| [/pr](anvil/commands/pr.md)                              | Create a pull request with auto-generated description                    |
-| [/document](anvil/commands/document.md)                  | Create or improve documentation                                          |
-| [/draft-tsd](anvil/commands/draft-tsd.md)                | Draft a technical specification from rough ideas or topics               |
-| [/grill](anvil/commands/grill.md)                        | Think through a feature before planning                                  |
-| [/plan](anvil/commands/plan.md)                          | Create a detailed implementation plan                                    |
-| [/scaffold-tests](anvil/commands/scaffold-tests.md)      | Generate failing tests from an implementation plan                       |
-| [/execute](anvil/commands/execute.md)                    | Execute an implementation plan from the plans folder                     |
-| [/init](anvil/commands/init.md)                          | Initialize or audit a repository's agent configuration                   |
-| [/audit-context](anvil/commands/audit-context.md)        | Identify knowledge gaps in project context and collect human input       |
-| [/post-mortem](anvil/commands/post-mortem.md)            | Review a session to assess execution and extract improvements            |
-| [/wtp-pruning](anvil/commands/wtp-pruning/COMMAND.md)    | Classify wtp worktrees and flag the stale ones                           |
+| Command                                                     | Description                                                        |
+| ----------------------------------------------------------- | ------------------------------------------------------------------ |
+| [/test](anvil/commands/test/COMMAND.md)                     | Run tests and analyze failures                                     |
+| [/explain](anvil/commands/explain/COMMAND.md)               | Break down code or concepts                                        |
+| [/debug](anvil/commands/debug/COMMAND.md)                   | Start a systematic debugging session                               |
+| [/optimize](anvil/commands/optimize/COMMAND.md)             | Find and fix performance issues                                    |
+| [/refactor](anvil/commands/refactor/COMMAND.md)             | Refactor code following best practices                             |
+| [/review](anvil/commands/review/COMMAND.md)                 | Multi-model code review with deduplicated findings                 |
+| [/review-with-me](anvil/commands/review-with-me/COMMAND.md) | Interactive review where the human drives and AI provides context  |
+| [/commit](anvil/commands/commit/COMMAND.md)                 | Create a well-formatted git commit                                 |
+| [/deps](anvil/commands/deps/COMMAND.md)                     | Audit and upgrade dependencies                                     |
+| [/fix-issue](anvil/commands/fix-issue/COMMAND.md)           | Fix a GitHub issue by number                                       |
+| [/pr](anvil/commands/pr/COMMAND.md)                         | Create a pull request with auto-generated description              |
+| [/document](anvil/commands/document/COMMAND.md)             | Create or improve documentation                                    |
+| [/draft-tsd](anvil/commands/draft-tsd/COMMAND.md)           | Draft a technical specification from rough ideas or topics         |
+| [/grill](anvil/commands/grill/COMMAND.md)                   | Think through a feature before planning                            |
+| [/plan](anvil/commands/plan/COMMAND.md)                     | Create a detailed implementation plan                              |
+| [/scaffold-tests](anvil/commands/scaffold-tests/COMMAND.md) | Generate failing tests from an implementation plan                 |
+| [/execute](anvil/commands/execute/COMMAND.md)               | Execute an implementation plan from the plans folder               |
+| [/init](anvil/commands/init/COMMAND.md)                     | Initialize or audit a repository's agent configuration             |
+| [/audit-context](anvil/commands/audit-context/COMMAND.md)   | Identify knowledge gaps in project context and collect human input |
+| [/post-mortem](anvil/commands/post-mortem/COMMAND.md)       | Review a session to assess execution and extract improvements      |
+| [/wtp-pruning](anvil/commands/wtp-pruning/COMMAND.md)       | Classify wtp worktrees and flag the stale ones                     |
 
 ### Skills
 
@@ -204,7 +204,7 @@ See [ANVIL.md](ANVIL.md) for the full plugin format reference.
 dotagents/
 ├── anvil-plugin.json   # Anvil plugin manifest
 ├── anvil/
-│   ├── commands/       # Slash commands (<name>.md or <name>/COMMAND.md)
+│   ├── commands/       # Slash commands (<name>/COMMAND.md)
 │   └── agents/         # Specialist agents
 ├── skills/             # Skills (<name>/SKILL.md)
 ├── plans/              # Implementation plans
