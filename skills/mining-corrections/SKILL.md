@@ -8,20 +8,20 @@ description: Mines past Anvil sessions for places where the user corrected the a
 Turns repeated user corrections into enforcement. Two modes share one pipeline:
 
 - **Bulk**: every session since a date. The default, and the one the user will actually run.
-- **Session**: one session id, typically the current one, run at the end of a piece of work.
+- **Session**: one session id, typically the current one. `/goodbye` runs it at the end of every session.
 
 The ledger lives at `$CORRECTION_LEDGER`, else `~/.agents/correction-ledger.md`. Its format is in [references/ledger-format.md](references/ledger-format.md).
 
 ## 1. Extract
 
-Read "Last mined" from the ledger and use it as `--since`. With no ledger, mine everything.
+Read "Last mined" from the ledger and use it as `--since`. With no ledger, mine everything. Pass each "Mined individually" entry as `--mined <session>=<time>`, in both modes, so turns already mined in session mode aren't counted twice.
 
 ```bash
-python3 <skill-dir>/scripts/extract.py --since 2026-09-01 --out /tmp/corrections
-python3 <skill-dir>/scripts/extract.py --current --all-turns --out /tmp/corrections
+python3 <skill-dir>/scripts/extract.py --since 2026-09-01 --mined <id>=2026-10-04T18:02:11 --out /tmp/corrections
+python3 <skill-dir>/scripts/extract.py --current --all-turns --mined <id>=2026-10-04T18:02:11 --out /tmp/corrections
 ```
 
-Session mode uses `--current` (reads `$ANVIL_ROOT_SESSION_ID`, which Anvil's bash tool sets to the top-level session even inside subagents) or `--session <id>`, plus `--all-turns`, because one session is small enough to read unfiltered. The script prints the chunk count. Done when every chunk file exists.
+Session mode uses `--current` (reads `$ANVIL_ROOT_SESSION_ID`, which Anvil's bash tool sets to the top-level session even inside subagents) or `--session <id>`, plus `--all-turns`, because one session is small enough to read unfiltered. Note the time before running it; step 3 records it. The script prints the chunk and candidate counts. With no candidates, skip to step 3 and only record the time. Done when every chunk file exists.
 
 ## 2. Classify
 
@@ -35,7 +35,10 @@ Fold the results into the ledger:
 - Corrections that happen once go under `## Singletons` as a single line each. Promote one to a theme when it recurs.
 - For an **enforced** theme, check whether any new correction is dated after its enforcement. If so, reopen it and propose the next rung up.
 
-Done when every correction is either in a theme or a singleton, and "Last mined" is today.
+Done when every correction is either in a theme or a singleton, and the ledger records what was mined:
+
+- **Bulk:** set "Last mined" to today. Drop "Mined individually" entries dated before today; keep today's, since `--since` covers the whole day.
+- **Session:** leave "Last mined" alone, because other sessions since then are still unmined. Add or update this session's "Mined individually" entry with the time noted in step 1.
 
 ## 4. Propose
 

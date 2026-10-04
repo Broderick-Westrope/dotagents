@@ -10,10 +10,10 @@ _Run before starting (paths relative to this worktree unless absolute):_
 read plans/impl-2026-10-04-work-tracking/README.md   # phases, design decisions
 read skills/mining-corrections/SKILL.md               # sibling skill: tone, "Done when" steps, <skill-dir> script paths
 read skills/mining-corrections/scripts/extract.py     # read-only anvil.db access pattern
-read anvil/commands/post-mortem.md                    # a command that loads a skill by name
+read anvil/commands/post-mortem/COMMAND.md                    # a command that loads a skill by name
 read /Users/broderick.westrope/dev/helse/claude-essentials/ANVIL.md   # command frontmatter (git-ignored; root checkout only)
 read skills/finishing-a-development-branch/SKILL.md   # Step 5 removes worktrees
-read anvil/commands/execute.md                        # "Post-Execution" removes worktrees directly
+read anvil/commands/execute/COMMAND.md                        # "Post-Execution" removes worktrees directly
 read skills/executing-plans/SKILL.md                  # "## 6. Cleanup" removes worktrees
 read README.md
 read "/Users/broderick.westrope/Library/Application Support/wtp/worktrees/eucalyptusvc/skills/skill-paths-hook/NOTES.local.md"  # hand-written handoff to generalise
@@ -105,7 +105,7 @@ Agents still edit the body with their edit tool, outside the lock. Step 6 means 
 |---|---|
 | `wip` / `wip board [--all]` | The board, described below |
 | `wip new <slug> --title <t>` | Creates the file at phase `idea`, with source `manual`. Rejects an existing or invalid slug |
-| `wip show <slug>` | Prints the metadata and body, then one live board entry. For each session link, prints `anvil --session <id> --there` (resumes in the session's original cwd), plus `cd '<worktree>' && anvil --session <id>` for each linked worktree |
+| `wip show <slug>` | Prints the metadata and body, then one live board entry. Then prints resume commands for the most recent session (by `updated_at` in `ANVIL_DB`, else the last linked): `anvil --session <id> --there` (resumes in the session's original cwd), plus `cd '<worktree>' && anvil --session <id>` for each linked worktree. Earlier sessions get only the `--there` line, newest first |
 | `wip which [<path>] [--session <id>]` | Prints matching slugs, one per line, deduplicated and sorted, or nothing. A path matches a `worktree` link if it equals the link or lies inside it, compared by path component after `realpath`. It matches a `doc` link only if it's the same file. `topic` links never match, since topics aren't initiatives. `--session` matches a session link. Callers must ask the user when more than one slug comes back |
 | `wip link <slug> <kind> <ref> [--cwd <dir>]` | Kinds: `worktree`, `pr`, `topic`, `doc` or `session`. Validation by kind: <ul><li>`worktree`: a dir where `git rev-parse --path-format=absolute --git-dir` differs from `--git-common-dir`</li><li>`topic`, `doc`: an existing path</li><li>`pr`: `^https://github\.com/[^/]+/[^/]+/pull/\d+$`, stored with state `unknown`</li><li>`session`: a root session ID in `ANVIL_DB`. Its `working_dir` is stored as `cwd`. If the DB is absent, accept it and use `--cwd`</li></ul> Linking an existing link is a no-op |
 | `wip unlink <slug> <kind> <ref>` | Removes the link, matching on the resolved ref. Errors if absent |
@@ -226,7 +226,7 @@ time WIP_DIR=$(mktemp -d) python3 skills/tracking-work/scripts/wip.py   # real r
 **Files:**
 - Create: `skills/tracking-work/SKILL.md`
 - Create: `skills/tracking-work/references/body-template.md`
-- Create: `anvil/commands/goodbye.md`
+- Create: `anvil/commands/goodbye/COMMAND.md`
 - Modify: `README.md` (one row in the commands table, one in the skills table)
 
 **Steps:**
@@ -278,7 +278,7 @@ time WIP_DIR=$(mktemp -d) python3 skills/tracking-work/scripts/wip.py   # real r
      4. **Update each initiative.** Why, Decisions, Next, Open questions, Context and the branch sections touched; link the session, docs written and the topic if relevant; apply unrecorded phase events. Done when `wip show <slug>` reflects the session.
      5. **Report.** `wip show` for each initiative touched; list each file written and lines kept unconfirmed. Don't commit or push.
 2. [ ] Write `skills/tracking-work/references/body-template.md`: `## Why`, `## Decisions`, `## Next` (the first line is what the board shows), `## Open questions` (removed once decided), `## Context` (where things are, cross-branch gotchas), and `## Branches` with one example `### <branch>` section giving the worktree path, **Left** and **Gotchas**. `wip new` and `import-pins` write this file as the new body, so there's one copy of the template, and the board skips `<placeholder>` lines under Next.
-3. [ ] Write `anvil/commands/goodbye.md`. It loads the skill by name, not through `skills:` preload, because preload drops the skill's location (`anvil/internal/skills/format.go:11-26`) and `<skill-dir>` wouldn't resolve:
+3. [ ] Write `anvil/commands/goodbye/COMMAND.md`. It loads the skill by name, not through `skills:` preload, because preload drops the skill's location (`anvil/internal/skills/format.go:11-26`) and `<skill-dir>` wouldn't resolve:
    ```markdown
    ---
    description: Record where this session's work stands so it can be closed and resumed later
@@ -289,6 +289,8 @@ time WIP_DIR=$(mktemp -d) python3 skills/tracking-work/scripts/wip.py   # real r
 
    $ARGUMENTS
    ```
+
+   It then runs **mining-corrections** in session mode (see the README's decision 8). That needs `extract.py --mined <session>=<time>` and a "Mined individually" line in the ledger, so a session mined by `/goodbye` doesn't move "Last mined" forward for bulk runs or get counted twice.
 4. [ ] Add README rows:
    - `/goodbye`: "Record where this session's work stands so it can be closed and resumed later";
    - `tracking-work`: "Track code initiatives through workflow phases, with their handoff notes".
@@ -306,7 +308,7 @@ grep -rn "NOTES.local" skills anvil                 # no output
 
 **Files:**
 - Modify: `skills/finishing-a-development-branch/SKILL.md`
-- Modify: `anvil/commands/execute.md` ("Post-Execution", step 1)
+- Modify: `anvil/commands/execute/COMMAND.md` ("Post-Execution", step 1)
 - Modify: `skills/executing-plans/SKILL.md` ("## 6. Cleanup")
 
 **Steps:**
@@ -316,7 +318,7 @@ grep -rn "NOTES.local" skills anvil                 # no output
 
 **Verify:**
 ```bash
-grep -n "git worktree remove\|Remove worktree" skills/finishing-a-development-branch/SKILL.md anvil/commands/execute.md skills/executing-plans/SKILL.md   # none outside a tracking-work sentence
+grep -n "git worktree remove\|Remove worktree" skills/finishing-a-development-branch/SKILL.md anvil/commands/execute/COMMAND.md skills/executing-plans/SKILL.md   # none outside a tracking-work sentence
 grep -n "Options 1 and 4" skills/finishing-a-development-branch/SKILL.md
 ```
 
@@ -400,8 +402,8 @@ Run with the plugin path in `~/.config/anvil/anvil.json` pointed at this worktre
 **Findings to act on:**
 
 1. Every agent edit to an initiative file outside the session's cwd triggers an Anvil permission prompt ("path outside working directory"). Adding a permission rule for `~/.agents/initiatives/*.md` would remove it.
-2. `wip show` resume output is noisy (see Resume above). Printing the `cd` variants only for the most recent session would cut it to one line per session plus one per worktree.
-3. Fix the sandbox setup step so `$S/initiatives` is its own repo (see Worktree above).
+2. `wip show` resume output is noisy (see Resume above). Fixed: it now prints the `cd` variants only for the most recent session.
+3. Fix the sandbox setup step so `$S/initiatives` is its own repo (see Worktree above). Fixed in the setup step.
 
 ### Task 5: User setup (after Task 4 passes)
 
