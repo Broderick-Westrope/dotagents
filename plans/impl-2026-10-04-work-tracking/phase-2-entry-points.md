@@ -33,8 +33,8 @@ The skill offers enrolment once per session when no ticket matches. If the user 
 ### Task 1: Record phase events in the workflow
 
 **Files:**
-- Modify: `skills/grilling/SKILL.md`. After the spec is saved and committed, apply "Design doc written".
-- Modify: `skills/writing-plans/SKILL.md`. After the plan is saved and committed, apply "Implementation plan written".
+- Modify: `skills/grilling/SKILL.md`. After the user approves the reviewed spec, apply "Design doc written".
+- Modify: `skills/writing-plans/SKILL.md`. After the devils-advocate review (end of "Before Presenting"), apply "Implementation plan written", passing the README for a phased plan.
 - Modify: `skills/executing-plans/SKILL.md`. Under "## 1. Setup", apply "Execution starts".
 - Modify: `skills/using-git-worktrees/SKILL.md`, in two places:
   - after creation, apply "Worktree created";
