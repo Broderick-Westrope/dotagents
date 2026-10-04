@@ -100,29 +100,29 @@ Output the merged review using this format:
 - **Reviewers**: Sonnet + Opus + Convention (parallel; list only completed reviews)
 - **Agreement**: X of Y findings confirmed by multiple reviewers
 
-## Critical Issues ⛔
+## Critical Issues
 
 - `[Sonnet + Opus]` `file.ts:123` - [Issue description]
 - `[Opus]` `file.ts:456` - [Issue only Opus caught]
 
-## Important Issues ⚠️
+## Important Issues
 
 - `[Sonnet + Opus]` `file.ts:789` - [Issue description]
 - `[Convention]` `file.ts:012` - [Convention violation only the convention reviewer caught]
 
-## Product & UX Issues 🎯
+## Product & UX Issues
 
 - [Same attribution pattern]
 
-## Developer Experience Issues 🔧
+## Developer Experience Issues
 
 - [Same attribution pattern]
 
-## Documentation Updates Needed 📝
+## Documentation Updates Needed
 
 - [Same attribution pattern]
 
-## Suggestions 💡
+## Suggestions
 
 - [Same attribution pattern]
 
