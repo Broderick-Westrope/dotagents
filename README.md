@@ -112,6 +112,7 @@ Reusable development patterns:
 | [visualizing-with-mermaid](skills/visualizing-with-mermaid/SKILL.md) | Create professional technical diagrams             |
 | [visualizing-topics](skills/visualizing-topics/SKILL.md)           | Build interactive HTML visualizations with animation |
 | [post-mortem](skills/post-mortem/SKILL.md)                         | Review sessions to extract actionable improvements   |
+| [mining-corrections](skills/mining-corrections/SKILL.md)           | Mine past sessions for repeated corrections into a ledger |
 
 ### Agents
 
