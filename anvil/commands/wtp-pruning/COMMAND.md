@@ -5,7 +5,7 @@ argument_hint: "[repo or path filter]"
 
 Survey every worktree managed by `wtp` and classify each one so the user can decide what to archive.
 
-This command is **read-only**. Do not remove worktrees, delete branches, run `git worktree prune`/`repair`, delete directories, or run `wtp remove`. The only state-changing command allowed is `git fetch`. If the user asks for cleanup afterwards, read `~/dev/helse/claude-essentials/anvil/references/wtp-pruning.md` before running anything; it covers the removal rules for each classification.
+This command is **read-only**. Do not remove worktrees, delete branches, run `git worktree prune`/`repair`, delete directories, or run `wtp remove`. The only state-changing command allowed is `git fetch`. If the user asks for cleanup afterwards, read `references/cleanup.md` (next to this command) before running anything; it covers the removal rules for each classification.
 
 Arguments:
 
