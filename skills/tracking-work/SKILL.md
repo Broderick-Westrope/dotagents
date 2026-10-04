@@ -40,7 +40,7 @@ python3 "<skill-dir>/scripts/wip.py" <command>
 
 ## Writing the body
 
-- Keep the body a current snapshot, not a log: Why, Decisions, Next, then one `### <branch>` section per linked worktree under `## Branches`.
+- Keep the body a current snapshot, not a log, following the template: Why, Decisions, Next, Open questions, Context, then one `### <branch>` section per linked worktree under `## Branches`. Delete lines that are no longer true; never append dated entries.
 - A branch section holds only what's left on that branch and its gotchas. No git or PR state; `wip show` gives that live.
 - Read the file first. Update lines your evidence shows are stale. Keep lines you can't confirm, and list them in your report. Leave sections you don't own (anything outside the template) verbatim.
 - Durable domain facts belong in the topic folder, following its `AGENTS.md`. Link the topic from the initiative rather than copying them.
@@ -82,7 +82,7 @@ Find the initiative first (see Rules). Then:
 
    Done when every affected initiative is identified, or the user declined.
 4. **Update each initiative.** For each one:
-   - update Why, Decisions and Next, and the `### <branch>` section of each worktree touched;
+   - update Why, Decisions, Next, Open questions and Context, and the `### <branch>` section of each worktree touched;
    - run `wip link <slug> session "$ANVIL_ROOT_SESSION_ID"`;
    - link docs written this session, and the topic if the work relates to one;
    - apply any phase event that happened this session and wasn't recorded.

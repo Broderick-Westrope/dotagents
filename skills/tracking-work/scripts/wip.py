@@ -12,6 +12,7 @@ import fcntl
 import hashlib
 import json
 import os
+import pathlib
 import re
 import signal
 import sqlite3
@@ -47,7 +48,8 @@ PATH_KINDS = {"worktree", "topic", "doc"}
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]{1,48}$")
 PR_URL = re.compile(r"^https://github\.com/[^/]+/[^/]+/pull/\d+$")
 NEXT_SECTION = re.compile(r"^##[ \t]+Next[ \t]*\r?$(.*?)(?=^##[ \t]|\Z)", re.M | re.S)
-TEMPLATE_BODY = b"\n## Why\n\n## Decisions\n\n## Next\n"
+PLACEHOLDER = re.compile(r"^(?:[-*]|\d+\.)?\s*<.*>$")
+BODY_TEMPLATE = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "references", "body-template.md")
 OPEN_FM = b"---\n"
 CLOSE_FM = b"\n---\n"
 SKIP_DIRS = {"node_modules"}
@@ -256,7 +258,7 @@ def cmd_new(args):
     with locked():
         if os.path.exists(path):
             raise WipError(f"{path} already exists")
-        write_atomic(path, render(meta, TEMPLATE_BODY))
+        write_atomic(path, render(meta, b"\n" + pathlib.Path(BODY_TEMPLATE).read_bytes()))
     print(path)
 
 
@@ -500,7 +502,7 @@ def cmd_import_pins(args):
                 "links": [{"kind": "session", "ref": sid, "cwd": os.path.realpath(wd) if wd else None}],
             }
             check(meta, path)
-            write_atomic(path, render(meta, TEMPLATE_BODY))
+            write_atomic(path, render(meta, b"\n" + pathlib.Path(BODY_TEMPLATE).read_bytes()))
             print(f"{slug}: created from {sid}")
 
 
@@ -589,7 +591,7 @@ def cmd_board(args):
                 head += f" · {meta['reason']}"
             lines.append(head)
             section = NEXT_SECTION.search(body.decode("utf-8", "replace"))
-            nxt = next((ln.strip() for ln in section.group(1).splitlines() if ln.strip()), None) if section else None
+            nxt = next((ln.strip() for ln in section.group(1).splitlines() if ln.strip() and not PLACEHOLDER.match(ln.strip())), None) if section else None
             if nxt:
                 lines.append(f"  next: {nxt}")
             dates = []
