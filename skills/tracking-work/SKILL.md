@@ -1,6 +1,6 @@
 ---
 name: tracking-work
-description: Tracks initiatives (pieces of work spanning worktrees, PRs, topics, docs and sessions) through workflow phases, and keeps session and worktree notes. Use when the user asks what they were working on, wants to resume, park or check on work in progress, wraps up a session ("/goodbye", "we're done for today"), or when a workflow reaches an event in this skill's Events table (worktree created or removed, design doc or plan written, execution started, PR opened).
+description: Tracks initiatives (pieces of work spanning worktrees, PRs, topics, docs and sessions) through workflow phases, and keeps session and worktree notes. Use when the user asks what they were working on, wants to resume, park or check on work in progress, wraps up a session ("goodbye", "we're done for today"), or when a workflow reaches an event in this skill's Events table (worktree created or removed, design doc or plan written, execution started, PR opened).
 ---
 
 # Tracking work
