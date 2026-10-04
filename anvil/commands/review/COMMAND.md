@@ -49,7 +49,7 @@ Finish shared scope discovery first, then construct one review prompt and all th
 - `task(subagent_type="reviewer", model="anthropic/claude-opus-5-5")`: **Opus**, general review
 - `task(subagent_type="convention-reviewer", model="anthropic/claude-opus-5-5")`: **Convention**, convention compliance
 
-**Before dispatch, count the calls: exactly three, one per table row, with identical review instructions.** Submit them together in one `multi_tool_use.parallel` call when that tool is available. Otherwise emit all three `task` tool calls in the same assistant message. Do not send a standalone reviewer call, run a trial reviewer, or wait for any reviewer result before dispatching the others.
+**Before dispatch, count the calls: exactly three, one per table row, with identical review instructions.** Emit all three `task` tool calls in the same assistant message. Do not send a standalone reviewer call, run a trial reviewer, or wait for any reviewer result before dispatching the others.
 
 Wait for the batch to finish before merging findings. Do not feed one reviewer's findings into another reviewer's prompt.
 

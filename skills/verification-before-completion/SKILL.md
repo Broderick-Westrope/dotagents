@@ -28,7 +28,7 @@ Before:
 - Expressing satisfaction ("Great!", "Done!", "Perfect!")
 - Using qualifiers ("should work", "probably fixed", "seems to")
 - Committing, creating PRs, marking tasks complete
-- Marking a multi-file implementation as complete (dispatch the **code-reviewer-sonnet** and **code-reviewer-opus** agents)
+- Marking a multi-file implementation as complete (dispatch the **reviewer** agent twice in parallel, once with model `anthropic/claude-sonnet-5-5` and once with `anthropic/claude-opus-5-5`, as in the /review command)
 - Moving to next task or delegating work
 
 ## Common Verification Requirements
@@ -41,7 +41,7 @@ Before:
 | Linter clean          | Linter output: 0 errors          | Partial check, spot test      |
 | Regression test works | Red→Green cycle verified         | Test passes once              |
 | Agent task complete   | VCS diff shows expected changes  | Agent reports "success"       |
-| Work is complete      | Code review via the **code-reviewer-opus** and **code-reviewer-sonnet** agents with no unresolved Critical issues | Self-review, "looks good to me" |
+| Work is complete      | **reviewer** on Sonnet and Opus (as in /review) with no unresolved Critical issues | Self-review, "looks good to me" |
 
 ## Red Flags
 
