@@ -13,7 +13,7 @@ read skills/grilling/SKILL.md                # writes plans/design-*.md (around 
 read skills/writing-plans/SKILL.md           # writes plans/impl-*.md
 read skills/executing-plans/SKILL.md         # "## 1. Setup"
 read skills/using-git-worktrees/SKILL.md     # "## Creation Steps"
-read anvil/commands/pr.md
+read anvil/commands/pr/COMMAND.md
 read anvil/agents/planner.md                 # writes plans/<feature>-spec.md, which differs from grilling's design-*.md naming
 read "/Users/broderick.westrope/Library/Application Support/wtp/worktrees/eucalyptusvc/skills/skill-paths-hook/NOTES.local.md"
 ```
@@ -39,7 +39,7 @@ The skill offers enrolment once per session when no initiative matches. If the u
 - Modify: `skills/using-git-worktrees/SKILL.md`, in two places:
   - after creation, apply "Worktree created";
   - add one line: "When resuming in a worktree, apply tracking-work's 'Resuming' event to read its branch notes."
-- Modify: `anvil/commands/pr.md`. `/pr` delegates the work to a Haiku subagent. Add the "PR opened" paragraph to the command body, outside the subagent prompt, to run after the subagent reports a created PR URL. Do nothing if no URL comes back.
+- Modify: `anvil/commands/pr/COMMAND.md`. `/pr` delegates the work to a Haiku subagent. Add the "PR opened" paragraph to the command body, outside the subagent prompt, to run after the subagent reports a created PR URL. Do nothing if no URL comes back.
 - Modify: `anvil/agents/planner.md`, in two places:
   - add `tracking-work` to its `skills:` allow-list (Anvil filters the skills advertised to an agent by this list);
   - where it writes `plans/<feature>-spec.md`, apply "Design doc written".
@@ -53,9 +53,9 @@ The skill offers enrolment once per session when no initiative matches. If the u
 
 **Verify:**
 ```bash
-grep -rl "tracking-work" skills/grilling skills/writing-plans skills/executing-plans skills/using-git-worktrees anvil/commands/pr.md anvil/agents/planner.md | wc -l   # 6 files
+grep -rl "tracking-work" skills/grilling skills/writing-plans skills/executing-plans skills/using-git-worktrees anvil/commands/pr/COMMAND.md anvil/agents/planner.md | wc -l   # 6 files
 grep -n "tracking-work" anvil/agents/planner.md   # in skills: and in the body
-grep -rln "wip.py\|initiatives/" skills/grilling skills/writing-plans skills/executing-plans skills/using-git-worktrees anvil/commands/pr.md anvil/agents/planner.md   # no output
+grep -rln "wip.py\|initiatives/" skills/grilling skills/writing-plans skills/executing-plans skills/using-git-worktrees anvil/commands/pr/COMMAND.md anvil/agents/planner.md   # no output
 ```
 
 ## Migration

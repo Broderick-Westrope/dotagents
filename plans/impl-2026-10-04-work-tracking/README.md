@@ -67,6 +67,9 @@ Handoffs at the end of a session are written by hand, if at all.
    - Each change is bracketed: pending edits are committed first as "record edits made outside wip", then the script's own write as `wip <arguments>`.
    - This keeps hand and agent edits from being lost by accident, and the history shows which changes the script made.
    - The script creates the repo on first use, never pushes, and refuses a folder that sits inside another repo.
+8. **`/goodbye` also mines the session for corrections.**
+   - After recording the work, it runs `mining-corrections` in session mode and adds the proposals to its report, unapplied.
+   - Session mode records `<session> at <time>` under "Mined individually" in the ledger instead of moving "Last mined", and both modes pass those entries to `extract.py --mined`, so no turn is counted twice and bulk runs still cover every other session.
 
 **Out of scope:**
 
