@@ -205,7 +205,7 @@ Reply to @alice on api/handler.go:42:
 > Kept the nil check. The upstream client returns nil on 404, see client.go:88.
 ```
 
-Group drafts by thread, quote each one in full so it can be copied as-is, and say which threads need no reply.
+Group drafts by thread, explain the reasoning behind each, and say which threads need no reply. The point is to give the user a chance to discuss and understand a reply before the reviewer sees it, so expect to revise drafts.
 
 ## The Bottom Line
 
