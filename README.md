@@ -115,7 +115,7 @@ Reusable development patterns:
 | [visualizing-topics](skills/visualizing-topics/SKILL.md)           | Build interactive HTML visualizations with animation |
 | [post-mortem](skills/post-mortem/SKILL.md)                         | Review sessions to extract actionable improvements   |
 | [mining-corrections](skills/mining-corrections/SKILL.md)           | Mine past sessions for repeated corrections into a ledger |
-| [tracking-work](skills/tracking-work/SKILL.md)                     | Track initiatives through workflow phases, and keep session and worktree notes |
+| [tracking-work](skills/tracking-work/SKILL.md)                     | Track code initiatives through workflow phases, with their handoff notes |
 
 ### Agents
 

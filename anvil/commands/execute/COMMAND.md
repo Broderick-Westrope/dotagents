@@ -121,7 +121,7 @@ Load the **executing-plans** skill first.
 
 If a worktree was created:
 
-1. **Clean up worktree:** from `<original-repo>`, load **tracking-work** and follow its "Worktree about to be removed" event for `../worktree-<plan-name>`; it archives `NOTES.local.md` before removal and stops if archiving fails.
+1. **Clean up worktree:** from `<original-repo>`, load **tracking-work** and follow its "Worktree about to be removed" event for `../worktree-<plan-name>`; it saves the branch's notes into the initiative before removal and unlinks the worktree after.
 
 2. **Check if `$ARGUMENTS` contains `--merge`:**
 

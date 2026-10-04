@@ -142,7 +142,7 @@ Check if in worktree:
 git worktree list | grep $(git branch --show-current)
 ```
 
-If yes: load **tracking-work** and follow its "Worktree about to be removed" event; it archives `NOTES.local.md` before removal and stops if archiving fails.
+If yes: load **tracking-work** and follow its "Worktree about to be removed" event; it saves the branch's notes into the initiative before removal and unlinks the worktree after.
 
 **For Options 2 and 3:** Keep worktree.
 
