@@ -579,6 +579,31 @@ class TestBoard(WipTest):
         self.assertIn("worktree", out)
         self.assertNotIn("Unclaimed", out)
 
+    def test_show_resumes_latest_session_in_each_worktree(self):
+        wt_a = self.worktree(self.main, os.path.join(self.dirs["root"], "wa"), "wa")
+        wt_b = self.worktree(self.main, os.path.join(self.dirs["root"], "wb"), "wb")
+        self.wip("new", "pp", "--title", "P")
+        for wt in (wt_a, wt_b):
+            self.wip("link", "pp", "worktree", wt)
+        self.sessions(
+            {"id": "old", "updated_at": 1_100_000_000_000, "working_dir": self.tmp},
+            {"id": "new", "updated_at": 1_900_000_000, "working_dir": self.tmp},
+            {"id": "mid", "updated_at": 1_500_000_000_000, "working_dir": self.tmp},
+        )
+        for sid in ("new", "old", "mid"):
+            self.wip("link", "pp", "session", sid)
+        out = self.wip("show", "pp").stdout
+        resume = out[out.index("\nresume:\n") + 1:].splitlines()
+        self.assertEqual(resume, [
+            "resume:",
+            "  anvil --session new --there",
+            f"  cd '{wt_a}' && anvil --session new",
+            f"  cd '{wt_b}' && anvil --session new",
+            "earlier sessions:",
+            "  anvil --session mid --there",
+            "  anvil --session old --there",
+        ])
+
     def test_pr_lines_and_footer(self):
         self.write("pp", phase="implementing", links=[self.pr_link(1, "draft", "2026-01-01T00:00:00Z"), self.pr_link(2)])
         out = self.wip().stdout

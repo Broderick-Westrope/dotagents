@@ -310,13 +310,24 @@ def cmd_show(args):
     cmd_board(argparse.Namespace(all=True, only=args.slug))
     worktrees = [link["ref"] for link in meta["links"] if link["kind"] == "worktree"]
     sessions = [link["ref"] for link in meta["links"] if link["kind"] == "session"]
-    if sessions:
-        print("\nresume:")
-    for sid in sessions:
+    if not sessions:
+        return
+    recency = {}
+    db = open_db()
+    if db:
+        marks = ",".join("?" * len(sessions))
+        recency = dict(db.execute(f"select id, {UPDATED_SECONDS_SQL} from sessions where id in ({marks})", sessions))
+        db.close()
+    latest, *earlier = sorted(reversed(sessions), key=lambda sid: recency.get(sid, 0), reverse=True)
+    print("\nresume:")
+    print(f"  anvil --session {latest} --there")
+    for wt in worktrees:
+        quoted = wt.replace("'", "'\\''")
+        print(f"  cd '{quoted}' && anvil --session {latest}")
+    if earlier:
+        print("earlier sessions:")
+    for sid in earlier:
         print(f"  anvil --session {sid} --there")
-        for wt in worktrees:
-            quoted = wt.replace("'", "'\\''")
-            print(f"  cd '{quoted}' && anvil --session {sid}")
 
 
 def cmd_which(args):
