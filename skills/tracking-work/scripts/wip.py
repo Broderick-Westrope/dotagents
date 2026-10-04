@@ -446,7 +446,7 @@ def cmd_sync(args):
                 [WIP_GH, "auth", "status", "--json", "hosts"], capture_output=True, text=True, timeout=GH_TIMEOUT
             )
             for account in json.loads(status.stdout)["hosts"].get(GH_HOST, []):
-                if account.get("active") or account.get("state") != "success":
+                if account.get("state") != "success":
                     continue
                 token = subprocess.run(
                     [WIP_GH, "auth", "token", "--user", account["login"]],
