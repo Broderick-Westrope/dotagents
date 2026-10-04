@@ -96,7 +96,7 @@ python3 skills/tracking-work/scripts/wip.py show agent-conventions   # 3 worktre
 - Imported all 10 pinned sessions as parked tickets, to be pruned later.
 - Created `agent-conventions` with the three worktrees from the plan plus this phase's `work-tracking-entry-points`, PR #235, the ledger, the plan README and both sessions. `wip sync` moved it to `review`, since PR #235 is open and not a draft.
 - Moved both `NOTES.local.md` files into its body and deleted them, with the user's approval. Facts were checked first: PR #235 is up to date with its remote, `subagent-hooks` still has no upstream, and the receiving-code-review half of item C is already done on main.
-- Finding: `gh` has two accounts, and the active one was the personal account, which can't see `eucalyptusvc/skills`. `wip sync` failed with "Could not resolve to a Repository" until run with `GH_TOKEN="$(gh auth token --user brodie-euc)"`. Recorded in the ticket's Context.
+- Finding: `gh` has two accounts, and the active one was the personal account, which can't see `eucalyptusvc/skills`. `wip sync` failed with "Could not resolve to a Repository" until run with `GH_TOKEN="$(gh auth token --user brodie-euc)"`. Fixed on the phase 1 branch: `wip sync` now retries with each logged-in account's token. PRs #6 and #7 are linked too, and all three PRs resolve in one sync.
 - Finding: slugs from `import-pins` are cut at 46 characters mid-word (`...-lokalise-trans`, `...-muninn-s-capabil`).
 
 ### Task 3: Workflow end-to-end
