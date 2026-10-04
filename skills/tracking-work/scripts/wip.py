@@ -439,10 +439,8 @@ def cmd_sync(args):
                 target = "done"
             elif "closed" in states:
                 target = "implementing" if phase == "review" or synced_done else None
-            if target and (target != phase or meta["phase_source"] != "sync"):
-                if target != phase:
-                    meta["since"] = today()
-                meta.update(phase=target, phase_source="sync", reason=None, parked_from=None)
+            if target and target != phase:
+                meta.update(phase=target, phase_source="sync", since=today(), reason=None, parked_from=None)
 
         after = mutate(slug, change)
         prs = ", ".join(
