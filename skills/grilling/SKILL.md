@@ -51,7 +51,7 @@ flowchart TD
     K -->|issues found, fix and re-dispatch| J
     K -->|approved| L{User reviews spec?}
     L -->|changes requested| I
-    L -->|approved| M([Invoke ce:writing-plans with spec path])
+    L -->|approved| M([Invoke writing-plans with spec path])
 ```
 
 The terminal state is invoking **writing-plans** with the spec file path. Do NOT invoke any other implementation skill.

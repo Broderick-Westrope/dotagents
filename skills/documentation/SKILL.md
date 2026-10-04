@@ -53,10 +53,10 @@ Pass these instructions when delegating:
 **Architecture Documentation:**
 1. Read core modules, trace dependencies, identify design decisions
 2. Document decisions focusing on WHY, not just WHAT
-3. Add diagrams using `Skill(ce:visualizing-with-mermaid)` for flows
+3. Add diagrams using the **visualizing-with-mermaid** skill for flows
 4. Write docs in `/docs/architecture/`
 
-For writing style and tone, use `Skill(ce:writer)` with **The Engineer** persona.
+For writing style and tone, use the **writer** skill with **The Engineer** persona.
 
 ### Location standards
 
