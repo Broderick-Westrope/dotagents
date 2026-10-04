@@ -34,6 +34,7 @@ Quick workflows for everyday development tasks:
 | [/init](anvil/commands/init.md)                          | Initialize or audit a repository's agent configuration                   |
 | [/audit-context](anvil/commands/audit-context.md)        | Identify knowledge gaps in project context and collect human input       |
 | [/post-mortem](anvil/commands/post-mortem.md)            | Review a session to assess execution and extract improvements            |
+| [/wtp-pruning](anvil/commands/wtp-pruning.md)            | Classify wtp worktrees and flag the stale ones                           |
 
 ### Skills
 
@@ -204,6 +205,7 @@ dotagents/
 ├── anvil-plugin.json   # Anvil plugin manifest
 ├── anvil/
 │   ├── commands/       # Slash commands
+│   ├── references/     # Supporting docs commands load on demand
 │   └── agents/         # Specialist agents
 ├── skills/             # Skills (<name>/SKILL.md)
 ├── plans/              # Implementation plans
