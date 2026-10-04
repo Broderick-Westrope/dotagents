@@ -30,6 +30,7 @@ Quick workflows for everyday development tasks:
 | [/post-mortem](anvil/commands/post-mortem/COMMAND.md)       | Review a session to assess execution and extract improvements      |
 | [/wtp-pruning](anvil/commands/wtp-pruning/COMMAND.md)       | Classify wtp worktrees and flag the stale ones                     |
 | [/survey-architecture](anvil/commands/survey-architecture/COMMAND.md) | Rank structural problems in existing code with evidence  |
+| [/goodbye](anvil/commands/goodbye/COMMAND.md)               | Record where this session's work stands so it can be closed and resumed later |
 
 ### Skills
 
@@ -108,6 +109,7 @@ These are intended to be complementary to the Anvil builtin skills.
 | [visualizing-topics](skills/visualizing-topics/SKILL.md)           | Build interactive HTML visualizations with animation |
 | [post-mortem](skills/post-mortem/SKILL.md)                         | Review sessions to extract actionable improvements   |
 | [mining-corrections](skills/mining-corrections/SKILL.md)           | Mine past sessions for repeated corrections into a ledger |
+| [tracking-work](skills/tracking-work/SKILL.md)                     | Track initiatives through workflow phases, and keep session and worktree notes |
 
 ### Agents
 
