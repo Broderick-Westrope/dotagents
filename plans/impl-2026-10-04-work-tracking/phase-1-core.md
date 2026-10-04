@@ -231,7 +231,7 @@ time WIP_DIR=$(mktemp -d) python3 skills/tracking-work/scripts/wip.py   # real r
 
 **Steps:**
 
-1. [ ] Write `skills/tracking-work/SKILL.md`, under about 130 lines.
+1. [x] Write `skills/tracking-work/SKILL.md`, under about 130 lines.
 
    The frontmatter `description` should trigger on:
    - tracking or resuming work in progress ("what was I working on", "what's left on this branch", "resume X", "park this");
@@ -277,8 +277,8 @@ time WIP_DIR=$(mktemp -d) python3 skills/tracking-work/scripts/wip.py   # real r
      3. **Find initiatives.** From worktrees and code docs (with the enrolment offer for unfinished code work), from `wip which --session`, and, when code work was discussed without touching its worktrees, by listing active initiatives (those linking the topic first) and asking which ones the discussion changed.
      4. **Update each initiative.** Why, Decisions, Next, Open questions, Context and the branch sections touched; link the session, docs written and the topic if relevant; apply unrecorded phase events. Done when `wip show <slug>` reflects the session.
      5. **Report.** `wip show` for each initiative touched; list each file written and lines kept unconfirmed. Don't commit or push.
-2. [ ] Write `skills/tracking-work/references/body-template.md`: `## Why`, `## Decisions`, `## Next` (the first line is what the board shows), `## Open questions` (removed once decided), `## Context` (where things are, cross-branch gotchas), and `## Branches` with one example `### <branch>` section giving the worktree path, **Left** and **Gotchas**. `wip new` and `import-pins` write this file as the new body, so there's one copy of the template, and the board skips `<placeholder>` lines under Next.
-3. [ ] Write `anvil/commands/goodbye/COMMAND.md`. It loads the skill by name, not through `skills:` preload, because preload drops the skill's location (`anvil/internal/skills/format.go:11-26`) and `<skill-dir>` wouldn't resolve:
+2. [x] Write `skills/tracking-work/references/body-template.md`: `## Why`, `## Decisions`, `## Next` (the first line is what the board shows), `## Open questions` (removed once decided), `## Context` (where things are, cross-branch gotchas), and `## Branches` with one example `### <branch>` section giving the worktree path, **Left** and **Gotchas**. `wip new` and `import-pins` write this file as the new body, so there's one copy of the template, and the board skips `<placeholder>` lines under Next.
+3. [x] Write `anvil/commands/goodbye/COMMAND.md`. It loads the skill by name, not through `skills:` preload, because preload drops the skill's location (`anvil/internal/skills/format.go:11-26`) and `<skill-dir>` wouldn't resolve:
    ```markdown
    ---
    description: Record where this session's work stands so it can be closed and resumed later
@@ -291,7 +291,7 @@ time WIP_DIR=$(mktemp -d) python3 skills/tracking-work/scripts/wip.py   # real r
    ```
 
    It then runs **mining-corrections** in session mode (see the README's decision 8). That needs `extract.py --mined <session>=<time>` and a "Mined individually" line in the ledger, so a session mined by `/goodbye` doesn't move "Last mined" forward for bulk runs or get counted twice.
-4. [ ] Add README rows:
+4. [x] Add README rows:
    - `/goodbye`: "Record where this session's work stands so it can be closed and resumed later";
    - `tracking-work`: "Track code initiatives through workflow phases, with their handoff notes".
 
@@ -313,8 +313,8 @@ grep -rn "NOTES.local" skills anvil                 # no output
 
 **Steps:**
 
-1. [ ] In `finishing-a-development-branch`, fix the existing contradiction. Step 5 says "For Options 1, 2, 4", but the Quick Reference table and the common-mistakes section keep the worktree for Option 2 (PR). Change Step 5 to "For Options 1 and 4".
-2. [ ] In all three files, replace each direct worktree-removal instruction with: "Load **tracking-work** and follow its 'Worktree about to be removed' event; it saves the branch's notes into the initiative before removal and unlinks the worktree after." Keep each file's surrounding conditions (when to remove) unchanged.
+1. [x] In `finishing-a-development-branch`, fix the existing contradiction. Step 5 says "For Options 1, 2, 4", but the Quick Reference table and the common-mistakes section keep the worktree for Option 2 (PR). Change Step 5 to "For Options 1 and 4".
+2. [x] In all three files, replace each direct worktree-removal instruction with: "Load **tracking-work** and follow its 'Worktree about to be removed' event; it saves the branch's notes into the initiative before removal and unlinks the worktree after." Keep each file's surrounding conditions (when to remove) unchanged.
 
 **Verify:**
 ```bash
@@ -343,37 +343,37 @@ These scenarios check agent behaviour, so they're acceptance checks, not determi
 
 **Scenarios:**
 
-1. [ ] **Worktree.**
+1. [x] **Worktree.**
    - Steps: in `wt a`, edit a file and record `git status --porcelain`, touch a marker file, then run `/goodbye` and accept enrolment.
    - Expect: an initiative is created with `wt a` linked and a `### wt-a` section under `## Branches`; git status is unchanged; nothing is written inside the worktree.
    - Expect: `find "$S" ~/.agents ~/dev/topics -newer <marker> -type f` lists only sandbox files.
-2. [ ] **Repeat.**
+2. [x] **Repeat.**
    - Steps: hand-edit a line in the initiative body, add `## Mine`, then run `/goodbye` again.
    - Expect: both survive, and nothing is duplicated.
-3. [ ] **Multi-worktree.**
+3. [x] **Multi-worktree.**
    - Steps: start in `$S`, edit both worktrees, then run `/goodbye`.
    - Expect: one initiative linking both worktrees (asked, not assumed), with a branch section each; scenario 1's section is merged, not replaced.
-4. [ ] **Topic, discussion only.**
+4. [x] **Topic, discussion only.**
    - Steps: start in `~/dev/topics/wip-scratch`, discuss the initiative from scenario 1 and make a decision about it, edit the topic, then run `/goodbye`.
    - Expect: the topic is updated following its `AGENTS.md`; no enrolment offer and no initiative for the topic; the agent lists active initiatives, asks which the discussion changed, and updates only the one you pick.
-5. [ ] **Declined.**
+5. [x] **Declined.**
    - Steps: start in `wt-c` with a new edit, run `/goodbye`, and decline enrolment.
    - Expect: no initiative is created and no further prompts.
-6. [ ] **Research-only.**
+6. [x] **Research-only.**
    - Steps: start in `$S` with no edits, then run `/goodbye`.
    - Expect: "nothing to record", or one note with a reason. No error.
-7. [ ] **Privacy.**
+7. [x] **Privacy.**
    - Steps: say `SECRET_TOKEN=abc123` in `wt a`, then run `/goodbye`.
    - Expect: `grep -r abc123 "$S" ~/dev/topics/wip-scratch` finds nothing.
-8. [ ] **Resume.**
+8. [x] **Resume.**
    - Steps: quit, run `wip show <slug>`, and run both printed resume commands.
    - Expect: `--there` reopens in the session's original cwd, and the `cd` variant opens in the worktree.
    - Steps: in a fresh session in `wt a`, ask "what's left on this branch?".
    - Expect: it runs `wip which .` and answers from the `### wt-a` section.
-9. [ ] **Removal.**
+9. [x] **Removal.**
    - Steps: follow `finishing-a-development-branch` Option 1 for `wt-c` after linking it to an initiative.
    - Expect: anything useful from its branch section is folded into Decisions or Next and the section is gone; `wip show` no longer lists the worktree.
-10. [ ] **Teardown.**
+10. [x] **Teardown.**
     - `cp "$S/anvil.json.bak" ~/.config/anvil/anvil.json`;
     - remove the worktrees and `$S`;
     - `rm -rf ~/dev/topics/wip-scratch`.
@@ -412,11 +412,11 @@ Run with the plugin path in `~/.config/anvil/anvil.json` pointed at this worktre
 
 **Steps:**
 
-1. [ ] Add a "Work in progress" section to `~/dev/CLAUDE.md`, after "Worktrees for New Work":
+1. [x] Add a "Work in progress" section to `~/dev/CLAUDE.md`, after "Worktrees for New Work":
    - initiatives live in `~/.agents/initiatives/`, managed through the tracking-work skill;
    - when resuming in a worktree, find its initiative with the skill and read its branch section first;
    - `/goodbye` before closing a session.
-2. [ ] Tell the user they can add this alias to `~/.zshrc`. Don't edit the file:
+2. [x] Tell the user they can add this alias to `~/.zshrc`. Don't edit the file:
    ```
    alias wip='python3 ~/dev/helse/claude-essentials/skills/tracking-work/scripts/wip.py'
    ```
