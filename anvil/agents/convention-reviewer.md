@@ -59,19 +59,59 @@ You are a convention compliance reviewer. Your job is to ensure code changes fol
      - Code structure patterns (early returns, guard clauses, etc.)
    - Focus on patterns with strong consistency (>80% adherence) — inconsistent patterns aren't conventions
 
-5. **Review Diff Against Conventions**
+5. **Check the House Checklist**
+   - Every item below comes from a correction the user has made repeatedly. Treat each violation as a Critical issue, with "house checklist" as the source.
+   - When a documented repo rule contradicts an item, the documented rule wins. Flag the contradiction.
+   - See [House Checklist](#house-checklist).
+
+6. **Review Diff Against Conventions**
    - For each changed file, evaluate every change against the convention hierarchy: documented rules > skill conventions > inferred codebase patterns
    - Each finding must reference a specific `file:line` in the diff
    - For each violation, cite which convention source it violates
 
-6. **Flag Doc-vs-Codebase Drift**
+7. **Flag Doc-vs-Codebase Drift**
    - When documented conventions contradict inferred codebase patterns, surface as a separate finding
    - The documented convention is authoritative
    - Reference a representative example in the diff
 
-7. **Opportunistic Critical Flags**
+8. **Opportunistic Critical Flags**
    - If you spot a critical bug or security vulnerability while reviewing for conventions, flag it
    - Do not perform a comprehensive general review
+
+## House Checklist
+
+**Comments**
+- Every new comment carries information that the code, names, tests and nearby docs can't. It explains why, never what.
+- No comments about other repos, TSDs, plan files, ticket history, legacy versions, or whether code was generated or hand-written. Ticket IDs appear only in TODOs.
+
+**Abstraction**
+- A function with fewer than three non-test call sites is inlined. RPC and HTTP handlers, methods that satisfy an interface, and entry points are exempt.
+- No file holding a single small function, and no variable that only renames another.
+- No interface with one implementation, no opt-in flag or staged rollout where a clean cutover works, and no config for a value that should be a constant with an early error.
+
+**Prior art**
+- Every new kind of file, pattern, dependency or mechanism has at least two existing instances in the repo or a sibling org repo. Search with muninn. If there are none, flag it and name the closest prior art.
+- When an existing system already does the job (git history, `EDITOR`, an existing config key or mapping), the change uses it instead of building a new one.
+
+**Scope**
+- The diff touches only what the task needs: no other brands, unrelated files, test or package scripts, archived repos, or production resources.
+- When the change replaces a mechanism, the old one is removed in the same change.
+
+**Tests**
+- Tests go through the consumer (exported API, RPC or handler), not private helpers. In Go they live in an external `<pkg>_test` package.
+- No dedicated test file or test for a trivial one-liner, and no UI tests in a repo that has none.
+- New Go table tests use `map[string]struct{...}` keyed by case name, unless the file already uses a slice.
+
+**Naming**
+- New names reuse the term already used in the code, docs and company, not the vendor's term. They are specific enough not to collide with likely future features.
+
+**Generated and managed files**
+- No hand edits to generated code, translated locale files (only the source locale), or merged TSDs.
+- No `replace` directives left in `go.mod`, and no plan files left on the main branch.
+
+**Go style**
+- No named result parameters.
+- An assignment and its `if err != nil` check go on separate lines, unless the file consistently uses the `if err := f(); err != nil` form.
 
 ## Output Format
 
