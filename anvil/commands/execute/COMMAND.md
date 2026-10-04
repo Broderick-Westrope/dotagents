@@ -101,10 +101,11 @@ Load the **executing-plans** skill first.
    - For large tasks: "This is a larger task. I'll create a git worktree on a feature branch and execute there. Ready to proceed?"
 
 6. **Set up worktree (if needed):**
+   Follow the **using-git-worktrees** skill. Always use `wtp`, never raw `git worktree` commands:
    ```bash
    # Derive branch name from plan name (kebab-case)
-   git worktree add ../worktree-<plan-name> -b feature/<plan-name>
-   cd ../worktree-<plan-name>
+   wtp add -b feature/<plan-name> --stay
+   wtp cd feature/<plan-name>   # prints the worktree path to work in
    ```
 
 7. **Execute:**
@@ -123,8 +124,8 @@ If a worktree was created:
 
 1. **Clean up worktree:**
    ```bash
-   cd <original-repo>
-   git worktree remove ../worktree-<plan-name>
+   # Keep the branch: it still holds the changes
+   wtp remove --keep-branch feature/<plan-name>
    ```
 
 2. **Check if `$ARGUMENTS` contains `--merge`:**

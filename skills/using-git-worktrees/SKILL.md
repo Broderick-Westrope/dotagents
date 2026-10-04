@@ -9,98 +9,52 @@ description: "Sets up isolated git worktrees for feature development. Use when s
 
 Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.
 
-**Core principle:** Systematic directory selection + safety verification = reliable isolation.
+**Core principle:** Every worktree is managed by `wtp`. Never call `git worktree add` or `git worktree remove` directly, and never pick a worktree directory yourself. `wtp` owns the location, so humans and agents always find worktrees in the same place.
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
-## Directory Selection Process
-
-Follow this priority order:
-
-### 1. Check Existing Directories
-
-```bash
-# Check in priority order
-ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-ls -d worktrees 2>/dev/null      # Alternative
-```
-
-**If found:** Use that directory. If both exist, `.worktrees` wins.
-
-### 2. Check CLAUDE.md
-
-```bash
-grep -i "worktree.*director" CLAUDE.md 2>/dev/null
-```
-
-**If preference specified:** Use it without asking.
-
-### 3. Ask User
-
-If no directory exists and no CLAUDE.md preference:
-
-```
-No worktree directory found. Where should I create worktrees?
-
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/claude-code/worktrees/<project-name>/ (global location)
-
-Which would you prefer?
-```
-
-## Safety Verification
-
-### For Project-Local Directories (.worktrees or worktrees)
-
-**MUST verify directory is ignored before creating worktree:**
-
-```bash
-# Check if directory is ignored (respects local, global, and system gitignore)
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
-```
-
-**If NOT ignored:**
-
-Fix broken things immediately:
-1. Add appropriate line to .gitignore
-2. Commit the change
-3. Proceed with worktree creation
-
-**Why critical:** Prevents accidentally committing worktree contents to repository.
-
-### For Global Directory (~/.config/claude-code/worktrees)
-
-No .gitignore verification needed - outside project entirely.
-
 ## Creation Steps
 
-### 1. Detect Project Name
+### 1. Check for an Existing Worktree
 
 ```bash
-project=$(basename "$(git rev-parse --show-toplevel)")
+wtp list --no-sync
 ```
 
-### 2. Create Worktree
+If a worktree for the branch already exists, reuse it: `wtp cd <branch>` prints its path.
+
+### 2. Create the Worktree
+
+Run from anywhere inside the repository:
 
 ```bash
-# Determine full path
-case $LOCATION in
-  .worktrees|worktrees)
-    path="$LOCATION/$BRANCH_NAME"
-    ;;
-  ~/.config/claude-code/worktrees/*)
-    path="~/.config/claude-code/worktrees/$project/$BRANCH_NAME"
-    ;;
-esac
+# New branch from the current HEAD
+wtp add -b <branch-name> --stay
 
-# Create worktree with new branch
-git worktree add "$path" -b "$BRANCH_NAME"
-cd "$path"
+# New branch from a specific commit or branch
+wtp add -b <branch-name> --stay main
+
+# Existing local or remote branch
+wtp add <branch-name> --stay
 ```
+
+`--stay` stops `wtp` from trying to change the shell's directory, which agents can't use. `wtp` prints the new location. Get it at any time with:
+
+```bash
+path="$(wtp cd <branch-name>)"
+```
+
+Each bash call runs in a fresh shell, so pass `$path` as the working directory or use absolute paths rather than relying on `cd`. To run one command inside the worktree:
+
+```bash
+wtp exec <branch-name> -- <command> [args...]
+```
+
+Project-specific setup hooks live in the repository's `.wtp.yml` and run automatically on `wtp add`. Don't duplicate them.
 
 ### 3. Run Project Setup
 
-Auto-detect and run appropriate setup:
+If the repository has no `.wtp.yml` hooks, detect and run the appropriate setup in the worktree:
 
 ```bash
 # Node.js
@@ -119,7 +73,7 @@ if [ -f go.mod ]; then go mod download; fi
 
 ### 4. Verify Clean Baseline
 
-Run tests to ensure worktree starts clean:
+Run tests to make sure the worktree starts clean:
 
 ```bash
 # Examples - use project-appropriate command
@@ -141,52 +95,64 @@ Tests passing (<N> tests, 0 failures)
 Ready to implement <feature-name>
 ```
 
+## Removing Worktrees
+
+```bash
+wtp remove <branch-name>                 # Remove worktree and delete its (merged) branch
+wtp remove --keep-branch <branch-name>   # Remove worktree, keep the branch
+wtp remove --force-branch <branch-name>  # Also delete an unmerged branch
+```
+
+`wtp remove` deletes the branch by default. Pass `--keep-branch` whenever the branch still matters, such as an open PR. Only use `-f`/`--force` (dirty worktree) or `--force-branch` (unmerged branch) after the user confirms.
+
 ## Quick Reference
 
 | Situation | Action |
 |-----------|--------|
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md then ask the user |
-| Directory not ignored | Add to .gitignore + commit |
+| List worktrees | `wtp list --no-sync` |
+| New branch | `wtp add -b <branch> --stay` |
+| Existing branch | `wtp add <branch> --stay` |
+| Path to a worktree | `wtp cd <branch>` |
+| Path to the root worktree | `wtp cd @` |
+| Run a command in a worktree | `wtp exec <branch> -- <cmd>` |
+| Done, branch merged | `wtp remove <branch>` |
+| Done, branch still needed | `wtp remove --keep-branch <branch>` |
 | Tests fail during baseline | Report failures + ask |
-| No package.json/Cargo.toml | Skip dependency install |
 
 ## Common Mistakes
 
-### Skipping ignore verification
+### Using raw git worktree commands
 
-- **Problem:** Worktree contents get tracked, pollute git status
-- **Fix:** Always use `git check-ignore` before creating project-local worktree
+- **Problem:** Worktrees end up in ad-hoc directories (`.worktrees/`, `../worktree-x`) that humans and other agents can't find, and `.wtp.yml` hooks don't run
+- **Fix:** Always use `wtp add` and `wtp remove`
 
-### Assuming directory location
+### Deleting a branch that's still needed
 
-- **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
+- **Problem:** `wtp remove` deletes the branch by default
+- **Fix:** Use `--keep-branch` when the branch has an open PR or the user wants to keep it
+
+### Relying on `cd`
+
+- **Problem:** Each shell call is independent, so a `cd` into the worktree doesn't carry over
+- **Fix:** Use `wtp cd <branch>` to resolve the absolute path and pass it explicitly
 
 ### Proceeding with failing tests
 
 - **Problem:** Can't distinguish new bugs from pre-existing issues
 - **Fix:** Report failures, get explicit permission to proceed
 
-### Hardcoding setup commands
-
-- **Problem:** Breaks on projects using different tools
-- **Fix:** Auto-detect from project files (package.json, etc.)
-
 ## Example Workflow
 
 ```
 You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
-[Check .worktrees/ - exists]
-[Verify ignored - git check-ignore confirms .worktrees/ is ignored]
-[Create worktree: git worktree add .worktrees/auth -b feature/auth]
-[Run npm install]
-[Run npm test - 47 passing]
+[wtp list --no-sync - no worktree for feature/auth]
+[wtp add -b feature/auth --stay]
+[path=$(wtp cd feature/auth)]
+[Run npm install in $path]
+[Run npm test in $path - 47 passing]
 
-Worktree ready at /Users/dev/myproject/.worktrees/auth
+Worktree ready at <path>
 Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
@@ -194,16 +160,15 @@ Ready to implement auth feature
 ## Red Flags
 
 **Never:**
-- Create worktree without verifying it's ignored (project-local)
+- Run `git worktree add` or `git worktree remove` directly
+- Choose a worktree directory yourself
+- Force-remove a dirty worktree or unmerged branch without confirmation
 - Skip baseline test verification
 - Proceed with failing tests without asking
-- Assume directory location when ambiguous
-- Skip CLAUDE.md check
 
 **Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
-- Verify directory is ignored for project-local
-- Auto-detect and run project setup
+- Create and remove worktrees with `wtp`
+- Resolve paths with `wtp cd <branch>`
 - Verify clean test baseline
 
 ## Integration

@@ -67,9 +67,11 @@ Which option?
 
 #### Option 1: Merge Locally
 
+The base branch is checked out in the root worktree, so merge there rather than in the feature worktree:
+
 ```bash
-# Switch to base branch
-git checkout <base-branch>
+# Switch to the root worktree (the base branch)
+cd "$(wtp cd @)"
 
 # Pull latest
 git pull
@@ -79,12 +81,9 @@ git merge <feature-branch>
 
 # Verify tests on merged result
 <test command>
-
-# If tests pass
-git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+If tests pass, cleanup worktree (Step 5). `wtp remove` also deletes the merged branch.
 
 #### Option 2: Push and Create PR
 
@@ -103,7 +102,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+**Don't cleanup worktree.** The PR may need follow-up commits.
 
 #### Option 3: Keep As-Is
 
@@ -125,29 +124,29 @@ Type 'discard' to confirm.
 
 Wait for exact confirmation.
 
-If confirmed:
-```bash
-git checkout <base-branch>
-git branch -D <feature-branch>
-```
-
-Then: Cleanup worktree (Step 5)
+If confirmed, cleanup worktree (Step 5) with `--force-branch` so the unmerged branch is deleted too.
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options 1 and 4.** Always use `wtp`, never raw `git worktree` commands.
 
-Check if in worktree:
+Check if the branch has a worktree:
 ```bash
-git worktree list | grep $(git branch --show-current)
+wtp list --no-sync --quiet | grep -x <feature-branch>
 ```
 
-If yes:
+If yes, run from the root worktree (`wtp cd @`):
 ```bash
-git worktree remove <worktree-path>
+# Option 1: removes the worktree and deletes the merged branch
+wtp remove <feature-branch>
+
+# Option 4: also deletes the unmerged branch (add -f if the worktree is dirty)
+wtp remove --force-branch <feature-branch>
 ```
 
-**For Option 3:** Keep worktree.
+If there is no worktree, delete the branch directly: `git branch -d` (Option 1) or `git branch -D` (Option 4).
+
+**For Options 2 and 3:** Keep worktree.
 
 ## Quick Reference
 
