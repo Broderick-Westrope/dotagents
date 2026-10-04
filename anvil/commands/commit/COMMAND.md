@@ -26,7 +26,7 @@ Don't commit in the repository's root worktree (where `git rev-parse --git-dir` 
 3. **Preflight checks:**
    Run preflight checks on staged files before committing. Fix formatting/lint issues, re-stage fixed files by path.
 
-4. **Draft the message** following Conventional Commits (schema below):
+4. **Draft the message** in the style the repository's `git log` already uses. If it has no consistent style, use Conventional Commits (schema below):
    - Capture the *intent* of the change (Why was this done?), not just the syntax (What changed?)
    - Infer the **scope** from the directory name or module (e.g., `src/auth/login.ts` -> `auth`). Avoid file extensions in scopes
 
