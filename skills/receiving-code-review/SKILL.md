@@ -20,9 +20,11 @@ WHEN receiving code review feedback:
 2. UNDERSTAND: Restate requirement in own words (or ask)
 3. VERIFY: Check against codebase reality
 4. EVALUATE: Technically sound for THIS codebase?
-5. RESPOND: Technical acknowledgment or reasoned pushback
+5. RESPOND: Technical acknowledgment or reasoned pushback, to the user in chat
 6. IMPLEMENT: One item at a time, test each
 ```
+
+Everything in this skill is said to the user, never posted. The user owns the conversation with reviewers. See [Replying to Reviewers](#replying-to-reviewers).
 
 ## Forbidden Responses
 
@@ -192,9 +194,18 @@ You understand 1,2,3,6. Unclear on 4,5.
 "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
 ```
 
-## GitHub Thread Replies
+## Replying to Reviewers
 
-When replying to inline review comments on GitHub, reply in the comment thread (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment.
+Never post on the user's behalf: no PR comments, thread replies, reviews, resolved threads, Linear comments or Slack messages. A request to address feedback, a shared link, or approval of a fix is not permission to post. Posting can also trigger side effects such as Atlantis re-plans.
+
+When a reviewer needs an answer, draft it in chat for the user to post:
+
+```
+Reply to @alice on api/handler.go:42:
+> Kept the nil check. The upstream client returns nil on 404, see client.go:88.
+```
+
+Group drafts by thread, quote each one in full so it can be copied as-is, and say which threads need no reply.
 
 ## The Bottom Line
 
