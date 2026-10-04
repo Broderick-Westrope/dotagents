@@ -143,8 +143,6 @@ When the user is still figuring out what to build, help them converge on a direc
 
 Format the shared understanding into this structure and save to `plans/design-YYYY-MM-DD-<topic>.md` (user preferences for spec location override this default). Commit the spec file to git.
 
-If the **tracking-work** skill is available, load it and apply the "Design doc written" row of its Events table.
-
 ```markdown
 # [Topic] Design Spec
 
@@ -182,6 +180,8 @@ After the design review passes, ask the user to review the written spec:
 > "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we move to planning."
 
 Wait for the user's response. If they request changes, make them and re-run the design review. Only proceed once the user approves.
+
+Once the user approves, if the **tracking-work** skill is available, load it and apply the "Design doc written" row of its Events table.
 
 **Invoke writing-plans:**
 
