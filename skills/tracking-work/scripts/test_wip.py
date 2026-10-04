@@ -16,8 +16,16 @@ REAL_GIT = shutil.which("git")
 TODAY = datetime.date.today().isoformat()
 OLD = (datetime.date.today() - datetime.timedelta(days=40)).isoformat()
 FAKE_GH = """#!/bin/sh
+if [ "$1" = auth ]; then
+  case "$2" in
+    status) [ -n "${FAKE_GH_ACCOUNTS:-}" ] || exit 1; printf '%s\\n' "$FAKE_GH_ACCOUNTS"; exit 0;;
+    token) printf 'tok-%s\\n' "$4"; exit 0;;
+  esac
+fi
 url="$3"
 n="${url##*/}"
+eval "need=\\${FAKE_GH_TOKEN_$n:-}"
+if [ -n "$need" ] && [ "${GH_TOKEN:-}" != "$need" ]; then echo "Could not resolve to a Repository" >&2; exit 1; fi
 eval "out=\\${FAKE_GH_$n:-}"
 if [ -z "$out" ]; then echo "no fixture for $url" >&2; exit 1; fi
 printf '%s\\n' "$out"
@@ -370,6 +378,26 @@ class TestSync(WipTest):
         link = self.read("sy")[0]["links"][0]
         self.assertIsNone(link["error"])
         self.assertNotEqual(link["observed"], observed)
+
+    def test_retries_with_other_gh_accounts(self):
+        accounts = json.dumps({"hosts": {"github.com": [
+            {"login": "me", "active": True, "state": "success"},
+            {"login": "work", "active": False, "state": "success"},
+        ]}})
+        env = {"FAKE_GH_1": GH["open"], "FAKE_GH_2": GH["draft"], "FAKE_GH_TOKEN_1": "tok-work"}
+        cases = {
+            "one account": ({}, {pr(1): ("unknown", "Could not resolve to a Repository"), pr(2): ("draft", None)}),
+            "work account too": ({"FAKE_GH_ACCOUNTS": accounts}, {pr(1): ("open", None), pr(2): ("draft", None)}),
+        }
+        for name, (extra, expected) in cases.items():
+            with self.subTest(name):
+                self.write("sy", phase="implementing", links=[self.pr_link(1), self.pr_link(2)])
+                r = self.wip("sync", "sy", env={**env, **extra})
+                links = {link["ref"]: (link["state"], link["error"]) for link in self.read("sy")[0]["links"]}
+                self.assertEqual(links, expected)
+                self.assertNotIn("tok-work", r.stdout + r.stderr)
+                with open(self.path("sy")) as f:
+                    self.assertNotIn("tok-work", f.read())
 
     def test_sync_all_skips_initiatives_without_prs(self):
         self.write("plain")
