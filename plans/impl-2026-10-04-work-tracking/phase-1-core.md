@@ -90,12 +90,14 @@ Schema rules:
 
 1. If the command needs network, such as `sync` calling `gh`, do that first, outside the lock.
 2. Take `fcntl.flock(LOCK_EX)` on `<WIP_DIR>/.lock`, with a 5 s timeout. The lock is released automatically if the process dies.
-3. Read the file and record a SHA-256 of its full contents.
-4. Apply the change to the parsed metadata, recomputing derived phases from the observations fetched in step 1.
-5. Just before writing, re-hash the file. If it changed (for example, an agent edited the body), go back to step 3, up to 3 times, then exit 1.
-6. Write to a temp file in `WIP_DIR` and `os.replace` it into place.
+3. Make sure `WIP_DIR` is a git repo of its own: `git init` it if it isn't in one, add a `.gitignore` for `.lock` and temp files if missing, and exit 1 if it sits inside another repo. Then commit any uncommitted changes in `WIP_DIR` as "record edits made outside wip", so the history separates hand and agent edits from the script's.
+4. Read the file and record a SHA-256 of its full contents.
+5. Apply the change to the parsed metadata, recomputing derived phases from the observations fetched in step 1.
+6. Just before writing, re-hash the file. If it changed (for example, an agent edited the body), commit that edit as in step 3 and go back to step 4, up to 3 times, then exit 1.
+7. Write to a temp file in `WIP_DIR` and `os.replace` it into place.
+8. Commit only the files written, with the message `wip <arguments>` (shell-quoted). If nothing was written, there's no commit. If the commit fails, exit 1 with a message naming the files written; the next change commits them as outside edits.
 
-Agents still edit the body with their edit tool, outside the lock. Step 5 means a script write never clobbers one of those edits.
+Agents still edit the body with their edit tool, outside the lock. Step 6 means a script write never clobbers one of those edits, and steps 3 and 6 mean their edits are committed separately from the script's. The script never pushes.
 
 **Commands.** Exit 0 on success. Usage errors and rule violations exit 1 with a one-line message. Catch at `main`; never print tracebacks.
 
@@ -203,7 +205,13 @@ The board never calls `gh`.
 8. Concurrency:
    - 8 parallel `link` calls with different refs all land;
    - a lock-holder process killed with SIGKILL doesn't block the next call;
-   - a body edit made between read and write triggers the retry and is preserved.
+   - a body edit made between read and write triggers the retry and is preserved, committed on its own before the script's commit.
+9. History:
+   - the first `new` initialises the repo, and `.lock` stays untracked;
+   - outside edits to several files land in one commit before the script's, and the script's commit contains only its change;
+   - a no-op `link`, `which` and the board add no commit;
+   - a failing commit hook exits 1 naming the file written, and the next change commits it as an outside edit;
+   - a `WIP_DIR` inside another repo exits 1 and leaves that repo untouched.
 
 **Verify:**
 ```bash

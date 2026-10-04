@@ -14,6 +14,7 @@ import json
 import os
 import pathlib
 import re
+import shlex
 import signal
 import sqlite3
 import subprocess
@@ -29,6 +30,9 @@ WIP_WORKTREES_ROOT = os.path.realpath(
 )
 ANVIL_DB = os.path.realpath(os.path.expanduser(os.environ.get("ANVIL_DB") or "~/.local/share/anvil/anvil.db"))
 WIP_GH = os.environ.get("WIP_GH") or "gh"
+COMMIT_MESSAGE = "wip " + shlex.join(sys.argv[1:])
+OUTSIDE_MESSAGE = "record edits made outside wip"
+GITIGNORE = ".lock\n.*.tmp\n"
 
 PHASES = ["idea", "spec", "planning", "implementing", "review", "done", "parked"]
 ACTIVE_PHASES = {"idea", "spec", "planning", "implementing", "review"}
@@ -62,6 +66,7 @@ LOCK_TIMEOUT = 5
 WRITE_ATTEMPTS = 3
 GH_TIMEOUT = 10
 GIT_TIMEOUT = 3
+COMMIT_TIMEOUT = 30
 BOARD_DEADLINE = 20
 WORKERS = 8
 DONE_HIDDEN_AFTER_DAYS = 14
@@ -170,6 +175,20 @@ def write_atomic(path, data):
         raise
 
 
+def repo_git(*args):
+    p = subprocess.run(["git", "-C", WIP_DIR, *args], capture_output=True, text=True, timeout=COMMIT_TIMEOUT)
+    if p.returncode:
+        detail = (p.stderr.strip().splitlines() or [f"exit {p.returncode}"])[-1]
+        raise WipError(f"git {args[0]} failed in {WIP_DIR}: {detail}")
+    return p.stdout
+
+
+def commit(message, *paths):
+    if repo_git("status", "--porcelain", "--", *paths).strip():
+        repo_git("add", "-A", "--", *paths)
+        repo_git("commit", "-q", "-m", message, "--", *paths)
+
+
 @contextlib.contextmanager
 def locked():
     os.makedirs(WIP_DIR, exist_ok=True)
@@ -184,14 +203,33 @@ def locked():
                 if time.monotonic() > deadline:
                     raise WipError(f"timed out after {LOCK_TIMEOUT}s waiting for {WIP_DIR}/.lock") from None
                 time.sleep(0.05)
-        yield
+        top = git(WIP_DIR, "rev-parse", "--show-toplevel", timeout=COMMIT_TIMEOUT)
+        if top is None:
+            repo_git("init", "-q")
+        elif os.path.realpath(top.strip()) != WIP_DIR:
+            raise WipError(f"{WIP_DIR} is inside the git repo {top.strip()}; make it a repo of its own")
+        ignore = os.path.join(WIP_DIR, ".gitignore")
+        if not os.path.exists(ignore):
+            with open(ignore, "w") as f:
+                f.write(GITIGNORE)
+        commit(OUTSIDE_MESSAGE, WIP_DIR)
+        written = []
+        try:
+            yield written
+        finally:
+            if written:
+                try:
+                    commit(COMMIT_MESSAGE, *written)
+                except WipError as e:
+                    names = ", ".join(os.path.basename(p) for p in written)
+                    raise WipError(f"wrote {names} but could not commit ({e}); the next wip change records it as an outside edit") from None
     finally:
         os.close(fd)
 
 
 def mutate(slug, change):
     path = slug_path(slug)
-    with locked():
+    with locked() as written:
         for _ in range(WRITE_ATTEMPTS):
             raw, meta, body = load(path)
             if change(meta) is False:
@@ -199,8 +237,10 @@ def mutate(slug, change):
             check(meta, path)
             with open(path, "rb") as f:
                 if hashlib.sha256(f.read()).digest() != hashlib.sha256(raw).digest():
+                    commit(OUTSIDE_MESSAGE, WIP_DIR)
                     continue
             write_atomic(path, render(meta, body))
+            written.append(path)
             return meta
     raise WipError(f"{path} kept changing during the write; try again")
 
@@ -255,10 +295,11 @@ def cmd_new(args):
         "links": [],
     }
     check(meta, path)
-    with locked():
+    with locked() as written:
         if os.path.exists(path):
             raise WipError(f"{path} already exists")
         write_atomic(path, render(meta, b"\n" + pathlib.Path(BODY_TEMPLATE).read_bytes()))
+        written.append(path)
     print(path)
 
 
@@ -482,7 +523,7 @@ def cmd_import_pins(args):
     for sid in args.apply:
         if sid not in proposals and sid not in linked:
             raise WipError(f"{sid} is not a pinned root session in {ANVIL_DB}")
-    with locked():
+    with locked() as written:
         for sid in dict.fromkeys(args.apply):
             if sid in linked:
                 print(f"skip {sid}: already linked to {linked[sid]}")
@@ -503,6 +544,7 @@ def cmd_import_pins(args):
             }
             check(meta, path)
             write_atomic(path, render(meta, b"\n" + pathlib.Path(BODY_TEMPLATE).read_bytes()))
+            written.append(path)
             print(f"{slug}: created from {sid}")
 
 

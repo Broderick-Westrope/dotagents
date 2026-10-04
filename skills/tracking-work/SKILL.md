@@ -32,6 +32,7 @@ python3 "<skill-dir>/scripts/wip.py" <command>
 ## Rules
 
 - Change metadata only through the script. Never edit the JSON block by hand. Edit the body with your edit tool.
+- `~/.agents/initiatives` is a git repo that the script commits to. Don't commit there yourself. Every `wip` change first commits pending edits as "record edits made outside wip", then commits its own change, so edit the body before running the `wip` commands for that step. Never push it.
 - `review` and `done` come from `wip sync` when the initiative has PRs. If the script rejects a phase change, report its message; don't work around it.
 - Parking needs a real reason. "More time" is fine.
 - Ask the user before parking or reopening an initiative.
@@ -88,5 +89,5 @@ Find the initiative first (see Rules). Then:
    - apply any phase event that happened this session and wasn't recorded.
 
    Done when `wip show <slug>` reflects the session.
-5. **Report.** Run `wip show <slug>` for each initiative touched. List each file written and any lines kept unconfirmed. Don't commit or push.
+5. **Report.** Run `wip show <slug>` for each initiative touched. List each file written and any lines kept unconfirmed. Don't commit or push anything yourself; `wip` has already committed the initiatives.
    Done when the user can see every path and the resume commands.

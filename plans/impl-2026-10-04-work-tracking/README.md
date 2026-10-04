@@ -63,6 +63,10 @@ Handoffs at the end of a session are written by hand, if at all.
    - A one-off `wip import-pins` turns the pins the user picks into parked initiatives, using the pin note as the reason.
    - Pins stay an Anvil UI feature.
 6. **Script first, command later.** `wip` with no arguments prints the board. A `/wip` command is added only if the user keeps asking an agent the same follow-up questions about the board.
+7. **The initiatives folder is a git repo, and the script commits.**
+   - Each change is bracketed: pending edits are committed first as "record edits made outside wip", then the script's own write as `wip <arguments>`.
+   - This keeps hand and agent edits from being lost by accident, and the history shows which changes the script made.
+   - The script creates the repo on first use, never pushes, and refuses a folder that sits inside another repo.
 
 **Out of scope:**
 

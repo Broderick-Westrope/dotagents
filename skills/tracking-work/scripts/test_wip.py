@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 import shutil
+import shlex
 import signal
 import sqlite3
 import subprocess
@@ -85,6 +86,9 @@ class WipTest(unittest.TestCase):
         return subprocess.run(
             [REAL_GIT, *args], cwd=cwd, env=self.env, check=True, capture_output=True, text=True
         ).stdout
+
+    def log(self):
+        return self.git("log", "--format=%s", cwd=self.dirs["wip"]).splitlines()
 
     def repo(self, path):
         os.makedirs(path)
@@ -621,13 +625,13 @@ class TestImportPins(WipTest):
 
     def test_apply_one_then_rerun(self):
         self.wip("import-pins", "--apply", "s1")
-        self.assertEqual(sorted(os.listdir(self.dirs["wip"])), [".lock", "caf-rollout.md"])
+        self.assertEqual(sorted(n for n in os.listdir(self.dirs["wip"]) if n.endswith(".md")), ["caf-rollout.md"])
         meta, _ = self.read("caf-rollout")
         self.assertEqual((meta["phase"], meta["reason"]), ("parked", "check metrics tomorrow"))
         self.assertEqual(meta["links"], [{"kind": "session", "ref": "s1", "cwd": self.dirs["work"]}])
         out = self.wip("import-pins", "--apply", "s1").stdout
         self.assertIn("skip s1", out)
-        self.assertEqual(sorted(os.listdir(self.dirs["wip"])), [".lock", "caf-rollout.md"])
+        self.assertEqual(sorted(n for n in os.listdir(self.dirs["wip"]) if n.endswith(".md")), ["caf-rollout.md"])
         out = self.wip("import-pins").stdout
         self.assertNotIn("s1", out)
         self.assertIn("id: s2", out)
@@ -701,7 +705,7 @@ class TestConcurrency(WipTest):
         with open(fake, "w") as f:
             f.write(
                 "#!/bin/sh\n"
-                f"if [ ! -e '{marker}' ]; then touch '{marker}'; printf 'agent edit\\n' >> '{self.path('cc')}'; fi\n"
+                f"if [ ! -e '{marker}' ]; then case \"$*\" in *--git-common-dir*) touch '{marker}'; printf 'agent edit\\n' >> '{self.path('cc')}';; esac; fi\n"
                 f'exec "{REAL_GIT}" "$@"\n'
             )
         os.chmod(fake, 0o755)
@@ -710,6 +714,65 @@ class TestConcurrency(WipTest):
         meta, body = self.read("cc")
         self.assertTrue(body.endswith(b"agent edit\n"))
         self.assertEqual(meta["links"], [{"kind": "worktree", "ref": wt}])
+        self.assertEqual(self.log()[:2], ["wip link cc worktree " + shlex.quote(wt), "record edits made outside wip"])
+        self.assertIn("+agent edit", self.git("show", "HEAD~1", cwd=self.dirs["wip"]))
+        self.assertNotIn("agent edit", self.git("show", "HEAD", cwd=self.dirs["wip"]))
+
+
+class TestHistory(WipTest):
+    def test_new_starts_a_repo_and_commits(self):
+        self.wip("new", "alpha", "--title", "Alpha work")
+        self.assertEqual(self.log(), ["wip new alpha --title 'Alpha work'", "record edits made outside wip"])
+        self.assertEqual(self.git("ls-files", cwd=self.dirs["wip"]).split(), [".gitignore", "alpha.md"])
+        self.assertEqual(self.git("status", "--porcelain", cwd=self.dirs["wip"]), "")
+
+    def test_outside_edits_are_committed_before_the_change(self):
+        self.wip("new", "alpha", "--title", "Alpha")
+        with open(self.path("alpha"), "ab") as f:
+            f.write(b"hand edit\n")
+        self.write("beta")
+        doc = self.doc()
+        self.wip("link", "alpha", "doc", doc)
+        self.assertEqual(self.log()[:2], ["wip link alpha doc " + shlex.quote(doc), "record edits made outside wip"])
+        outside = self.git("show", "--stat", "--format=", "HEAD~1", cwd=self.dirs["wip"])
+        self.assertIn("alpha.md", outside)
+        self.assertIn("beta.md", outside)
+        change = self.git("show", "--format=", "HEAD", cwd=self.dirs["wip"])
+        self.assertIn(doc, change)
+        self.assertNotIn("hand edit", change)
+
+    def test_no_op_change_adds_no_commit(self):
+        self.wip("new", "alpha", "--title", "Alpha")
+        doc = self.doc()
+        self.wip("link", "alpha", "doc", doc)
+        before = self.log()
+        self.wip("link", "alpha", "doc", doc)
+        self.wip("which", doc)
+        self.wip()
+        self.assertEqual(self.log(), before)
+
+    def test_failed_commit_is_reported_and_recovered(self):
+        self.wip("new", "alpha", "--title", "Alpha")
+        hook = os.path.join(self.dirs["wip"], ".git", "hooks", "pre-commit")
+        with open(hook, "w") as f:
+            f.write("#!/bin/sh\necho blocked by hook >&2\nexit 1\n")
+        os.chmod(hook, 0o755)
+        r = self.wip("phase", "alpha", "implementing", ok=False)
+        self.assertIn("wrote alpha.md but could not commit", r.stderr)
+        self.assertIn("blocked by hook", r.stderr)
+        self.assertEqual(self.read("alpha")[0]["phase"], "implementing")
+        os.remove(hook)
+        self.wip("phase", "alpha", "spec", "--doc", self.doc())
+        self.assertEqual(self.log()[:2][1], "record edits made outside wip")
+        self.assertIn('"phase": "implementing"', self.git("show", "HEAD~1", cwd=self.dirs["wip"]))
+
+    def test_dir_inside_another_repo_is_rejected(self):
+        outer = self.repo(os.path.join(self.dirs["work"], "outer"))
+        inner = os.path.join(outer, "initiatives")
+        r = self.wip("new", "alpha", "--title", "Alpha", ok=False, env={"WIP_DIR": inner})
+        self.assertIn("make it a repo of its own", r.stderr)
+        self.assertFalse(os.path.exists(os.path.join(inner, "alpha.md")))
+        self.assertEqual(self.git("log", "--format=%s", cwd=outer).split("\n")[0], "init")
 
 
 if __name__ == "__main__":
