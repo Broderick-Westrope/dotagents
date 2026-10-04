@@ -69,7 +69,7 @@ Handoffs at the end of a session are written by hand, if at all.
    - The script creates the repo on first use, never pushes, and refuses a folder that sits inside another repo.
 8. **`/goodbye` also mines the session for corrections.**
    - After recording the work, it runs `mining-corrections` in session mode and adds the proposals to its report, unapplied.
-   - Session mode records `<session> at <time>` under "Mined individually" in the ledger instead of moving "Last mined", and both modes pass those entries to `extract.py --mined`, so no turn is counted twice and bulk runs still cover every other session.
+   - Session mode records `<session> at <time>` under "Mined individually" in the ledger instead of moving "Last mined", and both modes pass "Last mined" as `--since` and those entries to `extract.py --mined`, so no turn is counted twice and bulk runs still cover every other session.
 
 **Out of scope:**
 

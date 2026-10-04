@@ -314,7 +314,7 @@ grep -rn "NOTES.local" skills anvil                 # no output
 **Steps:**
 
 1. [x] In `finishing-a-development-branch`, fix the existing contradiction. Step 5 says "For Options 1, 2, 4", but the Quick Reference table and the common-mistakes section keep the worktree for Option 2 (PR). Change Step 5 to "For Options 1 and 4".
-2. [x] In all three files, replace each direct worktree-removal instruction with: "Load **tracking-work** and follow its 'Worktree about to be removed' event; it saves the branch's notes into the initiative before removal and unlinks the worktree after." Keep each file's surrounding conditions (when to remove) unchanged.
+2. [x] In all three files, replace each direct worktree-removal instruction with: "Load **tracking-work** and follow its 'Worktree about to be removed' event; it folds what's still useful from the branch's notes into the initiative before removal, drops the rest, and unlinks the worktree after." Keep each file's surrounding conditions (when to remove) unchanged.
 
 **Verify:**
 ```bash

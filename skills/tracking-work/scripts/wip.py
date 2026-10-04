@@ -191,7 +191,7 @@ def commit(message, *paths):
 
 
 @contextlib.contextmanager
-def locked():
+def locked(message=COMMIT_MESSAGE):
     os.makedirs(WIP_DIR, exist_ok=True)
     fd = os.open(os.path.join(WIP_DIR, ".lock"), os.O_CREAT | os.O_RDWR, 0o644)
     try:
@@ -211,8 +211,7 @@ def locked():
             raise WipError(f"{WIP_DIR} is inside the git repo {top.strip()}; make it a repo of its own")
         ignore = os.path.join(WIP_DIR, ".gitignore")
         if not os.path.exists(ignore):
-            with open(ignore, "w") as f:
-                f.write(GITIGNORE)
+            write_atomic(ignore, GITIGNORE.encode())
         commit(OUTSIDE_MESSAGE, WIP_DIR)
         written = []
         try:
@@ -220,17 +219,17 @@ def locked():
         finally:
             if written:
                 try:
-                    commit(COMMIT_MESSAGE, *written)
-                except WipError as e:
+                    commit(message, *written)
+                except (WipError, subprocess.TimeoutExpired) as e:
                     names = ", ".join(os.path.basename(p) for p in written)
                     raise WipError(f"wrote {names} but could not commit ({e}); the next wip change records it as an outside edit") from None
     finally:
         os.close(fd)
 
 
-def mutate(slug, change):
+def mutate(slug, change, message=COMMIT_MESSAGE):
     path = slug_path(slug)
-    with locked() as written:
+    with locked(message) as written:
         for _ in range(WRITE_ATTEMPTS):
             raw, meta, body = load(path)
             if change(meta) is False:
@@ -460,7 +459,7 @@ def cmd_sync(args):
             alternates = []
 
     def fetch(url):
-        error = None
+        errors = []
         for token in [None, *alternates]:
             try:
                 r = subprocess.run(
@@ -476,9 +475,11 @@ def cmd_sync(args):
                 return None, f"cannot run {WIP_GH}: {e.strerror}"
             if r.returncode == 0:
                 break
-            error = error or (r.stderr.strip().splitlines() or [f"gh exited {r.returncode}"])[-1]
+            error = (r.stderr.strip().splitlines() or [f"gh exited {r.returncode}"])[-1]
+            if error not in errors:
+                errors.append(error)
         else:
-            return None, error
+            return None, "; ".join(errors)
         try:
             data = json.loads(r.stdout)
             state = {"MERGED": "merged", "CLOSED": "closed"}.get(data["state"])
@@ -521,7 +522,7 @@ def cmd_sync(args):
             if target and target != phase:
                 meta.update(phase=target, phase_source="sync", since=today(), reason=None, parked_from=None)
 
-        after = mutate(slug, change)
+        after = mutate(slug, change, f"wip sync {slug}")
         prs = ", ".join(
             f"{link['ref']} {link['state']}" + (f" (error: {link['error']})" if link["error"] else "")
             for link in after["links"]

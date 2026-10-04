@@ -400,6 +400,12 @@ class TestSync(WipTest):
                 with open(self.path("sy")) as f:
                     self.assertNotIn("tok-work", f.read())
 
+    def test_sync_all_commits_each_initiative_by_name(self):
+        for slug in ("one", "two"):
+            self.write(slug, phase="implementing", links=[self.pr_link(1)])
+        self.wip("sync", env={"FAKE_GH_1": GH["open"]})
+        self.assertEqual(self.log()[:2], ["wip sync two", "wip sync one"])
+
     def test_sync_all_skips_initiatives_without_prs(self):
         self.write("plain")
         before = self.read("plain")
