@@ -9,7 +9,7 @@ description: Executes implementation plans with smart task grouping. Groups rela
 
 ## 1. Setup
 
-**Create a branch** for the work unless trivial. Consider git worktrees for isolated environments, always managed with `wtp` rather than raw `git worktree` commands. For worktree setup, see **using-git-worktrees**.
+**Work in a linked worktree on a feature branch.** Load the **using-git-worktrees** skill and follow it to find or create one.
 
 **Clarify ambiguity upfront:** If the plan has unclear requirements or meaningful tradeoffs, ask the user before starting. Present options with descriptions explaining the tradeoffs. Use `multiSelect: true` for independent features that can be combined; use single-select for mutually exclusive choices. Don't guess when the user can clarify in 10 seconds.
 
@@ -146,9 +146,6 @@ If the code review in step 4 produces fixes, commit those as separate commits (e
 ## 6. Cleanup
 
 After committing:
-- Merge branch to main (if using branches)
-- Remove worktree (if using worktrees)
-- Mark plan file as COMPLETED
-- Move to `./plans/done/` if applicable
-
-For structured branch completion with merge/PR/cleanup options, see **finishing-a-development-branch**.
+- Mark the plan file as COMPLETED
+- Move it to `./plans/completed/` if the repository has one, and commit the move
+- Leave the branch and worktree in place. To merge, open a PR or clean up, the user can invoke the **finishing-a-development-branch** skill.

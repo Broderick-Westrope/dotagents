@@ -75,68 +75,25 @@ Load the **executing-plans** skill first.
    - During execution, after completing each task group, run its scaffolded tests. If tests fail, the task group is not done — fix until green.
    - The `## 4. Verify` step in the executing-plans skill still applies (automated tests, manual verification, DX quality, code review), but scaffolded tests are the first gate.
 
-3. **Assess plan size and decide on worktree:**
-
-   **Large tasks (use worktree):**
-   - Multiple phases or task groups
-   - 5+ individual tasks
-   - Touches 3+ subsystems/directories
-   - Estimated significant refactoring or new features
-
-   **Small tasks (no worktree needed):**
-   - Single phase with few tasks
-   - Fewer than 5 tasks total
-   - Localized changes to 1-2 areas
-   - Bug fixes or minor enhancements
-
-   If unsure, default to using a worktree for safety.
-
-4. **Ask clarifying questions if needed:**
+3. **Ask clarifying questions if needed:**
    - Ambiguous requirements
    - Missing context that can't be inferred
    - Unclear dependencies or ordering
 
-5. **Confirm execution:**
-   - For small tasks: "Ready to execute this plan? This will run tasks autonomously and commit changes as each task completes."
-   - For large tasks: "This is a larger task. I'll create a git worktree on a feature branch and execute there. Ready to proceed?"
+4. **Set up a worktree:**
+   Load the **using-git-worktrees** skill and follow it. If you're already in a linked worktree for this plan, work there. Otherwise create one on a branch named after the plan, e.g. `feat/<plan-name>`.
 
-6. **Set up worktree (if needed):**
-   Follow the **using-git-worktrees** skill. Always use `wtp`, never raw `git worktree` commands:
-   ```bash
-   # Derive branch name from plan name (kebab-case)
-   wtp add -b feature/<plan-name> --stay
-   wtp cd feature/<plan-name>   # prints the worktree path to work in
-   ```
-
-7. **Execute:**
+5. **Execute:**
    Follow the **executing-plans** skill workflow - it handles:
    - Dependency analysis and wave computation
    - Parallel task execution
    - Auto-recovery from errors
    - Progress tracking and status updates
    - Final verification and code review
-   - Archiving completed plan to `done/` folder
+   - Archiving completed plan to `plans/completed/`
    - Completion summary
 
 ### Post-Execution:
 
-If a worktree was created:
-
-1. **Clean up worktree:**
-   ```bash
-   # Keep the branch: it still holds the changes
-   wtp remove --keep-branch feature/<plan-name>
-   ```
-
-2. **Check if `$ARGUMENTS` contains `--merge`:**
-
-   - **Without `--merge` (default):**
-     - **Notify user:** "Plan complete. Changes are on branch `feature/<plan-name>`. You can merge locally, create a PR, or review the changes first."
-
-   - **With `--merge`:**
-     - **Merge branch:**
-       ```bash
-       git merge feature/<plan-name> --no-ff -m "Merge feature/<plan-name>: <plan-summary>"
-       git branch -d feature/<plan-name>
-       ```
-     - **Notify user:** "Plan complete. Changes merged to main."
+- **Without `--merge` (default):** report that the plan is complete and which branch and worktree hold the changes. Leave the worktree in place.
+- **With `--merge`:** load the **finishing-a-development-branch** skill and follow its "Merge locally" option. The `--merge` flag is the user's choice of that option, so don't ask again.
