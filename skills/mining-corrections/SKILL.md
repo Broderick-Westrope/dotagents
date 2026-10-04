@@ -18,10 +18,10 @@ Read "Last mined" from the ledger and use it as `--since`. With no ledger, mine 
 
 ```bash
 python3 <skill-dir>/scripts/extract.py --since 2026-09-01 --out /tmp/corrections
-python3 <skill-dir>/scripts/extract.py --latest --all-turns --out /tmp/corrections
+python3 <skill-dir>/scripts/extract.py --current --all-turns --out /tmp/corrections
 ```
 
-Session mode uses `--latest` (the most recently active session, which is wrong if other sessions are running in parallel) or `--session <id>`, plus `--all-turns`, because one session is small enough to read unfiltered. The script prints the chunk count. Done when every chunk file exists.
+Session mode uses `--current` (reads `$ANVIL_ROOT_SESSION_ID`, which Anvil's bash tool sets to the top-level session even inside subagents) or `--session <id>`, plus `--all-turns`, because one session is small enough to read unfiltered. The script prints the chunk count. Done when every chunk file exists.
 
 ## 2. Classify
 

@@ -58,11 +58,15 @@ def main():
     ap.add_argument("--db", default=DEFAULT_DB)
     ap.add_argument("--since", help="ISO date, e.g. 2026-09-01")
     ap.add_argument("--session", help="only this root session id")
-    ap.add_argument("--latest", action="store_true", help="only the most recently updated root session")
+    ap.add_argument("--current", action="store_true", help="only the session this command runs in ($ANVIL_ROOT_SESSION_ID)")
     ap.add_argument("--out", default="/tmp/corrections")
     ap.add_argument("--chunks", type=int, default=0, help="0 = auto, ~150KB per chunk")
     ap.add_argument("--all-turns", action="store_true", help="skip the keyword filter")
     args = ap.parse_args()
+    if args.current:
+        args.session = os.environ.get("ANVIL_ROOT_SESSION_ID")
+        if not args.session:
+            ap.error("--current needs ANVIL_ROOT_SESSION_ID; run from Anvil's bash tool or pass --session")
 
     db = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
     query = "select id, title, working_dir from sessions where parent_session_id is null"
@@ -70,8 +74,6 @@ def main():
     if args.session:
         query += " and id = ?"
         params.append(args.session)
-    if args.latest:
-        query += " order by updated_at desc limit 1"
     sessions = db.execute(query, params).fetchall()
     since = parse_since(args.since)
     home = os.path.expanduser("~")
