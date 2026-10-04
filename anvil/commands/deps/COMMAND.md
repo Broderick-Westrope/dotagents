@@ -3,11 +3,6 @@ description: Audit and upgrade project dependencies
 argument_hint: "[audit|upgrade|outdated]"
 ---
 
-**DELEGATION ONLY**: Do NOT run any commands or investigate the codebase yourself. Your only job is to immediately delegate to the **haiku** agent as a subagent, passing the prompt template below with `$ARGUMENTS` substituted.
-
-## Subagent Prompt for Haiku
-
-```
 Manage project dependencies.
 
 User arguments: $ARGUMENTS
@@ -55,4 +50,3 @@ For **upgrade**:
 
 ## Recommendations
 [Prioritized list of actions]
-```

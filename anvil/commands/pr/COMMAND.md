@@ -3,17 +3,16 @@ description: Create a pull request with auto-generated description
 argument_hint: "[base-branch]"
 ---
 
-**DELEGATION ONLY**: Do NOT run any commands or investigate the codebase yourself. Your only job is to immediately delegate to the **haiku** agent as a subagent, passing the prompt template below with `$ARGUMENTS` substituted.
-
-## Subagent Prompt for Haiku
-
-````
 Create a pull request for the current branch.
 
 User arguments: $ARGUMENTS
 (If provided, use as the base branch. Otherwise, default to main or master.)
 
+The user invoking /pr is the explicit request to push this branch and open a PR.
+
 **Step 1: Check Prerequisites**
+- Run `git branch --show-current`, `git rev-parse --git-dir`, and `git rev-parse --git-common-dir`
+- If the current branch is the default branch (main/master), or this is the root worktree (`--git-dir` equals `--git-common-dir`) on main/master, STOP and tell the user to move the work onto a feature branch using the **using-git-worktrees** skill rather than creating a PR from main
 - Run `git status` to check for uncommitted changes
 - If there are uncommitted changes, STOP and report: "Please commit your changes first before creating a PR"
 - Run `git remote -v` to verify remote exists
@@ -89,4 +88,3 @@ EOF
 - If `gh` is not installed: Report "GitHub CLI (gh) is required. Install with: brew install gh"
 - If not authenticated: Report "Please authenticate with: gh auth login"
 - If PR creation fails: Report the error message from gh
-````
