@@ -20,7 +20,7 @@ Handoffs at the end of a session are written by hand, if at all.
 
 - Each initiative has one small file in `~/.agents/initiatives/` that records why it exists, its phase, its decisions, its next steps and a handoff section per branch. It links its worktrees, PRs, docs and sessions, plus any topic it draws on.
 - A stdlib-only script, `wip`, owns the file's machine-readable part. It validates phase changes, derives the phases that depend on PRs, and prints a board built from live git and Anvil state plus the last-observed PR state (shown with its age).
-- Topic folders keep their own docs and are never initiatives. A session in a topic updates the topic's docs, and updates initiatives only when the discussion changed them.
+- An initiative is anything the user wants out of their head: code, research, admin or personal (user decision, 2026-10-05). Topic folders keep their own docs and are never initiatives. A session in a topic updates the topic's docs, and updates initiatives only when the discussion changed them.
 - `/goodbye` and the existing workflow skills call `wip` at the moments state changes.
 - The user can close old sessions and skip early draft PRs: `wip` shows everything in flight, and each initiative records the session IDs to resume with `anvil --session <id> --there`.
 
