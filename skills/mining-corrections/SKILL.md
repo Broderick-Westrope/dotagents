@@ -17,11 +17,11 @@ The ledger lives at `$CORRECTION_LEDGER`, else `~/.agents/correction-ledger.md`.
 In both modes, read "Last mined" from the ledger and pass it as `--since`, so a resumed session doesn't re-mine turns a bulk run already covered. With no ledger, mine everything. Also pass each "Mined individually" entry as `--mined <session>=<time>`, so turns already mined in session mode aren't counted twice.
 
 ```bash
-python3 <skill-dir>/scripts/extract.py --since 2026-09-01 --mined <id>=2026-10-04T18:02:11 --out /tmp/corrections
-python3 <skill-dir>/scripts/extract.py --current --all-turns --since 2026-09-01 --mined <id>=2026-10-04T18:02:11 --out /tmp/corrections
+python3 <skill-dir>/scripts/extract.py --since 2026-09-01 --mined <id>=2026-10-04T18:02:11+01:00 --out /tmp/corrections
+python3 <skill-dir>/scripts/extract.py --current --all-turns --since 2026-09-01 --mined <id>=2026-10-04T18:02:11+01:00 --out /tmp/corrections
 ```
 
-Session mode uses `--current` (reads `$ANVIL_ROOT_SESSION_ID`, which Anvil's bash tool sets to the top-level session even inside subagents) or `--session <id>`, plus `--all-turns`, because one session is small enough to read unfiltered. Note the time before running it; step 3 records it. The script prints the chunk and candidate counts. With no candidates, skip to step 3 and only record the time. Done when every chunk file exists.
+Session mode uses `--current` (reads `$ANVIL_ROOT_SESSION_ID`, which Anvil's bash tool sets to the top-level session even inside subagents) or `--session <id>`, plus `--all-turns`, because one session is small enough to read unfiltered. Note the time with `date -Iseconds` before running it; step 3 records it. The offset matters: `--mined` rejects times without one. The script prints the chunk and candidate counts. With no candidates, skip to step 3 and only record the time. Done when every chunk file exists.
 
 ## 2. Classify
 

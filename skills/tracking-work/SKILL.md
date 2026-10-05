@@ -45,7 +45,7 @@ python3 "<skill-dir>/scripts/wip.py" <command>
 - A branch section holds only what's left on that branch and its gotchas. No git or PR state; `wip show` gives that live.
 - Read the file first. Update lines your evidence shows are stale. Keep lines you can't confirm, and list them in your report. Leave sections you don't own (anything outside the template) verbatim.
 - Durable domain facts belong in the topic folder, following its `AGENTS.md`. Link the topic from the initiative rather than copying them.
-- Corrections about how agents should work go in `~/.agents/correction-ledger.md` as single lines.
+- Don't write corrections about how agents should work to the correction ledger yourself. `/goodbye` mines the session for them.
 - Each fact has one home.
 
 ## Privacy
