@@ -73,9 +73,13 @@ def main():
     mined = {}
     for item in args.mined:
         sid, sep, when = item.partition("=")
-        if not sep:
-            ap.error(f"--mined needs SESSION=ISO, got {item!r}")
-        mined[sid] = parse_since(when)
+        try:
+            stamp = datetime.datetime.fromisoformat(when) if sep else None
+        except ValueError:
+            stamp = None
+        if stamp is None or stamp.tzinfo is None:
+            ap.error(f"--mined needs SESSION=ISO with a UTC offset, e.g. abc=2026-10-04T18:02:11+01:00; got {item!r}")
+        mined[sid] = int(stamp.timestamp())
     if args.current:
         args.session = os.environ.get("ANVIL_ROOT_SESSION_ID")
         if not args.session:
