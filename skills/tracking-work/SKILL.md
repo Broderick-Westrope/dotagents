@@ -1,13 +1,13 @@
 ---
 name: tracking-work
-description: Tracks initiatives (pieces of code work spanning worktrees, PRs, docs and sessions) through workflow phases, and keeps their handoff notes. Use when the user asks what they were working on or what's left on a branch, wants to resume, park or check on work in progress, wraps up a session ("goodbye", "we're done for today"), or when a workflow reaches an event in this skill's Events table (worktree created or removed, design doc or plan written, execution started, PR opened).
+description: Tracks initiatives (anything the user wants to keep track of, code or personal, spanning worktrees, PRs, docs and sessions) through workflow phases, and keeps their handoff notes. Use when the user asks what they were working on, what's on their plate or what's left on a branch, wants to note something to come back to, wants to resume, park or check on work in progress, wraps up a session ("goodbye", "we're done for today"), or when a workflow reaches an event in this skill's Events table (worktree created or removed, design doc or plan written, execution started, PR opened).
 ---
 
 # Tracking work
 
 ## Model
 
-An **initiative** is one piece of code work. Worktrees, docs, PRs and sessions are linked to it, and it can link topic folders as background. Each initiative is one file in `~/.agents/initiatives/<slug>.md`: JSON metadata owned by the script, then a body owned by agents and the user. The body holds all of the initiative's notes, including per-branch handoff notes; see [references/body-template.md](references/body-template.md).
+An **initiative** is anything the user wants to keep track of so it isn't only in their head: code work, research, admin, or personal matters. Worktrees, docs, PRs and sessions are linked to it, and it can link topic folders as background. Work with no worktree or PR still gets phases, notes and session links; its `done` is set by hand with a reason. Each initiative is one file in `~/.agents/initiatives/<slug>.md`: JSON metadata owned by the script, then a body owned by agents and the user. The body holds all of the initiative's notes, including per-branch handoff notes; see [references/body-template.md](references/body-template.md).
 
 Topic folders are never initiatives. A topic session updates the topic's own docs, and updates initiatives only when the discussion changed them.
 
@@ -37,7 +37,7 @@ python3 "<skill-dir>/scripts/wip.py" <command>
 - Parking needs a real reason. "More time" is fine.
 - Ask the user before parking or reopening an initiative.
 - **Finding the initiative.** Run `wip which <path>` on the event's path (a worktree path or a doc). If that prints nothing, run it on the cwd. If that prints nothing, run `wip which --session "$ANVIL_ROOT_SESSION_ID"`. If several slugs come back, ask the user which one. `which` never matches topic folders.
-- **Enrolment.** Only code work is enrolled: a worktree with changes, or a design doc or plan for code. If nothing matches, offer once per session: "Track this as an initiative?" Propose a slug, a title and the locations to link, or offer to attach the work to an existing slug (`wip` lists them). On acceptance, run `wip new <slug> --title "<title>"`, then `wip link` each location. If the user declines, skip tracking for the rest of the session and carry on with the workflow as normal. Never offer enrolment for topic edits or discussion.
+- **Enrolment.** Offer for anything unfinished the user will want to come back to: a worktree with changes, a design doc or plan, or a task, decision or commitment from the conversation, personal ones included. A finished one-off question or lookup doesn't need one. If nothing matches, offer once per session: "Track this as an initiative?" Propose a slug, a title and the locations to link, or offer to attach the work to an existing slug (`wip` lists them). On acceptance, run `wip new <slug> --title "<title>"`, then `wip link` each location. If the user declines, skip tracking for the rest of the session and carry on with the workflow as normal. Never offer an initiative for a topic folder itself; an unfinished task that comes up while working in a topic can still get one.
 
 ## Writing the body
 
@@ -77,9 +77,9 @@ Find the initiative first (see Rules). Then:
 2. **Topic docs.** For each topic folder with edits or discussion, update its docs following its `AGENTS.md`. Without guidance, add a dated section at the top of `AGENTS.md`. Don't create or look up an initiative for the topic itself.
    Done when each topic's docs reflect the session.
 3. **Find initiatives.**
-   - For each worktree or code doc, find its initiative using the rules above. For unfinished code work with none, make the enrolment offer.
+   - For each worktree or doc, find its initiative using the rules above. For unfinished work with none, including tasks or commitments from the conversation that have no location, make the enrolment offer.
    - Run `wip which --session "$ANVIL_ROOT_SESSION_ID"` for initiatives this session already worked on.
-   - If the session discussed code work without touching its worktrees (for example, planning in a topic), list active initiatives from `wip`, putting first any that link the topic (`grep -l '<topic path>' ~/.agents/initiatives/*.md`). Ask which ones the discussion changed. Don't guess.
+   - If the session discussed tracked work without touching its locations (for example, planning in a topic, or talking through a personal matter), list active initiatives from `wip`, putting first any that link the topic (`grep -l '<topic path>' ~/.agents/initiatives/*.md`). Ask which ones the discussion changed. Don't guess.
 
    Done when every affected initiative is identified, or the user declined.
 4. **Update each initiative.** For each one:
