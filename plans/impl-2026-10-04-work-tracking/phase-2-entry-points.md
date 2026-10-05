@@ -43,7 +43,7 @@ The skill offers enrolment once per session when no ticket matches. If the user 
 - Modify: `anvil/agents/planner.md`, in two places:
   - add `tracking-work` to its `skills:` allow-list (Anvil filters the skills advertised to an agent by this list);
   - rename its spec from `plans/<feature>-spec.md` to `plans/design-YYYY-MM-DD-<feature-name>.md`, matching grilling, so design docs and `impl-` plans share one naming scheme (user decision, 2026-10-04);
-  - after the spec is stable, apply "Design doc written".
+  - apply "Design doc written" in its Output Format step, which always runs. Phase 4 (adversarial review) is skipped in practice, because the planner's `tools:` list has no `task`.
 
 **Steps:**
 

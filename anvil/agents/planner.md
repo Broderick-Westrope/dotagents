@@ -67,8 +67,8 @@ Write the design doc in the format the **grilling** skill defines, to `plans/des
 
 Delegate the completed design doc to devils-advocate. Incorporate valid findings. Revise. Do not hand off to building until the design doc is stable.
 
-If the **tracking-work** skill is available, load it and apply the "Design doc written" row of its Events table.
-
 ## Output Format
 
 Documents go to disk in `plans/`. Respond to the user with a brief summary of what was written and where, plus any open questions. Ask whether to build it now or park it.
+
+Before responding, load the **tracking-work** skill if it's available and apply the "Design doc written" row of its Events table for the design doc. Do this even if the adversarial review didn't run. If no initiative matches, say so in your response instead of asking; the orchestrator relays the enrolment offer.
