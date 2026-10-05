@@ -105,18 +105,33 @@ python3 skills/tracking-work/scripts/wip.py show agent-conventions   # 3 worktre
 
 **Steps:**
 
-1. [ ] Create a ticket in a scratch worktree, then run `/grill` to completion.
+1. [x] Create a ticket in a scratch worktree, then run `/grill` to completion.
    - Expect: phase `spec`, with the design doc linked.
-2. [ ] Run `/plan`.
+2. [x] Run `/plan`.
    - Expect: phase `planning`, with the plan linked.
-3. [ ] Run `/execute` on a one-task plan.
+3. [x] Run `/execute` on a one-task plan.
    - Expect: `implementing`.
-4. [ ] Run `/pr` against a throwaway repo you own (or link an existing PR by hand), then run `wip sync` with the fake `gh` from phase 1.
+4. [x] Run `/pr` against a throwaway repo you own (or link an existing PR by hand), then run `wip sync` with the fake `gh` from phase 1.
    - Expect: `review` for an open PR, `done` after merged.
-5. [ ] In a worktree no ticket claims, run `/plan` and decline enrolment.
+5. [x] In a worktree no ticket claims, run `/plan` and decline enrolment.
    - Expect: no ticket, no second prompt, and the plan written exactly as before.
-6. [ ] Run `/plan` through the planner agent.
+6. [x] Run `/plan` through the planner agent.
    - Expect: it can load `tracking-work` and records `spec`.
-7. [ ] Tear down as in phase 1 Task 4.
+7. [x] Tear down as in phase 1 Task 4.
 
 **Verify:** record each outcome as a checklist at the bottom of this file.
+
+#### Task 3 results (2026-10-05)
+
+Run with the plugin path in `~/.config/anvil/anvil.json` pointed at this worktree, then restored byte-for-byte from the backup. Each session got sandbox `WIP_DIR`, `WIP_WORKTREES_ROOT`, `WIP_GH` (a fake `gh` reading PR states from files) and `CORRECTION_LEDGER` (a copy of the real ledger), checked with `echo` first. The user deleted the sandbox afterwards.
+
+- [x] **`/grill`.** It asked one question with a full proposal, wrote `plans/design-2026-10-05-shout-flag.md`, and passed devils-advocate review on the second round. It recorded `spec` only after the user approved the spec, then handed off to writing-plans.
+- [x] **`/plan`** (via grilling's hand-off). It wrote `plans/impl-2026-10-05-shout-flag.md` and recorded `planning` with the plan linked.
+- [x] **`/execute`.** It recorded `implementing` at setup, wrote a failing test first, implemented, and passed code review. It left the plan in place rather than moving it to `plans/done/`, because the ticket links that path.
+- [x] **PR opened.** The user opened the PR by hand, and the agent applied "PR opened": `link`, then `sync`, which moved the ticket to `review`. Marking the fake PR merged and running `wip sync` moved it to `done`.
+- [x] **Declined.** `/plan` in an unclaimed worktree wrote and committed the plan, then offered to track it once. After "no", nothing was created, no commit landed in the tickets repo, and a follow-up edit to the plan drew no second offer.
+- [x] **Planner agent.** The first run wrote `plans/design-2026-10-05-greet-lang.md` (the new name) but recorded nothing: the hook sat in phase 4, which the planner skips because its `tools:` list has no `task`. With the hook moved to its Output Format step, a rerun loaded `tracking-work` and recorded `spec`.
+- [x] **`/goodbye` with mining.** A correction given mid-session ("run Python tests with `PYTHONDONTWRITEBYTECODE=1`") was found by session-mode mining. The run updated the ticket, recorded the session under "Mined individually" without moving "Last mined", and proposed no enforcement for a single occurrence. The real ledger's checksum was unchanged.
+  - Finding: the agent had already written the correction to the ledger when the user gave it, because tracking-work told it to. Fixed: only the mining step writes corrections.
+  - Finding: the "Mined individually" time was written in UTC without an offset, which `--mined` read as local time, an hour off. Fixed: `--mined` now requires an offset, and the skill says to use `date -Iseconds`.
+- [x] **Teardown.** `anvil.json` restored and checked with `cmp`; the user removed the sandbox.
