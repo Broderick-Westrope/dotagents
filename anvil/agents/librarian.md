@@ -1,5 +1,5 @@
 ---
-model: anthropic/claude-sonnet-5
+model: anthropic/claude-sonnet-5-5
 delegates_to: []
 role: External documentation and library research specialist
 delegate_when: >

@@ -1,5 +1,5 @@
 ---
-model: anthropic/claude-sonnet-5
+model: anthropic/claude-sonnet-5-5
 delegates_to: [fixer]
 role: Test analysis, strategy, and planning specialist
 delegate_when: >

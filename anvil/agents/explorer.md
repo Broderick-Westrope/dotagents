@@ -1,5 +1,5 @@
 ---
-model: anthropic/claude-sonnet-5
+model: anthropic/claude-sonnet-5-5
 delegates_to: []
 role: Fast codebase search and pattern matching specialist
 delegate_when: >

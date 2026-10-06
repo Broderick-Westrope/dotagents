@@ -1,5 +1,5 @@
 ---
-model: anthropic/claude-sonnet-5
+model: anthropic/claude-sonnet-5-5
 delegates_to: [oracle]
 role: UI/UX specialist for intentional, polished user experiences
 delegate_when: >
