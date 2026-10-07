@@ -6,6 +6,7 @@ One markdown file, newest evidence merged in place. Themes are the unit, not ind
 # Correction ledger
 
 Last mined: 2026-10-04 (sessions since 2026-05-29)
+Mined individually: <session id> at 2026-10-04T18:02:11+01:00; <session id> at 2026-10-05T09:40:00+01:00
 
 ## <theme name>
 

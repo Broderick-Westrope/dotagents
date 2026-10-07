@@ -103,7 +103,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Keep the worktree for review follow-ups (Step 5)
 
 #### Option 3: Keep As-Is
 
@@ -135,19 +135,16 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options 1 and 4:**
 
 Check if in worktree:
 ```bash
 git worktree list | grep $(git branch --show-current)
 ```
 
-If yes:
-```bash
-git worktree remove <worktree-path>
-```
+If yes: load **tracking-work** and follow its "Worktree about to be removed" event; it folds what's still useful from the branch's notes into the ticket before removal, drops the rest, and unlinks the worktree after.
 
-**For Option 3:** Keep worktree.
+**For Options 2 and 3:** Keep worktree.
 
 ## Quick Reference
 
@@ -169,7 +166,7 @@ git worktree remove <worktree-path>
 - **Fix:** Present exactly 4 structured options
 
 **Automatic worktree cleanup**
-- **Problem:** Remove worktree when might need it (Option 2, 3)
+- **Problem:** Cleaning up a worktree that's still needed (Option 2, 3)
 - **Fix:** Only cleanup for Options 1 and 4
 
 **No confirmation for discard**
