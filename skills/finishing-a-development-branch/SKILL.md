@@ -142,7 +142,7 @@ Check if in worktree:
 git worktree list | grep $(git branch --show-current)
 ```
 
-If yes: load **tracking-work** and follow its "Worktree about to be removed" event; it folds what's still useful from the branch's notes into the initiative before removal, drops the rest, and unlinks the worktree after.
+If yes: load **tracking-work** and follow its "Worktree about to be removed" event; it folds what's still useful from the branch's notes into the ticket before removal, drops the rest, and unlinks the worktree after.
 
 **For Options 2 and 3:** Keep worktree.
 

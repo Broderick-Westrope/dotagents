@@ -40,13 +40,13 @@ Code conventions (from `~/.agents/correction-ledger.md`):
 
 | Setting | Env var | Default |
 |---|---|---|
-| Initiatives dir | `WIP_DIR` | `~/.agents/initiatives` |
+| Tickets dir | `WIP_DIR` | `~/.agents/tickets` |
 | Worktrees root scanned for orphans | `WIP_WORKTREES_ROOT` | `~/Library/Application Support/wtp/worktrees` |
 | Anvil DB | `ANVIL_DB` | `~/.local/share/anvil/anvil.db` |
 | `gh` binary | `WIP_GH` | `gh` |
 
 **File format.**
-- One file per initiative: `<WIP_DIR>/<slug>.md`, where the slug matches `^[a-z0-9][a-z0-9-]{1,48}$`.
+- One file per ticket: `<WIP_DIR>/<slug>.md`, where the slug matches `^[a-z0-9][a-z0-9-]{1,48}$`.
 - The front matter is a JSON object between `---` lines. JSON is valid YAML, so markdown tools still read it.
 - `json.dumps(indent=2, ensure_ascii=False)` writes it.
 - The body after the closing `---` belongs to agents and the user. The script writes the template body on `new`, and otherwise copies the body byte-for-byte.
@@ -106,12 +106,12 @@ Agents still edit the body with their edit tool, outside the lock. Step 6 means 
 | `wip` / `wip board [--all]` | The board, described below |
 | `wip new <slug> --title <t>` | Creates the file at phase `idea`, with source `manual`. Rejects an existing or invalid slug |
 | `wip show <slug>` | Prints the metadata and body, then one live board entry. Then prints resume commands for the most recent session (by `updated_at` in `ANVIL_DB`, else the last linked): `anvil --session <id> --there` (resumes in the session's original cwd), plus `cd '<worktree>' && anvil --session <id>` for each linked worktree. Earlier sessions get only the `--there` line, newest first |
-| `wip which [<path>] [--session <id>]` | Prints matching slugs, one per line, deduplicated and sorted, or nothing. A path matches a `worktree` link if it equals the link or lies inside it, compared by path component after `realpath`. It matches a `doc` link only if it's the same file. `topic` links never match, since topics aren't initiatives. `--session` matches a session link. Callers must ask the user when more than one slug comes back |
-| `wip link <slug> <kind> <ref> [--cwd <dir>]` | Kinds: `worktree`, `pr`, `topic`, `doc` or `session`. Validation by kind: <ul><li>`worktree`: a dir where `git rev-parse --path-format=absolute --git-dir` differs from `--git-common-dir`</li><li>`topic`, `doc`: an existing path</li><li>`pr`: `^https://github\.com/[^/]+/[^/]+/pull/\d+$`, stored with state `unknown`</li><li>`session`: a root session ID in `ANVIL_DB`. Its `working_dir` is stored as `cwd`. If the DB is absent, accept it and use `--cwd`</li></ul> Linking an existing link is a no-op |
+| `wip which [<path>] [--session <id>]` | Prints matching slugs, one per line, deduplicated and sorted, or nothing. A path matches a `worktree` link if it equals the link or lies inside it, compared by path component after `realpath`. It matches a `doc` link only if it's the same file. `topic` links never match, since topics aren't tickets. `--session` matches a session link. Callers must ask the user when more than one slug comes back |
+| `wip link <slug> <kind> <ref> [--cwd <dir>]` | Kinds: `worktree`, `pr`, `linear`, `topic`, `doc` or `session`. Validation by kind: <ul><li>`worktree`: a dir where `git rev-parse --path-format=absolute --git-dir` differs from `--git-common-dir`</li><li>`topic`, `doc`: an existing path</li><li>`pr`: `^https://github\.com/[^/]+/[^/]+/pull/\d+$`, stored with state `unknown`</li><li>`linear`: a Linear issue ID such as `OLL-1480`, upper-cased, matching `^[A-Z][A-Z0-9]*-[0-9]+$`</li><li>`session`: a root session ID in `ANVIL_DB`. Its `working_dir` is stored as `cwd`. If the DB is absent, accept it and use `--cwd`</li></ul> Linking an existing link is a no-op |
 | `wip unlink <slug> <kind> <ref>` | Removes the link, matching on the resolved ref. Errors if absent |
 | `wip phase <slug> <target> [--doc <path>] [--reason <text>]` | Applies the transition matrix below. `target` is a phase, or `unpark` |
 | `wip sync [<slug>]` | For each `pr` link, runs `$WIP_GH pr view <url> --json state,isDraft` with a 10 s timeout and maps the result: `OPEN` + draft → `draft`, `OPEN` → `open`, `MERGED` → `merged`, `CLOSED` → `closed`. If the call fails, it retries with the token of each account `gh auth status` lists as logged in, including the one marked active (the default call doesn't always use it), passed in `GH_TOKEN`, so PRs in work and personal orgs both resolve; tokens are never printed or stored. A call that fails on every account sets `error` and leaves `state` and `observed` unchanged. Then it applies the sync rules |
-| `wip import-pins [--apply <session-id>...]` | Without `--apply`: lists pinned root sessions not linked by any initiative, with a proposed slug (from the title; non-ASCII stripped; `-2` appended on collision), the title, and the pin note flattened to one line. With `--apply`: creates only the listed sessions' initiatives, at `parked` with reason = the pin note (or "pinned in Anvil" if empty) and the session linked. Already-linked sessions are skipped, so it's safe to rerun |
+| `wip import-pins [--apply <session-id>...]` | Without `--apply`: lists pinned root sessions not linked by any ticket, with a proposed slug (from the title; non-ASCII stripped; `-2` appended on collision), the title, and the pin note flattened to one line. With `--apply`: creates only the listed sessions' tickets, at `parked` with reason = the pin note (or "pinned in Anvil" if empty) and the session linked. Already-linked sessions are skipped, so it's safe to rerun |
 
 **Transition matrix** for `wip phase`. Every allowed change sets `since` to today and `phase_source` to `manual`.
 
@@ -122,15 +122,15 @@ Agents still edit the body with their edit tool, outside the lock. Step 6 means 
 | done | allowed with `--reason` (reopen) | allowed with `--reason` and `--doc` | rejected | rejected | rejected | rejected |
 | parked | allowed; clears `reason` and `parked_from` | allowed, with `--doc` as above | rejected | rejected | rejected | returns to `parked_from` |
 
-**Sync rules.** They're applied in order to each initiative whose phase isn't `parked`, and skipped if it has no PR links.
+**Sync rules.** They're applied in order to each ticket whose phase isn't `parked`, and skipped if it has no PR links.
 
 1. If any PR's state is `unknown`, or its last observation errored: no phase change, and the board flags it.
-2. Any PR `open`: the phase becomes `review` (source `sync`). This also reopens a `done` initiative, whether its done was manual or synced.
+2. Any PR `open`: the phase becomes `review` (source `sync`). This also reopens a `done` ticket, whether its done was manual or synced.
 3. Otherwise, any PR `draft`, and the phase is `review` or a synced `done`: the phase becomes `implementing` (source `sync`).
 4. Otherwise, every PR `merged`: the phase becomes `done` (source `sync`).
 5. Otherwise, there's a `closed` PR and none `open` or `draft`: if the phase is `review` or a synced `done`, it becomes `implementing` (source `sync`). The board flags "closed PR: unlink it if it was superseded".
 
-A parked initiative never changes in `sync`, but the board still shows its PR states.
+A parked ticket never changes in `sync`, but the board still shows its PR states.
 
 **Board.**
 
@@ -146,7 +146,7 @@ Git state:
 - A worktree that times out shows `?`, and the footer says how many timed out.
 
 Output sections:
-1. **Initiatives**, grouped by phase in workflow order (`idea`, `spec`, `planning`, `implementing`, `review`, `done`, `parked`). `done` is hidden if `since` is more than 14 days ago, unless `--all` is passed. Each initiative shows:
+1. **Tickets**, grouped by phase in workflow order (`idea`, `spec`, `planning`, `implementing`, `review`, `done`, `parked`). `done` is hidden if `since` is more than 14 days ago, unless `--all` is passed. Each ticket shows:
    - `slug · title · phase for Nd`, plus the reason when parked or manually done;
    - the first non-empty line under `## Next`;
    - per worktree: branch, `dirty N`, `↑N ↓M` or `no upstream`, last commit date, or `MISSING`;
@@ -174,8 +174,8 @@ The board never calls `gh`.
 3. Sync rules 1 to 5, each from the fake `gh`, plus:
    - a mix of `merged` and `closed`, which isn't done;
    - a PR reopened after done;
-   - a manually done initiative that later gets an open PR;
-   - a parked initiative with an open PR, which doesn't change;
+   - a manually done ticket that later gets an open PR;
+   - a parked ticket with an open PR, which doesn't change;
    - `gh` failing, so the state is kept and an error recorded.
 4. `link` validation for each kind:
    - a worktree path containing a space, accepted;
@@ -185,7 +185,7 @@ The board never calls `gh`.
 5. `which`:
    - a nested path inside a linked worktree;
    - a doc inside a worktree, which matches only as that exact file;
-   - two initiatives linking the same worktree, so both are printed;
+   - two tickets linking the same worktree, so both are printed;
    - an unrelated sibling dir with a shared prefix (`/x/foo` vs `/x/foobar`), which doesn't match;
    - a topic root and a file inside a linked topic, which don't match;
    - `--session`.
@@ -239,30 +239,30 @@ time WIP_DIR=$(mktemp -d) python3 skills/tracking-work/scripts/wip.py   # real r
    - the events in the Events table.
 
    Sections:
-   - **Model.** An initiative is a piece of code work. Worktrees, docs, PRs and sessions are linked to it, and it may link topics as background. The body holds all its notes, including one section per branch. Topic folders are never initiatives. Run the script as `python3 "<skill-dir>/scripts/wip.py"`. Include the phase table from the README.
+   - **Model.** A ticket is a piece of code work. Worktrees, docs, PRs and sessions are linked to it, and it may link topics as background. The body holds all its notes, including one section per branch. Topic folders are never tickets. Run the script as `python3 "<skill-dir>/scripts/wip.py"`. Include the phase table from the README.
    - **Rules.**
      - Change metadata only through the script.
      - `review` and `done` come from `wip sync` when there are PRs.
      - Parking needs a real reason; "more time" is fine.
      - Ask before parking or reopening.
      - When `wip which` returns several slugs, ask the user which one.
-     - **Finding the initiative.** Run `wip which` on the event's path; if that finds nothing, on the cwd; if that finds nothing, run `wip which --session "$ANVIL_ROOT_SESSION_ID"`.
-     - **Enrolment.** Only code work is enrolled (a worktree with changes, or a design doc or plan for code). If nothing matches, offer once per session: "Track this as an initiative?" Give a proposed slug, title and the locations to link, or the option to attach it to an existing slug. If the user declines, skip tracking for the rest of the session. Never offer it for topic edits or discussion.
+     - **Finding the ticket.** Run `wip which` on the event's path; if that finds nothing, on the cwd; if that finds nothing, run `wip which --session "$ANVIL_ROOT_SESSION_ID"`.
+     - **Enrolment.** Only code work is enrolled (a worktree with changes, or a design doc or plan for code). If nothing matches, offer once per session: "Track this as a ticket?" Give a proposed slug, title and the locations to link, or the option to attach it to an existing slug. If the user declines, skip tracking for the rest of the session. Never offer it for topic edits or discussion.
    - **Writing the body.**
      - A current snapshot following the template: Why, Decisions, Next, Open questions, Context, then `## Branches` with one `### <branch>` section per linked worktree holding what's left there and its gotchas. No git or PR state. Delete lines that are no longer true; never append dated entries.
      - Read the file first. Update lines your evidence shows are stale. Keep lines you can't confirm, and list them in your report. Leave sections outside the template verbatim.
-     - Durable domain facts go in the topic, following its `AGENTS.md`; the initiative links the topic.
+     - Durable domain facts go in the topic, following its `AGENTS.md`; the ticket links the topic.
      - `~/.agents/correction-ledger.md` gets single-line entries for corrections about how agents should work.
      - Each fact has one home.
    - **Privacy.**
      - Anything meant for a PR, ticket or repo doc is drafted in chat, never written.
      - Follow each destination's rules; e.g. eucalyptusvc repos don't mention personal tooling.
-     - Never write credentials, tokens, connection strings or patient data anywhere, including initiative files.
+     - Never write credentials, tokens, connection strings or patient data anywhere, including ticket files.
    - **Events:**
 
      | Event | Do |
      |---|---|
-     | Worktree created | Find the initiative from the source location or session; `wip link <slug> worktree <new path>` |
+     | Worktree created | Find the ticket from the source location or session; `wip link <slug> worktree <new path>` |
      | Design doc written | `wip phase <slug> spec --doc <path>` |
      | Implementation plan written | `wip phase <slug> planning --doc <path>` |
      | Execution starts | `wip phase <slug> implementing` |
@@ -273,10 +273,10 @@ time WIP_DIR=$(mktemp -d) python3 skills/tracking-work/scripts/wip.py   # real r
      | Session ending | See "Ending a session" |
    - **Ending a session.** Each step ends with a "Done when":
      1. **List locations.** The locations this session edited, yours and sub-agents', plus the cwd, sorted into worktrees, topics and other files. For each git location, run `git status --short` and `git log -1 --format='%h %cs'`. With no edits and no decisions worth keeping, say there's nothing to record.
-     2. **Topic docs.** Update each topic with edits or discussion following its `AGENTS.md`; without guidance, add a dated section at the top of `AGENTS.md`. No initiative for the topic itself.
-     3. **Find initiatives.** From worktrees and code docs (with the enrolment offer for unfinished code work), from `wip which --session`, and, when code work was discussed without touching its worktrees, by listing active initiatives (those linking the topic first) and asking which ones the discussion changed.
-     4. **Update each initiative.** Why, Decisions, Next, Open questions, Context and the branch sections touched; link the session, docs written and the topic if relevant; apply unrecorded phase events. Done when `wip show <slug>` reflects the session.
-     5. **Report.** `wip show` for each initiative touched; list each file written and lines kept unconfirmed. Don't commit or push.
+     2. **Topic docs.** Update each topic with edits or discussion following its `AGENTS.md`; without guidance, add a dated section at the top of `AGENTS.md`. No ticket for the topic itself.
+     3. **Find tickets.** From worktrees and code docs (with the enrolment offer for unfinished code work), from `wip which --session`, and, when code work was discussed without touching its worktrees, by listing active tickets (those linking the topic first) and asking which ones the discussion changed.
+     4. **Update each ticket.** Why, Decisions, Next, Open questions, Context and the branch sections touched; link the session, docs written and the topic if relevant; apply unrecorded phase events. Done when `wip show <slug>` reflects the session.
+     5. **Report.** `wip show` for each ticket touched; list each file written and lines kept unconfirmed. Don't commit or push.
 2. [x] Write `skills/tracking-work/references/body-template.md`: `## Why`, `## Decisions`, `## Next` (the first line is what the board shows), `## Open questions` (removed once decided), `## Context` (where things are, cross-branch gotchas), and `## Branches` with one example `### <branch>` section giving the worktree path, **Left** and **Gotchas**. `wip new` and `import-pins` write this file as the new body, so there's one copy of the template, and the board skips `<placeholder>` lines under Next.
 3. [x] Write `anvil/commands/goodbye/COMMAND.md`. It loads the skill by name, not through `skills:` preload, because preload drops the skill's location (`anvil/internal/skills/format.go:11-26`) and `<skill-dir>` wouldn't resolve:
    ```markdown
@@ -293,7 +293,7 @@ time WIP_DIR=$(mktemp -d) python3 skills/tracking-work/scripts/wip.py   # real r
    It then runs **mining-corrections** in session mode (see the README's decision 8). That needs `extract.py --mined <session>=<time>` and a "Mined individually" line in the ledger, so a session mined by `/goodbye` doesn't move "Last mined" forward for bulk runs or get counted twice.
 4. [x] Add README rows:
    - `/goodbye`: "Record where this session's work stands so it can be closed and resumed later";
-   - `tracking-work`: "Track code initiatives through workflow phases, with their handoff notes".
+   - `tracking-work`: "Track code tickets through workflow phases, with their handoff notes".
 
 **Verify:**
 ```bash
@@ -314,7 +314,7 @@ grep -rn "NOTES.local" skills anvil                 # no output
 **Steps:**
 
 1. [x] In `finishing-a-development-branch`, fix the existing contradiction. Step 5 says "For Options 1, 2, 4", but the Quick Reference table and the common-mistakes section keep the worktree for Option 2 (PR). Change Step 5 to "For Options 1 and 4".
-2. [x] In all three files, replace each direct worktree-removal instruction with: "Load **tracking-work** and follow its 'Worktree about to be removed' event; it folds what's still useful from the branch's notes into the initiative before removal, drops the rest, and unlinks the worktree after." Keep each file's surrounding conditions (when to remove) unchanged.
+2. [x] In all three files, replace each direct worktree-removal instruction with: "Load **tracking-work** and follow its 'Worktree about to be removed' event; it folds what's still useful from the branch's notes into the ticket before removal, drops the rest, and unlinks the worktree after." Keep each file's surrounding conditions (when to remove) unchanged.
 
 **Verify:**
 ```bash
@@ -330,7 +330,7 @@ These scenarios check agent behaviour, so they're acceptance checks, not determi
 
 1. Create a sandbox. Back up and restore `~/.config/anvil/anvil.json` from `$S/anvil.json.bak` rather than editing it back by hand. Check first that no other Anvil sessions depend on the plugin path, since the swap affects every session:
    ```bash
-   S="$HOME/dev/helse/wip-e2e"; mkdir -p "$S"/{initiatives,worktrees} && git init -q "$S/initiatives"
+   S="$HOME/dev/helse/wip-e2e"; mkdir -p "$S"/{tickets,worktrees} && git init -q "$S/tickets"
    git init -q "$S/repo" && git -C "$S/repo" commit -q --allow-empty -m init
    git -C "$S/repo" worktree add -q "$S/worktrees/wt a" -b wt-a
    git -C "$S/repo" worktree add -q "$S/worktrees/wt-c" -b wt-c
@@ -338,27 +338,27 @@ These scenarios check agent behaviour, so they're acceptance checks, not determi
    cp ~/.config/anvil/anvil.json "$S/anvil.json.bak"
    ```
 2. Point `plugins[0].path` at this worktree.
-3. Start each Anvil session through the terminal MCP's `create_session`, with `env: {WIP_DIR: "$S/initiatives", WIP_WORKTREES_ROOT: "$S/worktrees"}`.
+3. Start each Anvil session through the terminal MCP's `create_session`, with `env: {WIP_DIR: "$S/tickets", WIP_WORKTREES_ROOT: "$S/worktrees"}`.
 4. The first prompt in each session is "Run `echo $WIP_DIR` and nothing else". Expect the sandbox path. Stop if it's wrong.
 
 **Scenarios:**
 
 1. [x] **Worktree.**
    - Steps: in `wt a`, edit a file and record `git status --porcelain`, touch a marker file, then run `/goodbye` and accept enrolment.
-   - Expect: an initiative is created with `wt a` linked and a `### wt-a` section under `## Branches`; git status is unchanged; nothing is written inside the worktree.
+   - Expect: a ticket is created with `wt a` linked and a `### wt-a` section under `## Branches`; git status is unchanged; nothing is written inside the worktree.
    - Expect: `find "$S" ~/.agents ~/dev/topics -newer <marker> -type f` lists only sandbox files.
 2. [x] **Repeat.**
-   - Steps: hand-edit a line in the initiative body, add `## Mine`, then run `/goodbye` again.
+   - Steps: hand-edit a line in the ticket body, add `## Mine`, then run `/goodbye` again.
    - Expect: both survive, and nothing is duplicated.
 3. [x] **Multi-worktree.**
    - Steps: start in `$S`, edit both worktrees, then run `/goodbye`.
-   - Expect: one initiative linking both worktrees (asked, not assumed), with a branch section each; scenario 1's section is merged, not replaced.
+   - Expect: one ticket linking both worktrees (asked, not assumed), with a branch section each; scenario 1's section is merged, not replaced.
 4. [x] **Topic, discussion only.**
-   - Steps: start in `~/dev/topics/wip-scratch`, discuss the initiative from scenario 1 and make a decision about it, edit the topic, then run `/goodbye`.
-   - Expect: the topic is updated following its `AGENTS.md`; no enrolment offer and no initiative for the topic; the agent lists active initiatives, asks which the discussion changed, and updates only the one you pick.
+   - Steps: start in `~/dev/topics/wip-scratch`, discuss the ticket from scenario 1 and make a decision about it, edit the topic, then run `/goodbye`.
+   - Expect: the topic is updated following its `AGENTS.md`; no enrolment offer and no ticket for the topic; the agent lists active tickets, asks which the discussion changed, and updates only the one you pick.
 5. [x] **Declined.**
    - Steps: start in `wt-c` with a new edit, run `/goodbye`, and decline enrolment.
-   - Expect: no initiative is created and no further prompts.
+   - Expect: no ticket is created and no further prompts.
 6. [x] **Research-only.**
    - Steps: start in `$S` with no edits, then run `/goodbye`.
    - Expect: "nothing to record", or one note with a reason. No error.
@@ -371,7 +371,7 @@ These scenarios check agent behaviour, so they're acceptance checks, not determi
    - Steps: in a fresh session in `wt a`, ask "what's left on this branch?".
    - Expect: it runs `wip which .` and answers from the `### wt-a` section.
 9. [x] **Removal.**
-   - Steps: follow `finishing-a-development-branch` Option 1 for `wt-c` after linking it to an initiative.
+   - Steps: follow `finishing-a-development-branch` Option 1 for `wt-c` after linking it to a ticket.
    - Expect: anything useful from its branch section is folded into Decisions or Next and the section is gone; `wip show` no longer lists the worktree.
 10. [x] **Teardown.**
     - `cp "$S/anvil.json.bak" ~/.config/anvil/anvil.json`;
@@ -385,25 +385,25 @@ These scenarios check agent behaviour, so they're acceptance checks, not determi
 Run with the plugin path in `~/.config/anvil/anvil.json` pointed at this worktree, then restored byte-for-byte from the backup. Every session's first prompt printed the sandbox `WIP_DIR`. The sandbox and scratch topic were removed afterwards.
 
 - [x] **Worktree.** `/goodbye` in `wt a` offered enrolment with a proposed slug, title and links. On acceptance it created `app-greeting`, linked the worktree and session, wrote a `### wt-a` section, and set `implementing`. Git status in `wt a` was unchanged and nothing was written inside the worktree. Outside the sandbox, only Anvil's own `.anvil/logs` changed.
-  - Finding: the sandbox sat inside `~/dev`, which is itself a git repo, so the first `wip new` refused ("make it a repo of its own"). The agent stopped and asked rather than running `git init` itself. After a manual `git init` it carried on. The real `~/.agents` isn't inside a repo, so this doesn't affect normal use, but the sandbox setup should `git init "$S/initiatives"` or live outside any repo.
+  - Finding: the sandbox sat inside `~/dev`, which is itself a git repo, so the first `wip new` refused ("make it a repo of its own"). The agent stopped and asked rather than running `git init` itself. After a manual `git init` it carried on. The real `~/.agents` isn't inside a repo, so this doesn't affect normal use, but the sandbox setup should `git init "$S/tickets"` or live outside any repo.
 - [x] **Repeat.** A hand-edited gotcha line and a new `## Mine` section were left untouched on a second `/goodbye`, which reported nothing new and said `wip` would commit the edits next time. A later `wip` call committed them as "record edits made outside wip".
 - [x] **Multi-worktree.** Started in `$S` and edited both worktrees. The agent linked `wt-c` because the user said it was the same work, and `/goodbye` added a `### wt-c` section, rewrote `### wt-a` from the diff, recorded the decision, and raised an open question about a stray line. `## Mine` survived.
 - [x] **Topic, discussion only.** In the scratch topic, `/goodbye` updated the topic's `log.md`, made no enrolment offer, and asked whether to apply the discussion to `app-greeting`. On "yes" it moved the open question into Decisions and updated the `wt-a` section.
 - [x] **Declined.** In `wt-d` with an edit, `/goodbye` offered new, attach or don't track. "Don't track" created nothing, made no commit and asked nothing further.
 - [x] **Research-only.** In `wt-d` before any edit, `/goodbye` said there was nothing to record.
-- [x] **Privacy.** A dummy `SECRET_TOKEN=abc123` given in chat was refused and never written: no match in the sandbox, the scratch topic, or the initiatives repo's full history (`git log -p`). The decision from the same message was recorded.
+- [x] **Privacy.** A dummy `SECRET_TOKEN=abc123` given in chat was refused and never written: no match in the sandbox, the scratch topic, or the tickets repo's full history (`git log -p`). The decision from the same message was recorded.
 - [x] **Resume.** `anvil --session <id> --there` started from `$S` reopened the session in `wt a`. The `cd '<worktree>' && anvil --session <id>` form opened it in `wt-c`. A fresh session in `wt a` asked "what's left on this branch?" ran `wip which .` and `wip show`, and answered from the `### wt-a` section.
   - Finding: `wip show` printed 12 resume lines for 4 sessions and 2 worktrees (every session crossed with every worktree). It's correct but noisy.
 - [x] **Removal.** `finishing-a-development-branch` Option 1 for `wt-c` merged it, followed the "Worktree about to be removed" event (folded the branch section into Decisions and deleted it), removed the worktree and branch, then ran `wip unlink` and `wip sync`. `wip show` no longer listed `wt-c`.
 - [x] **Teardown.** `anvil.json` restored and checked with `cmp`; worktrees, `$S` and `~/dev/topics/wip-scratch` removed.
 
-**History check.** The sandbox initiatives repo ended with 16 commits that alternate cleanly: each `wip <command>` commit was preceded by a "record edits made outside wip" commit whenever an agent had edited the body first.
+**History check.** The sandbox tickets repo ended with 16 commits that alternate cleanly: each `wip <command>` commit was preceded by a "record edits made outside wip" commit whenever an agent had edited the body first.
 
 **Findings to act on:**
 
-1. Every agent edit to an initiative file outside the session's cwd triggers an Anvil permission prompt ("path outside working directory"). Adding a permission rule for `~/.agents/initiatives/*.md` would remove it.
+1. Every agent edit to a ticket file outside the session's cwd triggers an Anvil permission prompt ("path outside working directory"). Adding a permission rule for `~/.agents/tickets/*.md` would remove it.
 2. `wip show` resume output is noisy (see Resume above). Fixed: it now prints the `cd` variants only for the most recent session.
-3. Fix the sandbox setup step so `$S/initiatives` is its own repo (see Worktree above). Fixed in the setup step.
+3. Fix the sandbox setup step so `$S/tickets` is its own repo (see Worktree above). Fixed in the setup step.
 
 ### Task 5: User setup (after Task 4 passes)
 
@@ -413,8 +413,8 @@ Run with the plugin path in `~/.config/anvil/anvil.json` pointed at this worktre
 **Steps:**
 
 1. [x] Add a "Work in progress" section to `~/dev/CLAUDE.md`, after "Worktrees for New Work":
-   - initiatives live in `~/.agents/initiatives/`, managed through the tracking-work skill;
-   - when resuming in a worktree, find its initiative with the skill and read its branch section first;
+   - tickets live in `~/.agents/tickets/`, managed through the tracking-work skill;
+   - when resuming in a worktree, find its ticket with the skill and read its branch section first;
    - `/goodbye` before closing a session.
 2. [x] Tell the user they can add this alias to `~/.zshrc`. Don't edit the file:
    ```

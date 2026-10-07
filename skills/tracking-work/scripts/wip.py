@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Track initiatives across worktrees, PRs, topics, docs and Anvil sessions.
+"""Track tickets across worktrees, PRs, topics, docs and Anvil sessions.
 
-Each initiative is <WIP_DIR>/<slug>.md: JSON front matter owned by this
+Each ticket is <WIP_DIR>/<slug>.md: JSON front matter owned by this
 script, then a markdown body owned by agents and the user.
 """
 import argparse
@@ -24,7 +24,7 @@ import time
 import urllib.parse
 
 HOME = os.path.expanduser("~")
-WIP_DIR = os.path.realpath(os.path.expanduser(os.environ.get("WIP_DIR") or "~/.agents/initiatives"))
+WIP_DIR = os.path.realpath(os.path.expanduser(os.environ.get("WIP_DIR") or "~/.agents/tickets"))
 WIP_WORKTREES_ROOT = os.path.realpath(
     os.path.expanduser(os.environ.get("WIP_WORKTREES_ROOT") or "~/Library/Application Support/wtp/worktrees")
 )
@@ -48,10 +48,12 @@ LINK_KEYS = {
     "doc": {"kind", "ref"},
     "pr": {"kind", "ref", "state", "observed", "error"},
     "session": {"kind", "ref", "cwd"},
+    "linear": {"kind", "ref"},
 }
 PATH_KINDS = {"worktree", "topic", "doc"}
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]{1,48}$")
 PR_URL = re.compile(r"^https://github\.com/[^/]+/[^/]+/pull/\d+$")
+LINEAR_ID = re.compile(r"^[A-Z][A-Z0-9]*-[0-9]+$")
 NEXT_SECTION = re.compile(r"^##[ \t]+Next[ \t]*\r?$(.*?)(?=^##[ \t]|\Z)", re.M | re.S)
 PLACEHOLDER = re.compile(r"^(?:[-*]|\d+\.)?\s*<.*>$")
 BODY_TEMPLATE = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "references", "body-template.md")
@@ -141,7 +143,7 @@ def load(path):
         with open(path, "rb") as f:
             raw = f.read()
     except FileNotFoundError:
-        raise WipError(f"no initiative at {path}") from None
+        raise WipError(f"no ticket at {path}") from None
     end = raw.find(CLOSE_FM, len(OPEN_FM) - 1)
     if not raw.startswith(OPEN_FM) or end < 0:
         raise WipError(f"{path}: missing --- front matter")
@@ -347,6 +349,8 @@ def cmd_which(args):
 def cmd_link(args):
     kind = args.kind
     ref = os.path.realpath(os.path.expanduser(args.ref)) if kind in PATH_KINDS else args.ref
+    if kind == "linear":
+        ref = ref.upper()
 
     def change(meta):
         link = {"kind": kind, "ref": ref}
@@ -361,6 +365,8 @@ def cmd_link(args):
             if not PR_URL.match(ref):
                 raise WipError(f"{ref} is not a GitHub PR URL like https://github.com/<owner>/<repo>/pull/<n>")
             link.update(state="unknown", observed=None, error=None)
+        elif kind == "linear" and not LINEAR_ID.match(ref):
+            raise WipError(f"{ref} is not a Linear issue ID like OLL-1480")
         elif kind == "session":
             db = open_db()
             if db:
@@ -384,6 +390,8 @@ def cmd_link(args):
 
 def cmd_unlink(args):
     ref = os.path.realpath(os.path.expanduser(args.ref)) if args.kind in PATH_KINDS else args.ref
+    if args.kind == "linear":
+        ref = ref.upper()
 
     def change(meta):
         kept = [link for link in meta["links"] if (link["kind"], link["ref"]) != (args.kind, ref)]
@@ -406,7 +414,7 @@ def cmd_phase(args):
             raise WipError("review comes from PR state: link a PR and run `wip sync`")
         if target == "unpark":
             if current != "parked":
-                raise WipError(f"only a parked initiative can be unparked; {args.slug} is {current}")
+                raise WipError(f"only a parked ticket can be unparked; {args.slug} is {current}")
             meta.update(phase=meta["parked_from"] or "idea", reason=None, parked_from=None)
         elif target in ("done", "parked"):
             if current not in ACTIVE_PHASES:
@@ -539,9 +547,9 @@ def cmd_import_pins(args):
         f"select id, title, pin_note, working_dir from sessions where pinned = 1 and {ROOT_SESSION_SQL} order by created_at, id"
     ).fetchall()
     db.close()
-    initiatives = load_all()
-    linked = {link["ref"]: slug for slug, meta, _ in initiatives for link in meta["links"] if link["kind"] == "session"}
-    taken = {slug for slug, _, _ in initiatives}
+    tickets = load_all()
+    linked = {link["ref"]: slug for slug, meta, _ in tickets for link in meta["links"] if link["kind"] == "session"}
+    taken = {slug for slug, _, _ in tickets}
     proposals = {}
     for sid, title, note, wd in rows:
         if sid in linked:
@@ -590,9 +598,9 @@ def cmd_import_pins(args):
 def cmd_board(args):
     start = time.monotonic()
     only = getattr(args, "only", None)
-    initiatives = [(only, *load(slug_path(only))[1:])] if only else load_all()
+    tickets = [(only, *load(slug_path(only))[1:])] if only else load_all()
     now = datetime.date.today()
-    linked = {link["ref"] for _, meta, _ in initiatives for link in meta["links"] if link["kind"] == "worktree"}
+    linked = {link["ref"] for _, meta, _ in tickets for link in meta["links"] if link["kind"] == "worktree"}
 
     candidates = set()
     stack = [] if only or not os.path.isdir(WIP_WORKTREES_ROOT) else [WIP_WORKTREES_ROOT]
@@ -642,7 +650,7 @@ def cmd_board(args):
     timeouts = len(paths) - len(states)
 
     db = open_db()
-    session_ids = [link["ref"] for _, meta, _ in initiatives for link in meta["links"] if link["kind"] == "session"]
+    session_ids = [link["ref"] for _, meta, _ in tickets for link in meta["links"] if link["kind"] == "session"]
     recency, pins = {}, []
     if db:
         if session_ids:
@@ -658,7 +666,7 @@ def cmd_board(args):
     lines, flags = [], []
     for phase in PHASES:
         group = []
-        for slug, meta, body in initiatives:
+        for slug, meta, body in tickets:
             days = (now - datetime.date.fromisoformat(meta["since"])).days
             if meta["phase"] == phase and (args.all or phase != "done" or days <= DONE_HIDDEN_AFTER_DAYS):
                 group.append((slug, meta, body, days))
@@ -688,6 +696,8 @@ def cmd_board(args):
                         dates.append(states[ref]["date"])
                     else:
                         lines.append(f"  worktree {shown}: ?")
+                elif link["kind"] == "linear":
+                    lines.append(f"  linear {ref}")
                 elif link["kind"] == "pr":
                     if link["error"]:
                         lines.append(f"  pr {ref}: ? {link['state']} (error: {link['error']})")
@@ -720,7 +730,7 @@ def cmd_board(args):
     if only:
         print("\n".join(lines + [f"flag: {f}" for f in flags]))
         return
-    print("Initiatives" + ("" if lines else "\n  none"))
+    print("Tickets" + ("" if lines else "\n  none"))
     print("\n".join(lines))
     if flags:
         print("\nFlags")
@@ -739,7 +749,7 @@ def cmd_board(args):
         print(f"\nUnclaimed pinned sessions ({len(unlinked_pins)})")
         for sid, title, note in unlinked_pins:
             print(f"  {flatten(title)} · {flatten(note) or '-'} · {sid}")
-    observations = [link["observed"] for _, meta, _ in initiatives for link in meta["links"] if link["kind"] == "pr"]
+    observations = [link["observed"] for _, meta, _ in tickets for link in meta["links"] if link["kind"] == "pr"]
     if not observations:
         oldest = "none"
     elif None in observations:
@@ -751,29 +761,29 @@ def cmd_board(args):
 
 
 def main():
-    parser = Parser(prog="wip", description="Track initiatives across worktrees, PRs and sessions.")
+    parser = Parser(prog="wip", description="Track tickets across worktrees, PRs and sessions.")
     parser.set_defaults(func=cmd_board, all=False)
     sub = parser.add_subparsers(dest="cmd")
 
     p = sub.add_parser("board", help="show the board")
-    p.add_argument("--all", action="store_true", help="include initiatives done more than 14 days ago")
+    p.add_argument("--all", action="store_true", help="include tickets done more than 14 days ago")
     p.set_defaults(func=cmd_board)
 
-    p = sub.add_parser("new", help="create an initiative")
+    p = sub.add_parser("new", help="create a ticket")
     p.add_argument("slug")
     p.add_argument("--title", required=True)
     p.set_defaults(func=cmd_new)
 
-    p = sub.add_parser("show", help="show one initiative")
+    p = sub.add_parser("show", help="show one ticket")
     p.add_argument("slug")
     p.set_defaults(func=cmd_show)
 
-    p = sub.add_parser("which", help="find initiatives linking a path or session")
+    p = sub.add_parser("which", help="find tickets linking a path or session")
     p.add_argument("path", nargs="?")
     p.add_argument("--session")
     p.set_defaults(func=cmd_which)
 
-    p = sub.add_parser("link", help="link a worktree, PR, topic, doc or session")
+    p = sub.add_parser("link", help="link a worktree, PR, Linear issue, topic, doc or session")
     p.add_argument("slug")
     p.add_argument("kind", choices=sorted(LINK_KEYS))
     p.add_argument("ref")
@@ -797,7 +807,7 @@ def main():
     p.add_argument("slug", nargs="?")
     p.set_defaults(func=cmd_sync)
 
-    p = sub.add_parser("import-pins", help="turn pinned Anvil sessions into parked initiatives")
+    p = sub.add_parser("import-pins", help="turn pinned Anvil sessions into parked tickets")
     p.add_argument("--apply", nargs="+", metavar="SESSION_ID")
     p.set_defaults(func=cmd_import_pins)
 
