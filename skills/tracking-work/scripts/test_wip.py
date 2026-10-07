@@ -400,13 +400,13 @@ class TestSync(WipTest):
                 with open(self.path("sy")) as f:
                     self.assertNotIn("tok-work", f.read())
 
-    def test_sync_all_commits_each_initiative_by_name(self):
+    def test_sync_all_commits_each_ticket_by_name(self):
         for slug in ("one", "two"):
             self.write(slug, phase="implementing", links=[self.pr_link(1)])
         self.wip("sync", env={"FAKE_GH_1": GH["open"]})
         self.assertEqual(self.log()[:2], ["wip sync two", "wip sync one"])
 
-    def test_sync_all_skips_initiatives_without_prs(self):
+    def test_sync_all_skips_tickets_without_prs(self):
         self.write("plain")
         before = self.read("plain")
         self.write("withpr", phase="implementing", links=[self.pr_link(1)])
@@ -440,7 +440,11 @@ class TestLink(WipTest):
             "root session with empty parent": (["session", "root-2"], True),
             "child session": (["session", "child-1"], False),
             "session absent from db": (["session", "nope"], False),
-            "unknown kind": (["ticket", "x"], False),
+            "linear id": (["linear", "OLL-1480"], True),
+            "lowercase linear id": (["linear", "bre-917"], True),
+            "linear url": (["linear", "https://linear.app/x/issue/OLL-1"], False),
+            "linear id without number": (["linear", "OLL-"], False),
+            "unknown kind": (["jira", "x"], False),
         }
         self.wip("new", "lk", "--title", "L")
         for name, (args, ok) in cases.items():
@@ -450,6 +454,11 @@ class TestLink(WipTest):
         self.assertIn({"kind": "worktree", "ref": spaced}, links)
         self.assertIn({"kind": "pr", "ref": pr(7), "state": "unknown", "observed": None, "error": None}, links)
         self.assertIn({"kind": "session", "ref": "root-1", "cwd": self.dirs["work"]}, links)
+        self.assertIn({"kind": "linear", "ref": "OLL-1480"}, links)
+        self.assertIn({"kind": "linear", "ref": "BRE-917"}, links)
+        self.assertIn("  linear OLL-1480", self.wip("show", "lk").stdout)
+        self.wip("unlink", "lk", "linear", "bre-917")
+        self.assertNotIn({"kind": "linear", "ref": "BRE-917"}, self.read("lk")[0]["links"])
 
     def test_session_without_db_uses_cwd(self):
         self.wip("new", "lk", "--title", "L")
@@ -547,7 +556,7 @@ class TestBoard(WipTest):
         shutil.rmtree(gone)
 
         out = self.wip().stdout
-        initiatives, unclaimed = out.split("Unclaimed worktrees")
+        tickets, unclaimed = out.split("Unclaimed worktrees")
         self.assertIn("feat/a/b/c/d", unclaimed)
         self.assertIn("org/repo/feat/a/b/c/d  feat/a/b/c/d · no upstream · " + TODAY, unclaimed)
         self.assertIn("org/repo/ahead  ahead · ↑1 ↓0 · " + TODAY, unclaimed)
@@ -555,9 +564,9 @@ class TestBoard(WipTest):
         self.assertNotIn("node_modules", out)
         self.assertNotIn(".hidden", out)
         self.assertIn("(2)", unclaimed.splitlines()[0])
-        self.assertIn("dirty · dirty 1 · no upstream · " + TODAY, initiatives)
-        self.assertIn("gone: MISSING", initiatives)
-        self.assertIn(f"linked: worktree missing: {gone}", initiatives)
+        self.assertIn("dirty · dirty 1 · no upstream · " + TODAY, tickets)
+        self.assertIn("gone: MISSING", tickets)
+        self.assertIn(f"linked: worktree missing: {gone}", tickets)
         self.assertIn("git timeouts: 0", out)
 
     def test_stale_and_parked_flags(self):
@@ -664,7 +673,7 @@ class TestBoard(WipTest):
     def test_empty(self):
         os.rmdir(self.dirs["root"])
         out = self.wip().stdout
-        self.assertIn("Initiatives\n  none", out)
+        self.assertIn("Tickets\n  none", out)
 
 
 class TestImportPins(WipTest):
@@ -828,7 +837,7 @@ class TestHistory(WipTest):
 
     def test_dir_inside_another_repo_is_rejected(self):
         outer = self.repo(os.path.join(self.dirs["work"], "outer"))
-        inner = os.path.join(outer, "initiatives")
+        inner = os.path.join(outer, "tickets")
         r = self.wip("new", "alpha", "--title", "Alpha", ok=False, env={"WIP_DIR": inner})
         self.assertIn("make it a repo of its own", r.stderr)
         self.assertFalse(os.path.exists(os.path.join(inner, "alpha.md")))
