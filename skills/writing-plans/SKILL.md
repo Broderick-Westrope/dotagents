@@ -165,6 +165,8 @@ Before presenting the plan to the user, dispatch the **devils-advocate** agent a
 
 Skip this step only if the plan is trivial (< 3 tasks, single subsystem, no architectural decisions).
 
+Once the plan is reviewed and committed, if the **tracking-work** skill is available, load it and apply the "Implementation plan written" row of its Events table. For a phased plan, pass the README as the doc.
+
 ## Phased Plans
 
 Split a plan into phases when a reviewer would need to context-switch between unrelated domains to understand the resulting diff. Each phase is a **PR-sized vertical slice** — a sub-feature that can be reviewed, approved, and merged independently.

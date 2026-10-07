@@ -5,6 +5,8 @@ argument_hint: "[base-branch]"
 
 **DELEGATION ONLY**: Do NOT run any commands or investigate the codebase yourself. Your only job is to immediately delegate to the **haiku** agent as a subagent, passing the prompt template below with `$ARGUMENTS` substituted.
 
+**After the subagent returns:** if it reports a created PR URL and the **tracking-work** skill is available, load it and apply the "PR opened" row of its Events table with that URL. If no URL comes back, do nothing.
+
 ## Subagent Prompt for Haiku
 
 ````

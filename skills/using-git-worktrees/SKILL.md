@@ -141,6 +141,10 @@ Tests passing (<N> tests, 0 failures)
 Ready to implement <feature-name>
 ```
 
+If the **tracking-work** skill is available, load it and apply the "Worktree created" row of its Events table.
+
+When resuming in a worktree, apply tracking-work's "Resuming" row to read its branch notes.
+
 ## Quick Reference
 
 | Situation | Action |

@@ -23,6 +23,7 @@ skills:
   - drafting-tsds
   - writing-plans
   - planning-products
+  - tracking-work
 mcps:
   muninn:
   linear:
@@ -62,7 +63,7 @@ The **grilling** skill handles both targeted refinement and approach exploration
 
 ### Phase 3: Writing the Spec
 
-Write a design spec to `plans/<feature-name>-spec.md`. Include:
+Write a design spec to `plans/design-YYYY-MM-DD-<feature-name>.md`, the same name **grilling** uses, so implementation plans (`plans/impl-YYYY-MM-DD-<feature-name>.md`) sit beside it. Include:
 
 - **Overview**: one paragraph — what this is and why it's being built
 - **Goals and non-goals**: explicit lists
@@ -80,3 +81,5 @@ Delegate the completed spec to devils-advocate. Incorporate valid findings. Revi
 ## Output Format
 
 Documents go to disk in `plans/`. Respond to the user with a brief summary of what was written and where, plus any open questions that need their input before implementation can begin.
+
+Before responding, load the **tracking-work** skill if it's available and apply the "Design doc written" row of its Events table for the spec. Do this even if the adversarial review didn't run. If no ticket matches, say so in your response instead of asking; the orchestrator relays the enrolment offer.

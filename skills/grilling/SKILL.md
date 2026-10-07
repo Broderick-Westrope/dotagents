@@ -181,6 +181,8 @@ After the design review passes, ask the user to review the written spec:
 
 Wait for the user's response. If they request changes, make them and re-run the design review. Only proceed once the user approves.
 
+Once the user approves, if the **tracking-work** skill is available, load it and apply the "Design doc written" row of its Events table.
+
 **Invoke writing-plans:**
 
 Pass the spec file path to **writing-plans**. Do NOT invoke any other skill.
