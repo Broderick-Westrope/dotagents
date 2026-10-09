@@ -53,9 +53,7 @@ Everything else → Integration test
 | API     | Response body, status | Internal DB state           |
 | Library | Return values         | Private methods             |
 
-Test through the module's public surface. In Go that means an external test
-package (`package foo_test`). Needing to reach a private function directly
-usually means it is a separate module hiding inside this one.
+Test through the module's public surface. In Go that means an external test package (`package foo_test`). Needing to reach a private function directly usually means it is a separate module hiding inside this one.
 
 ## Anti-Patterns
 

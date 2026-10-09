@@ -5,27 +5,19 @@ description: "Go design conventions for any Go repository: package depth, when t
 
 # Go Style
 
-This skill covers design decisions. Naming, formatting, enums, and time
-injection live in **euc-go**, which applies in every Go repo.
-**euc-go-microservice** adds service layout rules in Eucalyptus services.
+This skill covers design decisions. Naming, formatting, enums, and time injection live in **euc-go**, which applies in every Go repo. **euc-go-microservice** adds service layout rules in Eucalyptus services.
 
 ## Precedence
 
-1. The repo's own docs (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`) and its
-   consistent existing patterns.
+1. The repo's own docs (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`) and its consistent existing patterns.
 2. Company skills (`euc-*`) in Eucalyptus repos.
 3. This skill.
 
-The rules below are written to agree with Eucalyptus practice. They
-sharpen euc-go's "no single-implementation interfaces" and "prefer inlining"
-rather than contradict them. If you find a real conflict, follow the higher
-rule and tell the user. A rule that helps agents is worth proposing to the
-team, so don't diverge silently.
+The rules below are written to agree with Eucalyptus practice. They sharpen euc-go's "no single-implementation interfaces" and "prefer inlining" rather than contradict them. If you find a real conflict, follow the higher rule and tell the user. A rule that helps agents is worth proposing to the team, so don't diverge silently.
 
 ## Vocabulary
 
-Use these terms exactly. Mixing them up leads agents to add interface types
-when the goal was a smaller package API.
+Use these terms exactly. Mixing them up leads agents to add interface types when the goal was a smaller package API.
 
 | Term | Meaning in Go |
 |---|---|
@@ -38,17 +30,10 @@ when the goal was a smaller package API.
 
 ## Packages
 
-- **Aim for deep packages.** Keep the exported surface small and unexport by
-  default. Callers should get a lot done with a few identifiers.
-- **Apply the deletion test.** Imagine deleting the package or function. If
-  the complexity vanishes, it was a pass-through and should go. If the
-  complexity reappears across several callers, it is earning its place.
-- **Split by reason to change, not by file size.** Two packages are worth it
-  when they change for different reasons and the surface between them is
-  small. A package that needs most of another package's exported API is the
-  same module in two places.
-- **The exported API is the test surface.** If behavior can't be tested
-  through it, the package is probably hiding a second module (see Tests).
+- **Aim for deep packages.** Keep the exported surface small and unexport by default. Callers should get a lot done with a few identifiers.
+- **Apply the deletion test.** Imagine deleting the package or function. If the complexity vanishes, it was a pass-through and should go. If the complexity reappears across several callers, it is earning its place.
+- **Split by reason to change, not by file size.** Two packages are worth it when they change for different reasons and the surface between them is small. A package that needs most of another package's exported API is the same module in two places.
+- **The exported API is the test surface.** If behavior can't be tested through it, the package is probably hiding a second module (see Tests).
 
 ## Extract or Inline
 
@@ -69,29 +54,23 @@ Do not extract:
 - Single-use helpers, or helpers that exist only so a test can call them.
 - Two blocks that look alike but change for different reasons.
 
-A long function is fine when it reads top to bottom as one concern. It is not
-fine when it mixes concerns. The classic case is a big `switch` over message
-or event types, or an `if/else` chain that gains a branch per feature. Fix
-that with a different shape, not with a pile of helpers:
+A long function is fine when it reads top to bottom as one concern. It is not fine when it mixes concerns. The classic case is a big `switch` over message or event types, or an `if/else` chain that gains a branch per feature. Fix that with a different shape, not with a pile of helpers:
 
 - A **lookup table**: a map from type or key to handler.
 - A **state machine**: explicit states and transitions.
 - A **typed model**: a type whose methods own the rules.
 
-Signs you need one: every new feature adds a case to the same switch, or two
-booleans have to be kept in sync.
+Signs you need one: every new feature adds a case to the same switch, or two booleans have to be kept in sync.
 
 ## Interface Types
 
-Declare an interface type only at a real seam. "One adapter is a
-hypothetical seam, two is a real one." The test fake counts as the second.
+Declare an interface type only at a real seam. "One adapter is a hypothetical seam, two is a real one." The test fake counts as the second.
 
 Declare one for:
 
 - Other services (gRPC and GraphQL clients).
 - Vendor and third-party HTTP clients.
-- Infrastructure outside the process: pubsub, clock, feature flags, object
-  storage.
+- Infrastructure outside the process: pubsub, clock, feature flags, object storage.
 
 Do not declare one for:
 
@@ -99,17 +78,13 @@ Do not declare one for:
 - The database. Test against a real one.
 - "We might need another implementation later."
 
-When you do declare one, define it in the consuming package, keep it small,
-and have constructors accept interface types and return concrete structs.
+When you do declare one, define it in the consuming package, keep it small, and have constructors accept interface types and return concrete structs.
 
-Microservices with an RPC or GraphQL API already have their main interface at
-the network boundary, so they need very few interface types. Larger repos
-without that boundary rely on package APIs instead, which is the same rule.
+Microservices with an RPC or GraphQL API already have their main interface at the network boundary, so they need very few interface types. Larger repos without that boundary rely on package APIs instead, which is the same rule.
 
 ## Errors
 
-Wrap with `%w`. Messages are lower case, name the operation, and skip
-"failed to" (`open session: %w`, not `failed to open session: %w`).
+Wrap with `%w`. Messages are lower case, name the operation, and skip "failed to" (`open session: %w`, not `failed to open session: %w`).
 
 Where the details go depends on whether the repo has telemetry. Check:
 
@@ -117,22 +92,14 @@ Where the details go depends on whether the repo has telemetry. Check:
 rg -l 'eucalyptusvc/sprig|dd-trace-go|go.opentelemetry.io' go.mod
 ```
 
-- **Telemetry present** (Sprig, Datadog, OpenTelemetry, or similar): keep
-  error messages constant so they group and filter cleanly. Put IDs, enums,
-  and reasons on the span as tags.
-- **No telemetry** (CLIs, local tools, libraries): the error text is often
-  all you get, so include the identifiers that make it debuggable:
-  `fmt.Errorf("load session %s: %w", id, err)`.
+- **Telemetry present** (Sprig, Datadog, OpenTelemetry, or similar): keep error messages constant so they group and filter cleanly. Put IDs, enums, and reasons on the span as tags.
+- **No telemetry** (CLIs, local tools, libraries): the error text is often all you get, so include the identifiers that make it debuggable: `fmt.Errorf("load session %s: %w", id, err)`.
 
 Either way, never put patient data, PII, or secrets in errors or span tags.
 
 ## Tests
 
-- **Use external test packages** (`package foo_test`). Test unexported
-  behavior through the exported API. If you need to call an unexported
-  function directly, it is usually a deep module hiding inside the package.
-  Consider moving it into its own package. Internal tests are a rare,
-  justified exception, such as state with no exported way to observe it.
+- **Use external test packages** (`package foo_test`). Test unexported behavior through the exported API. If you need to call an unexported function directly, it is usually a deep module hiding inside the package. Consider moving it into its own package. Internal tests are a rare, justified exception, such as state with no exported way to observe it.
 - **Use map tables** keyed by case name:
 
   ```go
@@ -147,15 +114,11 @@ Either way, never put patient data, PII, or secrets in errors or span tags.
   }
   ```
 
-  Random iteration order exposes tests that depend on each other, and
-  duplicate names fail to compile.
-- **Mock other services, vendor clients, and infrastructure** (pubsub,
-  clock, flags). Use a real database. Never mock the repo's own packages.
+  Random iteration order exposes tests that depend on each other, and duplicate names fail to compile.
+- **Mock other services, vendor clients, and infrastructure** (pubsub, clock, flags). Use a real database. Never mock the repo's own packages.
 - Follow the repo's assertion library. Most use testify `require`.
 - Don't copy loop variables (`tc := tc`). Go 1.22 made it unnecessary.
 
 ## Making Rules Stick
 
-Agents copy the nearest code. When a rule here keeps being broken in a repo,
-propose a check (a `golangci-lint` rule such as `depguard` for import
-direction, or a test) instead of restating the rule in prose.
+Agents copy the nearest code. When a rule here keeps being broken in a repo, propose a check (a `golangci-lint` rule such as `depguard` for import direction, or a test) instead of restating the rule in prose.

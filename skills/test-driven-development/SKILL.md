@@ -61,8 +61,7 @@ flowchart LR
     classDef green fill:#ccffcc,stroke:#00cc00,color:#000
 ```
 
-Each slice is a tracer bullet: one test, the minimal code to pass it, then
-the next test. Do not write all the tests first and then all the code.
+Each slice is a tracer bullet: one test, the minimal code to pass it, then the next test. Do not write all the tests first and then all the code.
 
 ### RED - Write Failing Test
 
@@ -184,12 +183,7 @@ Next failing test for the next slice of behavior.
 
 ### Clean Up After the Loop
 
-There is no refactor step inside the loop. Restructuring after every slice
-designs for code that is only half written, and it mixes "add behavior" with
-"change structure" in the same diff. Once every slice is green, re-read the
-whole change and clean up its structure (duplication, names, mixed concerns,
-misplaced code) as separate commits. Code review then checks it again with
-fresh eyes. The tests you wrote are what make the cleanup safe.
+There is no refactor step inside the loop. Restructuring after every slice designs for code that is only half written, and it mixes "add behavior" with "change structure" in the same diff. Once every slice is green, re-read the whole change and clean up its structure (duplication, names, mixed concerns, misplaced code) as separate commits. Code review then checks it again with fresh eyes. The tests you wrote are what make the cleanup safe.
 
 ## Good Tests
 
@@ -319,9 +313,7 @@ $ npm test
 PASS
 ```
 
-Next slice: write the next failing test. Whether validation for several
-fields deserves its own function is a question for review, once all the
-behavior exists.
+Next slice: write the next failing test. Whether validation for several fields deserves its own function is a question for review, once all the behavior exists.
 
 ## Testing Anti-Patterns
 

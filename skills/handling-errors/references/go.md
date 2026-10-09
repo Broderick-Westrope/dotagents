@@ -1,8 +1,6 @@
 # Go Error Handling
 
-Go-specific patterns for handling errors. Design rules (message wording and
-where identifiers go) live in the **go-style** skill; this file shows the
-mechanics.
+Go-specific patterns for handling errors. Design rules (message wording and where identifiers go) live in the **go-style** skill; this file shows the mechanics.
 
 ## Contents
 
@@ -35,14 +33,10 @@ Check whether the repo has telemetry:
 rg -l 'eucalyptusvc/sprig|dd-trace-go|go.opentelemetry.io' go.mod
 ```
 
-- **Telemetry present:** keep messages constant (`read config: %w`) and put
-  IDs, paths, and reasons on the span as tags. Constant messages group and
-  filter cleanly in Datadog.
-- **No telemetry:** include the identifiers in the wrapped message
-  (`read config %s: %w`), because the error text is the only record.
+- **Telemetry present:** keep messages constant (`read config: %w`) and put IDs, paths, and reasons on the span as tags. Constant messages group and filter cleanly in Datadog.
+- **No telemetry:** include the identifiers in the wrapped message (`read config %s: %w`), because the error text is the only record.
 
-Never include patient data, PII, or secrets either way. The examples below
-assume a repo without telemetry.
+Never include patient data, PII, or secrets either way. The examples below assume a repo without telemetry.
 
 ## Explicit Checking with Wrapping
 
