@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: "Enforces the RED-GREEN test-first loop. Use when starting implementation of a feature or bugfix to ensure tests are written before production code, not after. Structural cleanup is left to code review, not done inside the loop."
+description: "Enforces the RED-GREEN test-first loop. Use when starting implementation of a feature or bugfix to ensure tests are written before production code, not after. Structural cleanup happens after all slices are green, not inside the loop."
 ---
 
 # Test-Driven Development (TDD)
@@ -55,7 +55,7 @@ flowchart LR
     VERIFY_GREEN -->|yes| NEXT(["Next slice"])
     VERIFY_GREEN -->|no| GREEN
     NEXT --> RED
-    NEXT -.->|"all slices green"| REVIEW(["Code review\nowns cleanup"])
+    NEXT -.->|"all slices green"| CLEANUP(["Clean up\nwhole change"])
 
     classDef red fill:#ffcccc,stroke:#cc0000,color:#000
     classDef green fill:#ccffcc,stroke:#00cc00,color:#000
@@ -182,14 +182,14 @@ Confirm:
 
 Next failing test for the next slice of behavior.
 
-### Cleanup Belongs to Review
+### Clean Up After the Loop
 
 There is no refactor step inside the loop. Restructuring after every slice
 designs for code that is only half written, and it mixes "add behavior" with
-"change structure" in the same diff. Once every slice is green, code review
-sees the whole change with fresh context and owns the structural cleanup
-(duplication, names, mixed concerns, misplaced code). The tests you wrote
-are what make that cleanup safe.
+"change structure" in the same diff. Once every slice is green, re-read the
+whole change and clean up its structure (duplication, names, mixed concerns,
+misplaced code) as separate commits. Code review then checks it again with
+fresh eyes. The tests you wrote are what make the cleanup safe.
 
 ## Good Tests
 

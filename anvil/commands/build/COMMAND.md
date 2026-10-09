@@ -33,9 +33,10 @@ Build progress:
 - [ ] 3. Write the build note
 - [ ] 4. Devil's advocate review
 - [ ] 5. Iterate or rebuild
-- [ ] 6. Verify on the real artifact
-- [ ] 7. Code review
-- [ ] 8. Finish the branch
+- [ ] 6. Clean up
+- [ ] 7. Verify on the real artifact
+- [ ] 8. Code review
+- [ ] 9. Finish the branch
 ```
 
 ### 1. Set up a branch
@@ -50,14 +51,15 @@ version must be cheap to throw away.
 - Build the thinnest complete path first: one slice through every layer that
   works end to end. Then widen it.
 - Use **test-driven-development** for each slice. Stop at green. Structural
-  cleanup happens in step 7, not now.
+  cleanup happens in step 6, once the approach has survived review.
 - Commit as you go, one commit per logical step.
 - For large changes, build slice by slice. Run slices in parallel only when
   they touch separate areas, and give each subagent the design doc and its
   slice. Each slice goes through steps 3 to 5 before the next one depends on
   it.
 
-Don't stop to polish. The point is to learn what the change really involves.
+Don't stop to polish yet. The point is to learn what the change really
+involves, and the devil's advocate may still send it back for a rebuild.
 
 ### 3. Write the build note
 
@@ -93,7 +95,16 @@ earlier rounds can't anchor it.
   is cheap; a patched wrong approach is not.
 - After three rounds without a pass, stop and bring the findings to the user.
 
-### 6. Verify on the real artifact
+### 6. Clean up
+
+The approach has survived, so now make it good. Re-read the whole diff as one
+change and fix its structure: pass-through layers, shallow modules,
+duplicated concepts, growing switches, unclear names, and code in the wrong
+place. Use the matching style skill (e.g. **go-style**) and
+**refactoring-code**. Keep tests green, and commit cleanup separately from
+behavior changes.
+
+### 7. Verify on the real artifact
 
 Tests passing is not enough. Exercise the change the way a user would:
 
@@ -105,13 +116,13 @@ Tests passing is not enough. Exercise the change the way a user would:
 Fix friction you notice (confusing errors, noisy output, inconsistent
 behavior). See **verification-before-completion**.
 
-### 7. Code review
+### 8. Code review
 
-Run the `/review` workflow. Review owns structural cleanup: pass-through
-layers, shallow modules, duplicated concepts, and growing switches. Fix
-findings as separate commits; don't amend them into earlier ones.
+Run the `/review` workflow. Reviewers check structure again with fresh eyes,
+since authors miss their own pass-throughs. Fix findings as separate commits;
+don't amend them into earlier ones.
 
-### 8. Finish the branch
+### 9. Finish the branch
 
 Use **finishing-a-development-branch**.
 
@@ -120,5 +131,5 @@ Use **finishing-a-development-branch**.
 Database migrations, protobuf and public API contracts, and changes spanning
 several services still start with an early version, but on a branch only.
 Don't apply migrations to shared environments or publish contracts until
-step 7 passes. In step 4, ask the devil's advocate to focus on reversibility
+step 8 passes. In step 4, ask the devil's advocate to focus on reversibility
 and rollout order.

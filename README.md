@@ -43,7 +43,7 @@ Reusable development patterns:
 | Skill                                                                                | Description                                              |
 | ------------------------------------------------------------------------------------ | -------------------------------------------------------- |
 | [writing-tests](skills/writing-tests/SKILL.md)                                       | Testing Trophy methodology, behavior-focused tests       |
-| [test-driven-development](skills/test-driven-development/SKILL.md)                   | RED-GREEN test-first loop; cleanup belongs to review     |
+| [test-driven-development](skills/test-driven-development/SKILL.md)                   | RED-GREEN test-first loop; clean up once all slices green |
 | [verification-before-completion](skills/verification-before-completion/SKILL.md)     | Verify before claiming success                           |
 | [preflight-checks](skills/preflight-checks/SKILL.md)                                 | Auto-detect and run project linters/formatters/checkers  |
 
@@ -177,7 +177,7 @@ See [ANVIL.md](ANVIL.md) for the full plugin format reference.
 
 ```bash
 /grill     # design doc; build now or park it
-/build     # early version, build note, devils-advocate, review
+/build     # early version, build note, devils-advocate, cleanup, review
 ```
 
 **Clean up legacy code:**
