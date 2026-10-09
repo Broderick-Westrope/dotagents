@@ -64,7 +64,7 @@ Signs you need one: every new feature adds a case to the same switch, or two boo
 
 ## Interface Types
 
-Declare an interface type only at a real seam. "One adapter is a hypothetical seam, two is a real one." The test fake counts as the second.
+Declare an interface type only at a real seam. "One adapter is a hypothetical seam, two is a real one." A test fake counts as the second adapter only when the real implementation can't run in tests, such as an external API client, another service, or out-of-process infrastructure. A fake for the repo's own code doesn't count; test against the real code instead.
 
 Declare one for:
 

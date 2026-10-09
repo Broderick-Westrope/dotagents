@@ -13,7 +13,7 @@ The best modules are **deep**: a lot of behavior behind a small interface. A **s
 
 ## When to Declare an Abstraction
 
-Declare an interface type (or protocol, or abstract class) only at a real **seam**: a place where behavior genuinely varies. "One adapter is a hypothetical seam, two is a real one." A test fake counts as the second adapter.
+Declare an interface type (or protocol, or abstract class) only at a real **seam**: a place where behavior genuinely varies. "One adapter is a hypothetical seam, two is a real one." A test fake counts as the second adapter only when the real implementation can't run in tests, such as an external API client, another service, or out-of-process infrastructure. A fake for the repo's own code doesn't count; test against the real code instead.
 
 | Dependency | Abstraction? |
 |---|---|
