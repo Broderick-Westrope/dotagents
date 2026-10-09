@@ -14,7 +14,7 @@ Load the relevant reference based on what you're working on:
 | Working on... | Load | File |
 |---------------|------|------|
 | Layers, vertical slices, file organization | **Structure** | `references/structure.md` |
-| Interfaces, dependency inversion, contracts | **Coupling** | `references/coupling.md` |
+| Interfaces, dependency inversion, contracts, module depth | **Coupling** | `references/coupling.md` |
 | Bounded contexts, API design, module boundaries | **Boundaries** | `references/boundaries.md` |
 | Async patterns, race conditions, queues | **Concurrency** | `references/concurrency.md` |
 | Logging, health checks, metrics, tracing | **Observability** | `references/observability.md` |
@@ -51,7 +51,7 @@ State is where complexity hides. The more places state lives and the more things
 
 - **Make the common path easy.** If doing the right thing requires extra effort, people will take shortcuts. Good defaults, templates, and guard rails beat documentation.
 - **Enforce with tooling, not docs.** Linting rules, CI checks, and architectural tests scale. Wiki pages and team agreements don't. If a convention matters, make violations fail the build.
-- **Isolate volatility.** Wrap external integrations in adapters. Isolate business rules in the domain layer. Keep presentation thin. Abstract storage behind repositories.
+- **Isolate volatility.** Wrap external integrations (other services, vendor APIs) behind a client you can fake in tests. Isolate business rules in the domain layer. Keep presentation thin. Don't wrap the database in a repository interface just to mock it; test against a real database.
 - **Prefer composition over inheritance.** Combine small, focused pieces rather than extending complex base classes.
 
 ### Complexity budget
@@ -75,6 +75,7 @@ Every architectural decision has a complexity cost. Spend that budget where it m
 |---------|----------|
 | "Where does this code go?" | If the answer isn't obvious, the structure needs work |
 | "Changing X requires touching Y" | Missing boundary between X and Y |
+| "Deleting this layer loses nothing" | It's a pass-through; inline it |
 | "This module does too many things" | Split along separate reasons to change |
 | "We can't test this in isolation" | Hidden dependencies; inject them instead |
 | "New devs take weeks to be productive" | Conventions are too weak or too novel |

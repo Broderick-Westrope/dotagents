@@ -1,8 +1,3 @@
----
-name: test-driven-development
-description: "Enforces the RED-GREEN-REFACTOR development workflow discipline. Use when starting implementation of a feature or bugfix to ensure tests are written before production code, not after."
----
-
 # Test-Driven Development (TDD)
 
 Write the test first. Watch it fail. Write minimal code to pass.
@@ -11,7 +6,7 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 **Violating the letter of the rules is violating the spirit of the rules.**
 
-> For test quality patterns (what to assert, how to mock, which test type), see **writing-tests**. This skill covers the discipline of *when* to write tests: always first.
+> Used by step 2 of `/build`. For test quality patterns (what to assert, how to mock, which test type), see **writing-tests**. This file covers the discipline of *when* to write tests: always first.
 
 ## When to Use
 
@@ -44,7 +39,7 @@ Write code before the test? Delete it. Start over.
 
 Implement fresh from tests. Period.
 
-## Red-Green-Refactor
+## Red-Green
 
 ```mermaid
 flowchart LR
@@ -52,17 +47,16 @@ flowchart LR
     VERIFY_RED -->|yes| GREEN["GREEN\nMinimal code"]:::green
     VERIFY_RED -->|"wrong\nfailure"| RED
     GREEN --> VERIFY_GREEN{"Verify passes\nAll green"}
-    VERIFY_GREEN -->|yes| REFACTOR["REFACTOR\nClean up"]:::blue
+    VERIFY_GREEN -->|yes| NEXT(["Next slice"])
     VERIFY_GREEN -->|no| GREEN
-    REFACTOR --> VERIFY_GREEN2{"Still\ngreen?"}
-    VERIFY_GREEN2 -->|yes| NEXT(["Next"])
-    VERIFY_GREEN2 -->|no| REFACTOR
     NEXT --> RED
+    NEXT -.->|"all slices green"| NOTE(["Write the build note"])
 
     classDef red fill:#ffcccc,stroke:#cc0000,color:#000
     classDef green fill:#ccffcc,stroke:#00cc00,color:#000
-    classDef blue fill:#ccccff,stroke:#0000cc,color:#000
 ```
+
+Each slice is a tracer bullet: one test, the minimal code to pass it, then the next test. Do not write all the tests first and then all the code.
 
 ### RED - Write Failing Test
 
@@ -178,18 +172,13 @@ Confirm:
 
 **Other tests fail?** Fix now.
 
-### REFACTOR - Clean Up
-
-After green only:
-- Remove duplication
-- Improve names
-- Extract helpers
-
-Keep tests green. Don't add behavior.
-
 ### Repeat
 
-Next failing test for next feature.
+Next failing test for the next slice of behavior.
+
+### Clean Up Later
+
+There is no refactor step inside the loop. Restructuring after every slice designs for code that is only half written, and it mixes "add behavior" with "change structure" in the same diff. Structural cleanup happens when refining in step 5 of `/build`, once the approach has survived the devil's advocate. The tests you wrote are what make that cleanup safe.
 
 ## Good Tests
 
@@ -319,8 +308,7 @@ $ npm test
 PASS
 ```
 
-**REFACTOR**
-Extract validation for multiple fields if needed.
+Next slice: write the next failing test. Whether validation for several fields deserves its own function is a question for review, once all the behavior exists.
 
 ## Testing Anti-Patterns
 
@@ -337,7 +325,7 @@ For comprehensive anti-pattern guidance (assertion strategy, mocking guidelines,
 
 Before marking work complete (see also **verification-before-completion**):
 
-- [ ] Every new function/method has a test
+- [ ] Every new behavior has a test, written against the public surface (not each private function)
 - [ ] Watched each test fail before implementing
 - [ ] Each test failed for expected reason (feature missing, not typo)
 - [ ] Wrote minimal code to pass each test
@@ -355,7 +343,7 @@ Can't check all boxes? You skipped TDD. Start over.
 | Don't know how to test | Write wished-for API. Write assertion first. Ask the user. |
 | Test too complicated | Design too complicated. Simplify interface. |
 | Must mock everything | Code too coupled. Use dependency injection. |
-| Test setup huge | Extract helpers. Still complex? Simplify design. |
+| Test setup huge | Use one shared fixture per package. Still complex? Simplify design. |
 
 ## Debugging Integration
 

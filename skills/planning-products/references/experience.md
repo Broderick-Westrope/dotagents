@@ -2,7 +2,7 @@
 
 Define the experience *requirements* before the experience *implementation*. This isn't UI design (that's the **design** skill). This is what the user's journey looks like, what moments matter, and what qualities the feature needs to embody.
 
-The output here feeds into the **design** skill for visual implementation and the **writing-plans** skill for technical implementation.
+The output here feeds into the **design** skill for visual implementation and the **grilling** skill for the technical design doc.
 
 ## User Journey Moments
 
@@ -78,4 +78,4 @@ The experience definition is ready to hand off when:
 - [ ] Experience qualities are chosen (2-3 from the table)
 - [ ] DX requirements are specified (if developer-facing)
 
-Hand off to the **design** skill for visual implementation. Hand off to the **writing-plans** skill for technical task breakdown.
+Hand off to the **design** skill for visual implementation. Hand off to the **grilling** skill for the technical design doc, which the user builds with `/build`.

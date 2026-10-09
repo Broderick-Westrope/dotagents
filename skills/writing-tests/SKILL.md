@@ -23,18 +23,17 @@ description: Writes behavior-focused tests using Testing Trophy model with real 
 
 **Default: Don't mock. Use real dependencies.**
 
-**Only mock:**
+**Mock only things outside the repo:**
 
-- External HTTP/API calls
-- Time/randomness
-- Third-party services (payments, email)
+- Other services (gRPC, GraphQL, HTTP APIs you call)
+- Vendor and third-party clients (payments, email, shipping)
+- Infrastructure: pubsub, clock, randomness, feature flags
 
 **Never mock:**
 
-- Internal modules
-- Database queries (use test DB)
+- The repo's own modules or packages
+- The database (use a real test database)
 - Business logic
-- Your own code calling your own code
 
 **Before mocking, ask:** "What side effects does this have? Does my test need those?" If unsure, run with real implementation first, then add minimal mocking only where needed.
 
@@ -53,6 +52,8 @@ Everything else → Integration test
 | UI      | Visible text, roles   | CSS classes, internal state |
 | API     | Response body, status | Internal DB state           |
 | Library | Return values         | Private methods             |
+
+Test through the module's public surface. In Go that means an external test package (`package foo_test`). Needing to reach a private function directly usually means it is a separate module hiding inside this one.
 
 ## Anti-Patterns
 

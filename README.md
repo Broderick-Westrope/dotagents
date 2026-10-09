@@ -21,16 +21,10 @@ Quick workflows for everyday development tasks:
 | [/refactor](anvil/commands/refactor/COMMAND.md)             | Refactor code following best practices                             |
 | [/review](anvil/commands/review/COMMAND.md)                 | Multi-model code review with deduplicated findings                 |
 | [/review-with-me](anvil/commands/review-with-me/COMMAND.md) | Interactive review where the human drives and AI provides context  |
-| [/commit](anvil/commands/commit/COMMAND.md)                 | Create a well-formatted git commit                                 |
-| [/deps](anvil/commands/deps/COMMAND.md)                     | Audit and upgrade dependencies                                     |
 | [/fix-issue](anvil/commands/fix-issue/COMMAND.md)           | Fix a GitHub issue by number                                       |
-| [/pr](anvil/commands/pr/COMMAND.md)                         | Create a pull request with auto-generated description              |
 | [/document](anvil/commands/document/COMMAND.md)             | Create or improve documentation                                    |
-| [/draft-tsd](anvil/commands/draft-tsd/COMMAND.md)           | Draft a technical specification from rough ideas or topics         |
-| [/grill](anvil/commands/grill/COMMAND.md)                   | Think through a feature before planning                            |
-| [/plan](anvil/commands/plan/COMMAND.md)                     | Create a detailed implementation plan                              |
-| [/scaffold-tests](anvil/commands/scaffold-tests/COMMAND.md) | Generate failing tests from an implementation plan                 |
-| [/execute](anvil/commands/execute/COMMAND.md)               | Execute an implementation plan from the plans folder               |
+| [/grill](anvil/commands/grill/COMMAND.md)                   | Think through a feature and write a design doc                     |
+| [/build](anvil/commands/build/COMMAND.md)                   | Build an early version, then challenge and review the diff         |
 | [/audit-context](anvil/commands/audit-context/COMMAND.md)   | Identify knowledge gaps in project context and collect human input |
 | [/post-mortem](anvil/commands/post-mortem/COMMAND.md)       | Review a session to assess execution and extract improvements      |
 | [/wtp-pruning](anvil/commands/wtp-pruning/COMMAND.md)       | Classify wtp worktrees and flag the stale ones                     |
@@ -44,9 +38,7 @@ Reusable development patterns:
 | Skill                                                                                | Description                                              |
 | ------------------------------------------------------------------------------------ | -------------------------------------------------------- |
 | [writing-tests](skills/writing-tests/SKILL.md)                                       | Testing Trophy methodology, behavior-focused tests       |
-| [test-driven-development](skills/test-driven-development/SKILL.md)                   | RED-GREEN-REFACTOR workflow discipline                   |
 | [verification-before-completion](skills/verification-before-completion/SKILL.md)     | Verify before claiming success                           |
-| [preflight-checks](skills/preflight-checks/SKILL.md)                                 | Auto-detect and run project linters/formatters/checkers  |
 
 **Debugging & Problem Solving:**
 
@@ -63,19 +55,17 @@ Reusable development patterns:
 | Skill                                                                | Description                                                 |
 | -------------------------------------------------------------------- | ----------------------------------------------------------- |
 | [refactoring-code](skills/refactoring-code/SKILL.md)                 | Behavior-preserving code improvements                       |
+| [go-style](skills/go-style/SKILL.md)                                 | Go package depth, extraction, interface types, errors, tests |
 | [optimizing-performance](skills/optimizing-performance/SKILL.md)     | Measurement-driven optimization                             |
 | [handling-errors](skills/handling-errors/SKILL.md)                   | Error handling best practices                               |
 | [migrating-code](skills/migrating-code/SKILL.md)                     | Safe migration patterns for databases, APIs, and frameworks |
 
-**Planning & Execution:**
+**Design & Building:**
 
 | Skill                                                                | Description                                                      |
 | -------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | [grilling](skills/grilling/SKILL.md)                                 | Interview and design exploration, adapts to the user's clarity   |
 | [planning-products](skills/planning-products/SKILL.md)               | Product feature definition from a PM perspective                 |
-| [writing-plans](skills/writing-plans/SKILL.md)                       | Create implementation plans with devils-advocate review          |
-| [executing-plans](skills/executing-plans/SKILL.md)                   | Execute plans with mandatory code review                         |
-| [scaffolding-plan-tests](skills/scaffolding-plan-tests/SKILL.md)     | Translate plans into failing test files before coding            |
 | [architecting-systems](skills/architecting-systems/SKILL.md)         | Clean, scalable system architecture for the build phase          |
 | [design](skills/design/SKILL.md)                                     | Frontend design skill                                            |
 | [onboarding-systems](skills/onboarding-systems/SKILL.md)             | Guided onboarding into complex microservices                     |
@@ -87,7 +77,6 @@ Reusable development patterns:
 | [writer](skills/writer/SKILL.md)                         | Writing style guide with 7 personas (Architect, Engineer, PM, Marketer, Educator, Contributor, UX Writer) |
 | [strategy-writer](skills/strategy-writer/SKILL.md)       | Executive-quality strategic documents in Economist/HBR style                                              |
 | [documentation](skills/documentation/SKILL.md)           | Route to the right documentation approach (code comments, system docs, templates)                         |
-| [drafting-tsds](skills/drafting-tsds/SKILL.md)           | Structured TSDs that evaluate architectural options                                                       |
 
 **Data & Infrastructure:**
 
@@ -99,7 +88,7 @@ Reusable development patterns:
 
 **Git & Code Review Workflow:**
 
-Worktree management (`using-git-worktrees`, `finishing-a-development-branch`) ships with Anvil as builtin skills, alongside a built-in `wtp`.
+These are intended to be complementary to the Anvil builtin skills.
 
 | Skill                                                                              | Description                                                  |
 | ---------------------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -145,9 +134,7 @@ Add the plugin to your `anvil.json`:
 }
 ```
 
-The root `anvil-plugin.json` points Anvil at `skills/`, `anvil/commands/`, and `anvil/agents/`. Names are bare by default (e.g. `/commit`, `@oracle`); the `ce:` prefix is only added if there's a naming collision with a higher-priority source.
-
-See [ANVIL.md](ANVIL.md) for the full plugin format reference.
+The root `anvil-plugin.json` points Anvil at `skills/`, `anvil/commands/`, and `anvil/agents/`. Names are bare by default (e.g. `/review`, `@oracle`); the `ce:` prefix is only added if there's a naming collision with a higher-priority source.
 
 ### Verify Installation
 
@@ -172,16 +159,13 @@ See [ANVIL.md](ANVIL.md) for the full plugin format reference.
 
 ```bash
 /review
-# Fix issues, then:
-/commit
 ```
 
-**Plan and build a feature:**
+**Design and build a feature:**
 
 ```bash
-/grill
-/plan
-/execute
+/grill     # design doc; build now or park it
+/build     # early version, build note, devils-advocate, cleanup, review
 ```
 
 **Clean up legacy code:**
@@ -206,7 +190,7 @@ dotagents/
 │   ├── commands/       # Slash commands (<name>/COMMAND.md)
 │   └── agents/         # Specialist agents
 ├── skills/             # Skills (<name>/SKILL.md)
-├── plans/              # Implementation plans
+├── plans/              # Design docs
 └── assets/
 ```
 

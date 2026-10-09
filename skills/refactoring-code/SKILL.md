@@ -46,29 +46,36 @@ test('sets error state', () => {
 });
 ```
 
-**If tests are missing:** Add behavior-driven tests first using the **writing-tests** skill.
+**If tests are missing:** Pin the current behavior first using the **writing-tests** skill. For untested legacy code, write characterization tests that record what the code does today (even if it looks wrong), through the public surface. Type checks and lint are not a pin.
 
 ### Phase 3: Identify Issues
 
 | Issue | Indicators | Fix |
 |-------|------------|-----|
-| Complexity | Deep nesting, >50 line functions | Extract smaller functions |
-| Duplication | Copy-pasted code | Extract shared utility |
+| Mixed concerns | A switch or if/else chain that gains a case per feature; two booleans kept in sync | Change the shape: lookup table, state machine, or typed model |
+| Pass-through layers | Wrappers with one caller that add nothing; the deletion test makes complexity vanish | Inline and delete |
+| Shallow module | Exported surface about as complex as what it hides | Merge into its caller or deepen the module |
+| Duplication | The same logic with the same meaning in 3+ places | Extract one concept |
 | Poor naming | `x`, `data`, `temp` | Rename to intent |
 | Type gaps | `any` types, assertions | Add proper types |
 
+Length alone is not an issue. A long function that reads top to bottom as one concern stays inline. **Inline small steps, extract concepts.** For language-specific rules, load the matching style skill (e.g. **go-style**).
+
 ### Phase 4: Plan Refactoring
 
+- **Subtract first.** Delete dead code, pass-throughs, and duplicate paths before building anything new.
 - Break into small, independently testable steps
 - High impact + low risk first (e.g., renames)
+- When replacing an API, migrate every caller and delete the old one in the same change. Don't leave two ways to do one thing.
 - Defer high-risk changes (algorithm rewrites)
 
 ### Phase 5: Execute & Verify
 
 1. Make one change at a time
 2. Run tests after each change
-3. Check TypeScript compilation
+3. Run the type checker and linter
 4. Verify behavior unchanged
+5. Keep the change only if the code got easier to read: fewer layers to trace, less state to hold. If it didn't, revert it.
 
 **If something breaks:** STOP. Use the **systematic-debugging** skill. Don't proceed until understood.
 
@@ -84,11 +91,12 @@ test('sets error state', () => {
 
 | Smell | Refactoring |
 |-------|-------------|
-| Long function | Extract smaller functions |
-| Duplicate code | Extract to shared utility |
+| Growing switch over types | Lookup table or state machine |
+| One-caller wrapper | Inline it |
+| Duplicate concept (3+ places) | Extract one function or type |
 | Deep nesting | Early returns, guard clauses |
 | Magic numbers | Named constants |
-| Large component | Split into smaller components |
+| Large component doing several jobs | Split along reasons to change |
 | Long parameter list | Parameter object |
 
 ## When to Stop

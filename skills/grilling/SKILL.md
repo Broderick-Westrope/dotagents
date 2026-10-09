@@ -1,13 +1,13 @@
 ---
 name: grilling
-description: "Interview the user about a feature to build shared understanding before planning. Use when the user wants to think through what to build — whether they already have a clear direction or are still exploring. Handles both targeted requirement refinement and open-ended design exploration through a single adaptive process."
+description: "Interview the user about a feature to build shared understanding and produce a design doc. Use when the user wants to think through what to build — whether they already have a clear direction or are still exploring. Handles both targeted requirement refinement and open-ended design exploration through a single adaptive process."
 ---
 
 # Grilling
 
-Build deep shared understanding of a feature through targeted questioning, then produce a structured spec for planning.
+Build deep shared understanding of a feature through targeted questioning, then produce a design doc. The design doc is either built right away with the `/build` command or parked until the work is prioritised.
 
-A single entry point for pre-planning work. After exploring the codebase and asking a few initial questions, the process adapts: if the user has a clear direction, it focuses on closing the communication gap through targeted grilling; if the direction is unclear, it shifts into approach exploration before converging on a design.
+A single entry point for pre-build work. After exploring the codebase and asking a few initial questions, the process adapts: if the user has a clear direction, it focuses on closing the communication gap through targeted grilling; if the direction is unclear, it shifts into approach exploration before converging on a design.
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until a spec has been written and approved. This applies regardless of how clear the feature seems.
@@ -28,7 +28,7 @@ Complete these steps in order:
 5. **Write spec to disk** — format the understanding as a structured spec, save and commit
 6. **Design review** — dispatch the **devils-advocate** agent to review the spec; fix issues and re-dispatch until approved (max 3 iterations, then surface to the user)
 7. **User reviews spec** — ask the user to review the spec file before proceeding
-8. **Invoke writing-plans** — pass the spec file path to **writing-plans** to create the implementation plan
+8. **Build or park** — tell the user to run `/build <spec path>` when they want to build it
 
 ## Process Flow
 
@@ -51,10 +51,12 @@ flowchart TD
     K -->|issues found, fix and re-dispatch| J
     K -->|approved| L{User reviews spec?}
     L -->|changes requested| I
-    L -->|approved| M([Invoke writing-plans with spec path])
+    L -->|approved| M{Build now?}
+    M -->|yes| N([Tell user to run /build with spec path])
+    M -->|no| O([Park the spec])
 ```
 
-The terminal state is invoking **writing-plans** with the spec file path. Do NOT invoke any other implementation skill.
+The terminal state is handing the spec path to the user to run `/build`, or parking the committed spec for later. Do NOT start implementing or invoke any implementation skill.
 
 ## Phase 1: Explore Context
 
@@ -66,7 +68,7 @@ Before asking any questions, explore the project context. Read files, docs, and 
 
 Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Do not spend questions refining details of a project that needs to be decomposed first.
 
-If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then grill on the first sub-project through the normal flow. Each sub-project gets its own spec, plan, and implementation cycle.
+If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then grill on the first sub-project through the normal flow. Each sub-project gets its own spec and build cycle.
 
 ## Phase 2: The Questioning Process
 
@@ -177,13 +179,9 @@ After writing the spec:
 
 After the design review passes, ask the user to review the written spec:
 
-> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we move to planning."
+> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes. When you're ready to build it, run `/build <path>`."
 
-Wait for the user's response. If they request changes, make them and re-run the design review. Only proceed once the user approves.
-
-**Invoke writing-plans:**
-
-Pass the spec file path to **writing-plans**. Do NOT invoke any other skill.
+Wait for the user's response. If they request changes, make them and re-run the design review. Only proceed once the user approves. Do NOT start implementing or invoke any other skill.
 
 ## Key Principles
 

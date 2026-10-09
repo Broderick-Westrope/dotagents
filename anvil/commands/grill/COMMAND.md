@@ -1,5 +1,5 @@
 ---
-description: Think through a feature before planning — whether you have a clear direction or are still exploring
+description: Think through a feature before building. Use whether you have a clear direction or are still exploring
 argument_hint: "<feature-or-idea>"
 ---
 
