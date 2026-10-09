@@ -81,7 +81,7 @@ Read `../review/COMMAND.md` relative to this command's location and follow it. T
 
 Stop and hand over to the user with the worktree path, the branch, and the build note rewritten as a draft PR description. Wait for their review. Don't push, merge, or open a PR unless they ask.
 
-Once they approve, delete the build note and use **finishing-a-development-branch**.
+Once they approve, use **finishing-a-development-branch**. If they choose to open a pull request, use the draft from the build note as the body and follow the repository's PR conventions (**euc-pr-guidelines** in Eucalyptus repos). Then delete the build note.
 
 ## Changes That Are Expensive to Reverse
 

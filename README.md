@@ -22,7 +22,6 @@ Quick workflows for everyday development tasks:
 | [/review](anvil/commands/review/COMMAND.md)                 | Multi-model code review with deduplicated findings                 |
 | [/review-with-me](anvil/commands/review-with-me/COMMAND.md) | Interactive review where the human drives and AI provides context  |
 | [/fix-issue](anvil/commands/fix-issue/COMMAND.md)           | Fix a GitHub issue by number                                       |
-| [/pr](anvil/commands/pr/COMMAND.md)                         | Create a pull request with auto-generated description              |
 | [/document](anvil/commands/document/COMMAND.md)             | Create or improve documentation                                    |
 | [/grill](anvil/commands/grill/COMMAND.md)                   | Think through a feature and write a design doc                     |
 | [/build](anvil/commands/build/COMMAND.md)                   | Build an early version, then challenge and review the diff         |
