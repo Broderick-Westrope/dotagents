@@ -193,7 +193,7 @@ git worktree remove <worktree-path>
 ## Integration
 
 **Called by:**
-- **building-first-versions** (Step 8) - After code review passes
+- **/build** command (Step 8) - After code review passes
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill

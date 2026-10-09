@@ -85,6 +85,8 @@ Review in this order, and stop at the first level that fails:
 
 A premise or approach failure means the version should be rebuilt, not patched. Say so plainly in the verdict. Leave style, naming, and structural cleanup to code review.
 
+The version you review may be the first build or a later revision, and you may or may not be told which. Either way, apply the same bar and all three levels. Judge only what is in front of you now; don't go easier on a later round or assume earlier concerns were settled.
+
 ## Output Format
 
 ```markdown
@@ -109,7 +111,7 @@ A premise or approach failure means the version should be rebuilt, not patched. 
 - [Question]
 
 ## Verdict
-[CONCERNS FOUND | LOOKS SOLID | REBUILD] — [One sentence. Use REBUILD only for an early version whose premise or approach is wrong.]
+[CONCERNS FOUND | LOOKS SOLID | REBUILD] — [One sentence. Use REBUILD only for a version whose premise or approach is wrong.]
 ```
 
 ## Voice

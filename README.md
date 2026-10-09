@@ -28,7 +28,7 @@ Quick workflows for everyday development tasks:
 | [/document](anvil/commands/document/COMMAND.md)             | Create or improve documentation                                    |
 | [/draft-tsd](anvil/commands/draft-tsd/COMMAND.md)           | Draft a technical specification from rough ideas or topics         |
 | [/grill](anvil/commands/grill/COMMAND.md)                   | Think through a feature and write a design doc                     |
-| [/build](anvil/commands/build/COMMAND.md)                   | Build a first version, then challenge and review the diff          |
+| [/build](anvil/commands/build/COMMAND.md)                   | Build an early version, then challenge and review the diff         |
 | [/init](anvil/commands/init/COMMAND.md)                     | Initialize or audit a repository's agent configuration             |
 | [/audit-context](anvil/commands/audit-context/COMMAND.md)   | Identify knowledge gaps in project context and collect human input |
 | [/post-mortem](anvil/commands/post-mortem/COMMAND.md)       | Review a session to assess execution and extract improvements      |
@@ -73,7 +73,6 @@ Reusable development patterns:
 | -------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | [grilling](skills/grilling/SKILL.md)                                 | Interview and design exploration, adapts to the user's clarity   |
 | [planning-products](skills/planning-products/SKILL.md)               | Product feature definition from a PM perspective                 |
-| [building-first-versions](skills/building-first-versions/SKILL.md)   | Build a first version, then devils-advocate and code review it   |
 | [architecting-systems](skills/architecting-systems/SKILL.md)         | Clean, scalable system architecture for the build phase          |
 | [design](skills/design/SKILL.md)                                     | Frontend design skill                                            |
 | [onboarding-systems](skills/onboarding-systems/SKILL.md)             | Guided onboarding into complex microservices                     |
@@ -178,7 +177,7 @@ See [ANVIL.md](ANVIL.md) for the full plugin format reference.
 
 ```bash
 /grill     # design doc; build now or park it
-/build     # first version, build note, devils-advocate, review
+/build     # early version, build note, devils-advocate, review
 ```
 
 **Clean up legacy code:**

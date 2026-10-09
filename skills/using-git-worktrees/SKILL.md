@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: "Sets up isolated git worktrees for feature development. Use when starting work that needs isolation from the current workspace, before building a first version, or when working on multiple branches simultaneously."
+description: "Sets up isolated git worktrees for feature development. Use when starting work that needs isolation from the current workspace, before building an early version, or when working on multiple branches simultaneously."
 ---
 
 # Using Git Worktrees
@@ -209,7 +209,7 @@ Ready to implement auth feature
 ## Integration
 
 **Called by:**
-- **building-first-versions** - before building a first version
+- **/build** command - before building an early version
 - Any skill needing isolated workspace
 
 **Pairs with:**

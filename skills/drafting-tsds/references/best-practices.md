@@ -50,12 +50,12 @@ Draft TSDs are overkill when:
 |-----------|----------|----------|
 | Exploring solution space with multiple options | **Draft TSD** | Architecture Decision Record (too final) |
 | Documenting a decision already made | Architecture Decision Record (ADR) | Draft TSD (decision is final) |
-| Explaining how to build something | Design doc plus a first version, or a Developer Guide | Draft TSD (design is settled) |
+| Explaining how to build something | Design doc plus an early version, or a Developer Guide | Draft TSD (design is settled) |
 | Tracking open questions and options | Draft TSD | Ticket comments (lacks structure) |
 | Proposing a strategic direction | Strategy Memo (use the **strategy-writer** skill) | Draft TSD (not technical spec) |
 | Explaining architecture to new team members | Architecture Docs / System Overview | Draft TSD (proposal format wrong) |
 
-**Rule of thumb:** If you're still asking "Should we?" use a Draft TSD. If you're asking "How do we?" use a design doc and a first version, or a developer guide.
+**Rule of thumb:** If you're still asking "Should we?" use a Draft TSD. If you're asking "How do we?" use a design doc and an early version, or a developer guide.
 
 ---
 
