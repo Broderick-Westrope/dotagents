@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: "Enforces the RED-GREEN-REFACTOR development workflow discipline. Use when starting implementation of a feature or bugfix to ensure tests are written before production code, not after."
+description: "Enforces the RED-GREEN test-first loop. Use when starting implementation of a feature or bugfix to ensure tests are written before production code, not after. Structural cleanup is left to code review, not done inside the loop."
 ---
 
 # Test-Driven Development (TDD)
@@ -44,7 +44,7 @@ Write code before the test? Delete it. Start over.
 
 Implement fresh from tests. Period.
 
-## Red-Green-Refactor
+## Red-Green
 
 ```mermaid
 flowchart LR
@@ -52,17 +52,17 @@ flowchart LR
     VERIFY_RED -->|yes| GREEN["GREEN\nMinimal code"]:::green
     VERIFY_RED -->|"wrong\nfailure"| RED
     GREEN --> VERIFY_GREEN{"Verify passes\nAll green"}
-    VERIFY_GREEN -->|yes| REFACTOR["REFACTOR\nClean up"]:::blue
+    VERIFY_GREEN -->|yes| NEXT(["Next slice"])
     VERIFY_GREEN -->|no| GREEN
-    REFACTOR --> VERIFY_GREEN2{"Still\ngreen?"}
-    VERIFY_GREEN2 -->|yes| NEXT(["Next"])
-    VERIFY_GREEN2 -->|no| REFACTOR
     NEXT --> RED
+    NEXT -.->|"all slices green"| REVIEW(["Code review\nowns cleanup"])
 
     classDef red fill:#ffcccc,stroke:#cc0000,color:#000
     classDef green fill:#ccffcc,stroke:#00cc00,color:#000
-    classDef blue fill:#ccccff,stroke:#0000cc,color:#000
 ```
+
+Each slice is a tracer bullet: one test, the minimal code to pass it, then
+the next test. Do not write all the tests first and then all the code.
 
 ### RED - Write Failing Test
 
@@ -178,18 +178,18 @@ Confirm:
 
 **Other tests fail?** Fix now.
 
-### REFACTOR - Clean Up
-
-After green only:
-- Remove duplication
-- Improve names
-- Extract helpers
-
-Keep tests green. Don't add behavior.
-
 ### Repeat
 
-Next failing test for next feature.
+Next failing test for the next slice of behavior.
+
+### Cleanup Belongs to Review
+
+There is no refactor step inside the loop. Restructuring after every slice
+designs for code that is only half written, and it mixes "add behavior" with
+"change structure" in the same diff. Once every slice is green, code review
+sees the whole change with fresh context and owns the structural cleanup
+(duplication, names, mixed concerns, misplaced code). The tests you wrote
+are what make that cleanup safe.
 
 ## Good Tests
 
@@ -319,8 +319,9 @@ $ npm test
 PASS
 ```
 
-**REFACTOR**
-Extract validation for multiple fields if needed.
+Next slice: write the next failing test. Whether validation for several
+fields deserves its own function is a question for review, once all the
+behavior exists.
 
 ## Testing Anti-Patterns
 
@@ -337,7 +338,7 @@ For comprehensive anti-pattern guidance (assertion strategy, mocking guidelines,
 
 Before marking work complete (see also **verification-before-completion**):
 
-- [ ] Every new function/method has a test
+- [ ] Every new behavior has a test, written against the public surface (not each private function)
 - [ ] Watched each test fail before implementing
 - [ ] Each test failed for expected reason (feature missing, not typo)
 - [ ] Wrote minimal code to pass each test
