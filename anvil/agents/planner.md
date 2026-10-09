@@ -62,8 +62,6 @@ The **grilling** skill handles both targeted refinement and approach exploration
 
 Write the design doc in the format the **grilling** skill defines, to `plans/design-YYYY-MM-DD-<topic>.md`. Cover the problem, goal, scope, constraints, success criteria, design decisions with the alternatives declined, and the files that matter. Leave out implementation steps.
 
-In Eucalyptus repos, when the user needs a TSD for stakeholders, load **euc-tsd-writing** and work from the company template.
-
 ### Phase 4: Adversarial Review
 
 Delegate the completed design doc to devils-advocate. Incorporate valid findings. Revise. Do not hand off to building until the design doc is stable.

@@ -92,7 +92,7 @@ Reusable development patterns:
 
 **Git & Code Review Workflow:**
 
-Worktree management (`using-git-worktrees`, `finishing-a-development-branch`) ships with Anvil as builtin skills, alongside a built-in `wtp`.
+These are intended to be complementary to the Anvil builtin skills.
 
 | Skill                                                                              | Description                                                  |
 | ---------------------------------------------------------------------------------- | ------------------------------------------------------------ |
