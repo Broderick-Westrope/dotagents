@@ -1,8 +1,3 @@
----
-name: test-driven-development
-description: "Enforces the RED-GREEN test-first loop. Use when starting implementation of a feature or bugfix to ensure tests are written before production code, not after. Structural cleanup happens after all slices are green, not inside the loop."
----
-
 # Test-Driven Development (TDD)
 
 Write the test first. Watch it fail. Write minimal code to pass.
@@ -11,7 +6,7 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 **Violating the letter of the rules is violating the spirit of the rules.**
 
-> For test quality patterns (what to assert, how to mock, which test type), see **writing-tests**. This skill covers the discipline of *when* to write tests: always first.
+> Used by step 2 of `/build`. For test quality patterns (what to assert, how to mock, which test type), see **writing-tests**. This file covers the discipline of *when* to write tests: always first.
 
 ## When to Use
 
@@ -55,7 +50,7 @@ flowchart LR
     VERIFY_GREEN -->|yes| NEXT(["Next slice"])
     VERIFY_GREEN -->|no| GREEN
     NEXT --> RED
-    NEXT -.->|"all slices green"| CLEANUP(["Clean up\nwhole change"])
+    NEXT -.->|"all slices green"| NOTE(["Write the build note"])
 
     classDef red fill:#ffcccc,stroke:#cc0000,color:#000
     classDef green fill:#ccffcc,stroke:#00cc00,color:#000
@@ -181,9 +176,9 @@ Confirm:
 
 Next failing test for the next slice of behavior.
 
-### Clean Up After the Loop
+### Clean Up Later
 
-There is no refactor step inside the loop. Restructuring after every slice designs for code that is only half written, and it mixes "add behavior" with "change structure" in the same diff. Once every slice is green, re-read the whole change and clean up its structure (duplication, names, mixed concerns, misplaced code) as separate commits. Code review then checks it again with fresh eyes. The tests you wrote are what make the cleanup safe.
+There is no refactor step inside the loop. Restructuring after every slice designs for code that is only half written, and it mixes "add behavior" with "change structure" in the same diff. Structural cleanup happens when refining in step 5 of `/build`, once the approach has survived the devil's advocate. The tests you wrote are what make that cleanup safe.
 
 ## Good Tests
 

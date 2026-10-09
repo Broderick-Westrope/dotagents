@@ -17,7 +17,6 @@ tools:
   - bash
 skills:
   - writing-tests
-  - test-driven-development
   - fixing-flaky-tests
   - condition-based-waiting
 mcps:
@@ -49,7 +48,7 @@ You think about behavior, not implementation. You test contracts — what should
    - Prefer integration tests over unit tests when the behavior crosses multiple layers
    - Use unit tests for pure functions and isolated logic
    - Mock only what sits outside the repo: other services, vendor clients, and infrastructure (pubsub, clock, flags). Use a real database. Never mock the repo's own modules
-   - Load the **writing-tests** and **test-driven-development** skills for guidance
+   - Load the **writing-tests** skill for guidance
 
 5. **Write the test plan** — a structured list of test cases with: input, expected output, and why this case matters. Be specific enough that fixer can implement without asking questions. Test names and assertions should carry the intent — instruct fixer to add code comments only when a case's rationale cannot be conveyed any other way.
 

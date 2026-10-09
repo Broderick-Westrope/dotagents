@@ -41,7 +41,6 @@ Reusable development patterns:
 | Skill                                                                                | Description                                              |
 | ------------------------------------------------------------------------------------ | -------------------------------------------------------- |
 | [writing-tests](skills/writing-tests/SKILL.md)                                       | Testing Trophy methodology, behavior-focused tests       |
-| [test-driven-development](skills/test-driven-development/SKILL.md)                   | RED-GREEN test-first loop; clean up once all slices green |
 | [verification-before-completion](skills/verification-before-completion/SKILL.md)     | Verify before claiming success                           |
 | [preflight-checks](skills/preflight-checks/SKILL.md)                                 | Auto-detect and run project linters/formatters/checkers  |
 

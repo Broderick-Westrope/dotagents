@@ -36,7 +36,7 @@ Use a worktree on a feature branch (see **using-git-worktrees**). An early versi
 
 - Read the code you will touch and follow its existing patterns. Load the matching style skills (e.g. **go-style**).
 - Build the thinnest complete path first: one slice through every layer that works end to end. Then widen it. A tracer bullet, as in _The Pragmatic Programmer_.
-- Use **test-driven-development** for each slice. Stop at green. Structural cleanup happens when refining in step 5.
+- Follow `references/test-driven-development.md` (relative to this command's location) for each slice. Stop at green. Structural cleanup happens when refining in step 5.
 - Commit as you go, one commit per logical step, creating a history as you go.
 - For large changes, build slice by slice. Run slices in parallel only when they touch separate areas, and give each subagent the design doc and its slice. Each slice goes through steps 3 to 5 before the next one depends on it.
 
