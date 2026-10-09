@@ -80,7 +80,7 @@ Fix friction you notice (confusing errors, noisy output, inconsistent behavior).
 
 ### 7. Agent code review
 
-Run the `/review` workflow. Reviewers check structure again with fresh eyes, since authors miss their own mistakes. Fix findings as separate commits; don't amend them into earlier ones.
+Read `../review/COMMAND.md` relative to this command's location and follow it. Treat its `$ARGUMENTS` as "the full branch diff against `<base>`", so skip its scope questions. On REQUEST CHANGES, fix every Critical and Important finding without asking, committing each fix separately (don't amend earlier commits), then re-run the review as that command says. Reviewers check structure again with fresh eyes, since authors miss their own mistakes.
 
 ### 8. Human code review
 
