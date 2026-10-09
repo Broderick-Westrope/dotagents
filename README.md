@@ -138,8 +138,6 @@ Add the plugin to your `anvil.json`:
 
 The root `anvil-plugin.json` points Anvil at `skills/`, `anvil/commands/`, and `anvil/agents/`. Names are bare by default (e.g. `/review`, `@oracle`); the `ce:` prefix is only added if there's a naming collision with a higher-priority source.
 
-See [ANVIL.md](ANVIL.md) for the full plugin format reference.
-
 ### Verify Installation
 
 ```bash
