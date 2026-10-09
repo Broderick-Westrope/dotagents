@@ -21,7 +21,6 @@ Quick workflows for everyday development tasks:
 | [/refactor](anvil/commands/refactor/COMMAND.md)             | Refactor code following best practices                             |
 | [/review](anvil/commands/review/COMMAND.md)                 | Multi-model code review with deduplicated findings                 |
 | [/review-with-me](anvil/commands/review-with-me/COMMAND.md) | Interactive review where the human drives and AI provides context  |
-| [/commit](anvil/commands/commit/COMMAND.md)                 | Create a well-formatted git commit                                 |
 | [/deps](anvil/commands/deps/COMMAND.md)                     | Audit and upgrade dependencies                                     |
 | [/fix-issue](anvil/commands/fix-issue/COMMAND.md)           | Fix a GitHub issue by number                                       |
 | [/pr](anvil/commands/pr/COMMAND.md)                         | Create a pull request with auto-generated description              |
@@ -42,7 +41,6 @@ Reusable development patterns:
 | ------------------------------------------------------------------------------------ | -------------------------------------------------------- |
 | [writing-tests](skills/writing-tests/SKILL.md)                                       | Testing Trophy methodology, behavior-focused tests       |
 | [verification-before-completion](skills/verification-before-completion/SKILL.md)     | Verify before claiming success                           |
-| [preflight-checks](skills/preflight-checks/SKILL.md)                                 | Auto-detect and run project linters/formatters/checkers  |
 
 **Debugging & Problem Solving:**
 
@@ -138,7 +136,7 @@ Add the plugin to your `anvil.json`:
 }
 ```
 
-The root `anvil-plugin.json` points Anvil at `skills/`, `anvil/commands/`, and `anvil/agents/`. Names are bare by default (e.g. `/commit`, `@oracle`); the `ce:` prefix is only added if there's a naming collision with a higher-priority source.
+The root `anvil-plugin.json` points Anvil at `skills/`, `anvil/commands/`, and `anvil/agents/`. Names are bare by default (e.g. `/review`, `@oracle`); the `ce:` prefix is only added if there's a naming collision with a higher-priority source.
 
 See [ANVIL.md](ANVIL.md) for the full plugin format reference.
 
@@ -165,8 +163,6 @@ See [ANVIL.md](ANVIL.md) for the full plugin format reference.
 
 ```bash
 /review
-# Fix issues, then:
-/commit
 ```
 
 **Design and build a feature:**
