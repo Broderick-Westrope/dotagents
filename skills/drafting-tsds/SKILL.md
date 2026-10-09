@@ -16,7 +16,7 @@ Draft TSDs are PROPOSAL documents for exploring solution spaces before committin
 **When NOT to use this skill:**
 - Decision is already made (use ADR instead)
 - Solution is obvious (just implement it)
-- Need to document how to build something (use implementation plan)
+- Need to work out how to build something (use a design doc, then build a first version)
 
 ---
 
@@ -81,11 +81,11 @@ Every Draft TSD should lead to a clear recommendation. Document the reasoning so
 |-----------|----------|----------|
 | Exploring multiple architectural options | **Draft TSD** | ADR (too final) |
 | Decision already made, documenting rationale | ADR | Draft TSD |
-| Explaining how to implement | Implementation plan | Draft TSD |
+| Explaining how to implement | Design doc plus a first version | Draft TSD |
 | Tracking open questions during design | **Draft TSD** | Ticket comments |
 | Strategic business direction | Strategy memo | Draft TSD |
 
-**Rule of thumb:** If asking "Should we?", use Draft TSD. If asking "How do we?", use implementation plan.
+**Rule of thumb:** If asking "Should we?", use Draft TSD. If asking "How do we?", write a design doc and build a first version.
 
 ---
 

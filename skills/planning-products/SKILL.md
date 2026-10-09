@@ -104,7 +104,7 @@ Every feature needs measurable success criteria before work begins. Not vanity m
 
 This skill's output feeds into other skills:
 
-- **Technical implementation:** `Skill(ce:writing-plans)` takes the product spec and produces task breakdowns with agent grouping
+- **Technical implementation:** `Skill(ce:grilling)` turns the product spec into a design doc, and `Skill(ce:building-first-versions)` builds and challenges a first version from it
 - **UI/UX craft:** `Skill(ce:design)` takes the experience requirements and produces the visual implementation
 - **Architecture decisions:** `Skill(ce:architecting-systems)` takes the technical constraints from the spec and produces system design
 - **Strategy context:** `Skill(ce:strategy-writer)` operates upstream, informing the "why this, why now" that feeds into discovery

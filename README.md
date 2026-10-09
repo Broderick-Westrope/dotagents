@@ -27,10 +27,8 @@ Quick workflows for everyday development tasks:
 | [/pr](anvil/commands/pr/COMMAND.md)                         | Create a pull request with auto-generated description              |
 | [/document](anvil/commands/document/COMMAND.md)             | Create or improve documentation                                    |
 | [/draft-tsd](anvil/commands/draft-tsd/COMMAND.md)           | Draft a technical specification from rough ideas or topics         |
-| [/grill](anvil/commands/grill/COMMAND.md)                   | Think through a feature before planning                            |
-| [/plan](anvil/commands/plan/COMMAND.md)                     | Create a detailed implementation plan                              |
-| [/scaffold-tests](anvil/commands/scaffold-tests/COMMAND.md) | Generate failing tests from an implementation plan                 |
-| [/execute](anvil/commands/execute/COMMAND.md)               | Execute an implementation plan from the plans folder               |
+| [/grill](anvil/commands/grill/COMMAND.md)                   | Think through a feature and write a design doc                     |
+| [/build](anvil/commands/build/COMMAND.md)                   | Build a first version, then challenge and review the diff          |
 | [/init](anvil/commands/init/COMMAND.md)                     | Initialize or audit a repository's agent configuration             |
 | [/audit-context](anvil/commands/audit-context/COMMAND.md)   | Identify knowledge gaps in project context and collect human input |
 | [/post-mortem](anvil/commands/post-mortem/COMMAND.md)       | Review a session to assess execution and extract improvements      |
@@ -45,7 +43,7 @@ Reusable development patterns:
 | Skill                                                                                | Description                                              |
 | ------------------------------------------------------------------------------------ | -------------------------------------------------------- |
 | [writing-tests](skills/writing-tests/SKILL.md)                                       | Testing Trophy methodology, behavior-focused tests       |
-| [test-driven-development](skills/test-driven-development/SKILL.md)                   | RED-GREEN-REFACTOR workflow discipline                   |
+| [test-driven-development](skills/test-driven-development/SKILL.md)                   | RED-GREEN test-first loop; cleanup belongs to review     |
 | [verification-before-completion](skills/verification-before-completion/SKILL.md)     | Verify before claiming success                           |
 | [preflight-checks](skills/preflight-checks/SKILL.md)                                 | Auto-detect and run project linters/formatters/checkers  |
 
@@ -64,19 +62,18 @@ Reusable development patterns:
 | Skill                                                                | Description                                                 |
 | -------------------------------------------------------------------- | ----------------------------------------------------------- |
 | [refactoring-code](skills/refactoring-code/SKILL.md)                 | Behavior-preserving code improvements                       |
+| [go-style](skills/go-style/SKILL.md)                                 | Go package depth, extraction, interface types, errors, tests |
 | [optimizing-performance](skills/optimizing-performance/SKILL.md)     | Measurement-driven optimization                             |
 | [handling-errors](skills/handling-errors/SKILL.md)                   | Error handling best practices                               |
 | [migrating-code](skills/migrating-code/SKILL.md)                     | Safe migration patterns for databases, APIs, and frameworks |
 
-**Planning & Execution:**
+**Design & Building:**
 
 | Skill                                                                | Description                                                      |
 | -------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | [grilling](skills/grilling/SKILL.md)                                 | Interview and design exploration, adapts to the user's clarity   |
 | [planning-products](skills/planning-products/SKILL.md)               | Product feature definition from a PM perspective                 |
-| [writing-plans](skills/writing-plans/SKILL.md)                       | Create implementation plans with devils-advocate review          |
-| [executing-plans](skills/executing-plans/SKILL.md)                   | Execute plans with mandatory code review                         |
-| [scaffolding-plan-tests](skills/scaffolding-plan-tests/SKILL.md)     | Translate plans into failing test files before coding            |
+| [building-first-versions](skills/building-first-versions/SKILL.md)   | Build a first version, then devils-advocate and code review it   |
 | [architecting-systems](skills/architecting-systems/SKILL.md)         | Clean, scalable system architecture for the build phase          |
 | [design](skills/design/SKILL.md)                                     | Frontend design skill                                            |
 | [onboarding-systems](skills/onboarding-systems/SKILL.md)             | Guided onboarding into complex microservices                     |
@@ -177,12 +174,11 @@ See [ANVIL.md](ANVIL.md) for the full plugin format reference.
 /commit
 ```
 
-**Plan and build a feature:**
+**Design and build a feature:**
 
 ```bash
-/grill
-/plan
-/execute
+/grill     # design doc; build now or park it
+/build     # first version, build note, devils-advocate, review
 ```
 
 **Clean up legacy code:**
@@ -207,7 +203,7 @@ dotagents/
 │   ├── commands/       # Slash commands (<name>/COMMAND.md)
 │   └── agents/         # Specialist agents
 ├── skills/             # Skills (<name>/SKILL.md)
-├── plans/              # Implementation plans
+├── plans/              # Design docs
 └── assets/
 ```
 
