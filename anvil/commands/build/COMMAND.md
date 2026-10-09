@@ -7,31 +7,28 @@ Build an early version of: `$ARGUMENTS`
 
 If `$ARGUMENTS` is a path to a design doc, read it first. If it is empty, look for the most recent design doc in `plans/` and confirm it with the user before starting.
 
-Build first, then challenge the diff. An early version answers open questions faster than a plan, and reviewing real code is easier than reviewing prose about code.
-
-The one thing a plan did well was put assumptions in writing where a critic could attack them. A diff hides them. So the implementer writes a short **build note** alongside the diff, and the critic reads both.
+Build first, then challenge the diff. An early version answers open questions faster than a plan, and reviewing real code is easier than reviewing prose about code. The one thing a plan did well was put assumptions in writing where a critic could attack them. A diff hides them. So the implementer writes a short **build note** alongside the diff, and the critic reads both.
 
 ## Inputs
 
-- A design doc from **grilling** (goal, constraints, decisions), or a clear request from the user.
-- If neither the goal nor the success criteria are clear, stop and use **grilling** first.
+- A design doc (goal, constraints, decisions), or a clear request from the user.
+- If neither the goal nor the success criteria are clear, stop and ask the user to provide them or initiate **grilling** first.
 
 ## Steps
 
 ```
 Build progress:
-- [ ] 1. Set up a branch
+- [ ] 1. Set up a worktree
 - [ ] 2. Build an early version
 - [ ] 3. Write the build note
 - [ ] 4. Devil's advocate review
-- [ ] 5. Iterate or rebuild
-- [ ] 6. Clean up
-- [ ] 7. Verify on the real artifact
-- [ ] 8. Code review
-- [ ] 9. Finish the branch
+- [ ] 5. Refine or rebuild
+- [ ] 6. Verify on the real artifact
+- [ ] 7. Agent code review
+- [ ] 8. Human code review
 ```
 
-### 1. Set up a branch
+### 1. Set up a worktree
 
 Use a worktree on a feature branch (see **using-git-worktrees**). An early version must be cheap to throw away.
 
@@ -39,7 +36,7 @@ Use a worktree on a feature branch (see **using-git-worktrees**). An early versi
 
 - Read the code you will touch and follow its existing patterns. Load the matching style skills (e.g. **go-style**).
 - Build the thinnest complete path first: one slice through every layer that works end to end. Then widen it.
-- Use **test-driven-development** for each slice. Stop at green. Structural cleanup happens in step 6, once the approach has survived review.
+- Use **test-driven-development** for each slice. Stop at green. Structural cleanup happens when refining in step 5.
 - Commit as you go, one commit per logical step.
 - For large changes, build slice by slice. Run slices in parallel only when they touch separate areas, and give each subagent the design doc and its slice. Each slice goes through steps 3 to 5 before the next one depends on it.
 
@@ -55,25 +52,22 @@ Write it right after building, while you still know what you assumed. Keep it sh
 - **Unsure:** anything you would want a second opinion on.
 - **Verified:** what you checked and how (tests, commands, real runs).
 
-Don't commit the note. Pass it to the reviewers and reuse it for the PR description. After each iteration, rewrite it to describe the current version, not the history of changes.
+Don't commit the note. Write it to a unique temp file (`mktemp -t build-note`) so it survives context compaction and concurrent builds don't collide. After each round, rewrite it to describe the current version, not the history of changes.
 
 ### 4. Devil's advocate review
 
-Dispatch a fresh **devils-advocate** agent with exactly three things: the design doc path (or the request), the current build note, and the base branch to diff against.
+Dispatch a fresh **devils-advocate** agent with exactly three things: the design doc path (or the request), the build note's contents pasted into the prompt, and the base branch to diff against. Paste the note rather than passing its path, because reading files outside the working directory prompts the user for permission.
 
 Don't tell it which round this is, and don't pass earlier findings or how you resolved them. Each review should judge the current version on its own, so earlier rounds can't anchor it.
 
-### 5. Iterate or rebuild
+### 5. Refine or rebuild
 
-- **Code-level findings:** fix them as new commits, update the build note, and re-run step 4.
 - **Premise or approach is wrong:** don't patch it. Record what you learned in the design doc, delete the branch, and rebuild from step 1. An early version is cheap; a patched wrong approach is not.
+- **Otherwise, refine:** fix the findings, then re-read the whole diff as one change and clean up its structure: pass-through layers, shallow modules, duplicated concepts, growing switches, unclear names, and code in the wrong place. Use the matching style skill (e.g. **go-style**) and **refactoring-code**. Keep tests green and commit cleanup separately from behavior changes. Update the build note and re-run step 4.
+- Move on once the devil's advocate finds nothing worth changing and the cleanup pass leaves the diff unchanged.
 - After three rounds without a pass, stop and bring the findings to the user.
 
-### 6. Clean up
-
-The approach has survived, so now make it good. Re-read the whole diff as one change and fix its structure: pass-through layers, shallow modules, duplicated concepts, growing switches, unclear names, and code in the wrong place. Use the matching style skill (e.g. **go-style**) and **refactoring-code**. Keep tests green, and commit cleanup separately from behavior changes.
-
-### 7. Verify on the real artifact
+### 6. Verify on the real artifact
 
 Tests passing is not enough. Exercise the change the way a user would:
 
@@ -84,14 +78,16 @@ Tests passing is not enough. Exercise the change the way a user would:
 
 Fix friction you notice (confusing errors, noisy output, inconsistent behavior). See **verification-before-completion**.
 
-### 8. Code review
+### 7. Agent code review
 
-Run the `/review` workflow. Reviewers check structure again with fresh eyes, since authors miss their own pass-throughs. Fix findings as separate commits; don't amend them into earlier ones.
+Run the `/review` workflow. Reviewers check structure again with fresh eyes, since authors miss their own mistakes. Fix findings as separate commits; don't amend them into earlier ones.
 
-### 9. Finish the branch
+### 8. Human code review
 
-Use **finishing-a-development-branch**.
+Stop and hand over to the user with the worktree path, the branch, and the build note rewritten as a draft PR description. Wait for their review. Don't push, merge, or open a PR unless they ask.
+
+Once they approve, delete the build note and use **finishing-a-development-branch**.
 
 ## Changes That Are Expensive to Reverse
 
-Database migrations, protobuf and public API contracts, and changes spanning several services still start with an early version, but on a branch only. Don't apply migrations to shared environments or publish contracts until step 8 passes. In step 4, ask the devil's advocate to focus on reversibility and rollout order.
+Database migrations, protobuf and public API contracts, and changes spanning several services still start with an early version, but on a branch only. Don't apply migrations to shared environments or publish contracts until the user approves in step 8. In step 4, ask the devil's advocate to focus on reversibility and rollout order.
