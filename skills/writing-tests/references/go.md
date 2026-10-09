@@ -65,7 +65,7 @@ func TestUserProcessing(t *testing.T) {
 
 ## Table-Driven Tests (The Gold Standard)
 
-This is the dominant pattern in Go. Key the table by case name with a map, and combine it with `t.Parallel()` for speed. Map iteration order is random, which exposes cases that depend on each other, and duplicate case names fail to compile.
+This is the dominant pattern in Go. Key the table by case name with a map. If a test can be made parallel without being flaky, combine it with `t.Parallel()` for speed. Map iteration order is random, which exposes cases that depend on each other, and duplicate case names fail to compile.
 
 ```go
 func TestParseURL(t *testing.T) {
