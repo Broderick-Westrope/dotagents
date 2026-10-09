@@ -69,16 +69,7 @@ Don't tell it which round this is, and don't pass earlier findings or how you re
 
 ### 6. Exercise the change locally
 
-Tests passing is not enough. Run what you built and use it the way a user would, but only against things that live on this machine or that the repo already sets up for testing:
-
-- **APIs and services:** run them locally and call them with realistic but made-up payloads.
-- **CLIs and TUIs:** build the binary and drive it.
-- **Dependencies:** use local containers, test databases, emulators, and the sandbox or test accounts the repo already configures.
-- **Data:** use fixtures or synthetic data shaped like the real thing.
-
-Never touch deployed environments (production or shared staging), real customer or patient data, or anything that sends messages, emails, or payments. If the only way to check something needs a live system, don't do it. Tell the user what you would check and how, and leave it for them.
-
-Fix friction you notice (confusing errors, noisy output, inconsistent behavior). See **verification-before-completion**.
+Load **verification-before-completion** and exercise the change locally as it describes. Fix friction you notice (confusing errors, noisy output, inconsistent behavior).
 
 ### 7. Agent code review
 

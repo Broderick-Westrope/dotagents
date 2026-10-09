@@ -28,7 +28,7 @@ Before:
 - Expressing satisfaction ("Great!", "Done!", "Perfect!")
 - Using qualifiers ("should work", "probably fixed", "seems to")
 - Committing, creating PRs, marking tasks complete
-- Marking a multi-file implementation as complete (dispatch the **code-reviewer-sonnet** and **code-reviewer-opus** agents)
+- Marking a multi-file implementation as complete (run the review workflow in the `review` command, which dispatches the **reviewer** and **convention-reviewer** agents)
 - Moving to next task or delegating work
 
 ## Common Verification Requirements
@@ -38,10 +38,22 @@ Before:
 | Tests pass            | `yarn test` output: 0 failures   | Previous run, "looks correct" |
 | Build succeeds        | Build command: exit 0            | Linter clean, "should work"   |
 | Bug fixed             | Test reproducing bug: now passes | Code changed, assumed fix     |
+| Feature works         | Ran it locally the way a user would (see below) | Tests pass                    |
 | Linter clean          | Linter output: 0 errors          | Partial check, spot test      |
 | Regression test works | Red→Green cycle verified         | Test passes once              |
 | Agent task complete   | VCS diff shows expected changes  | Agent reports "success"       |
-| Work is complete      | Code review via the **code-reviewer-opus** and **code-reviewer-sonnet** agents with no unresolved Critical issues | Self-review, "looks good to me" |
+| Work is complete      | Code review via the **reviewer** and **convention-reviewer** agents with no unresolved Critical issues | Self-review, "looks good to me" |
+
+## Exercise the Change
+
+For user-facing behavior, tests passing is not enough. Run what you built and use it the way a user would, but only against things that live on this machine or that the repo already sets up for testing:
+
+- **APIs and services:** run them locally and call them with realistic but made-up payloads.
+- **CLIs and TUIs:** build the binary and drive it.
+- **Dependencies:** use local containers, test databases, emulators, and the sandbox or test accounts the repo already configures.
+- **Data:** use fixtures or synthetic data shaped like the real thing.
+
+Never touch deployed environments (production or shared staging), real customer or patient data, or anything that sends messages, emails, or payments. If the only way to check something needs a live system, don't do it. Tell the user what you would check and how, and leave it for them.
 
 ## Red Flags
 
