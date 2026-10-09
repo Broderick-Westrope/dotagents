@@ -2,19 +2,36 @@
 
 Coupling is the #1 cause of systems becoming painful at scale. Every unnecessary dependency between modules is a future coordination problem.
 
-## Depend on Interfaces, Not Implementations
+## Deep Modules, Small Interfaces
 
-Define what you need, not how it's provided. This isn't abstract architecture advice; it's the difference between a 10-minute change and a 2-day refactor.
+A module's *interface* is everything a caller must know to use it: its public names plus their behavior, error modes, ordering rules, and invariants. That is not the same as a language-level `interface` declaration. In Go, the module is the package and its interface is the exported API.
+
+The best modules are **deep**: a lot of behavior behind a small interface. A **shallow** module's interface is about as complex as what it hides, so it adds a layer without removing any work.
+
+- **The deletion test:** imagine deleting the module. If the complexity vanishes, it was a pass-through. If it reappears across several callers, it earns its place.
+- **The interface is the test surface.** If behavior can't be tested through it, there is probably a second module hiding inside.
+
+## When to Declare an Abstraction
+
+Declare an interface type (or protocol, or abstract class) only at a real **seam**: a place where behavior genuinely varies. "One adapter is a hypothetical seam, two is a real one." A test fake counts as the second adapter.
+
+| Dependency | Abstraction? |
+|---|---|
+| Your own modules calling each other | No. Call them directly. |
+| The database | No. Test against a real one. |
+| Other services, vendor APIs | Yes. A small client interface you can fake. |
+| Infrastructure outside the process (pubsub, clock, flags) | Yes. |
+| "We might swap it later" | No. Add it when the second implementation arrives. |
 
 ```ts
-// Tight coupling: service knows about specific database
+// Vendor API: a real seam, faked in tests
 class OrderService {
-  private db = new PostgresDatabase(); // locked in
+  constructor(private payments: PaymentsClient) {}
 }
 
-// Loose coupling: service declares what it needs
+// Own storage: no repository interface just for mocking
 class OrderService {
-  constructor(private repository: OrderRepository) {} // any implementation works
+  constructor(private db: Database) {} // real test DB in tests
 }
 ```
 
@@ -31,7 +48,7 @@ Modules communicate through explicit, stable interfaces. Internal implementation
 | Pattern | When | Coupling Level |
 |---------|------|----------------|
 | Direct function calls | Same module, synchronous | Tightest |
-| Interface/protocol | Cross-module within a service | Moderate |
+| Module's public API | Cross-module within a service | Moderate |
 | Events/messages | Cross-service, async workflows | Loosest |
 | API contracts | Service-to-service | Loose (if versioned) |
 
@@ -39,19 +56,18 @@ Choose the loosest coupling level that still makes the code readable and debugga
 
 ## The Dependency Rule
 
-Dependencies point inward. Business logic never imports infrastructure. Infrastructure implements interfaces the business logic defines.
+Dependencies point inward. Business logic never imports infrastructure details like HTTP handlers or UI. Where business logic needs an external system (a vendor API, another service), it defines the small interface it needs and infrastructure provides it.
 
 ```ts
-// Domain defines what it needs (no framework imports)
-interface OrderRepository {
-  save(order: Order): Promise<void>;
-  findById(id: string): Promise<Order | null>;
+// Domain defines what it needs from the vendor
+interface PaymentsClient {
+  charge(orderId: string, cents: number): Promise<void>;
 }
 
 // Infrastructure provides it
-class PostgresOrderRepository implements OrderRepository {
-  async save(order: Order): Promise<void> {
-    // actual database code here
+class StripePaymentsClient implements PaymentsClient {
+  async charge(orderId: string, cents: number): Promise<void> {
+    // actual vendor call here
   }
 }
 ```

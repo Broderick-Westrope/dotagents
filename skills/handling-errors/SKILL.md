@@ -87,7 +87,7 @@ async function fetchData() {
 
 - **TypeScript/React**: See [references/typescript-react.md](references/typescript-react.md) for Error Boundaries, typed errors, Result pattern, UI display
 - **Python**: See [references/python.md](references/python.md) for EAFP, exception chaining, context managers
-- **Go**: See [references/go.md](references/go.md) for explicit error returns, wrapping with %w, sentinel errors
+- **Go**: See [references/go.md](references/go.md) for explicit error returns, wrapping with %w, sentinel errors, and whether identifiers go in the message or on a span
 
 ## Anti-Patterns
 

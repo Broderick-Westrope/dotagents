@@ -15,7 +15,7 @@ Presentation  →  Application  →  Domain  ←  Infrastructure
 
 - **Domain:** Business rules and entities. No framework imports. No I/O.
 - **Application:** Use cases that orchestrate domain objects. Thin layer.
-- **Infrastructure:** Database, HTTP clients, file systems. Implements interfaces defined by the domain (arrow points inward).
+- **Infrastructure:** Database, HTTP clients, file systems. Where the domain needs an external system it can't run in tests (vendor APIs, other services), the domain defines a small interface and infrastructure implements it (arrow points inward). The database is called directly and tested for real.
 - **Presentation:** Controllers, routes, views. Translates between external formats and application calls.
 
 ## Vertical Slices
@@ -25,10 +25,10 @@ Use features as your top-level organization, with layers as internal structure w
 ```
 src/
 ├── payments/
-│   ├── domain.ts        # types, business rules, repository interface
+│   ├── domain.ts        # types, business rules
 │   ├── service.ts       # application logic, orchestration
 │   ├── routes.ts        # presentation (HTTP handlers)
-│   ├── repository.ts    # infrastructure (database)
+│   ├── store.ts         # infrastructure (database queries)
 │   └── tests/
 ├── users/
 │   ├── domain.ts

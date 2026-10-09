@@ -1,6 +1,6 @@
 # Go Testing Patterns
 
-Language-specific patterns for testing Go applications using the standard library, `testify`, and modern integration tools.
+Language-specific patterns for testing Go applications using the standard library, `testify`, and modern integration tools. Layout rules (external test packages, map tables, what to mock) live in the **go-style** skill; this file shows the mechanics. Follow the repo's assertion conventions where they differ from the examples.
 
 ## Contents
 
@@ -21,22 +21,26 @@ Don't be a purist. Use tools where they help, but know their limits.
 - **Use `google/go-cmp`** for complex structs (superior diff output).
 
 ```go
+package user_test
+
 import (
     "testing"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
     "github.com/google/go-cmp/cmp"
+
+    "example.com/app/user"
 )
 
 func TestUserProcessing(t *testing.T) {
     // SETUP
     // Use 'require' to fail fast if setup fails
-    user, err := CreateUser("test@example.com")
+    u, err := user.Create("test@example.com")
     require.NoError(t, err, "Setup failed, stopping test")
-    require.NotNil(t, user)
+    require.NotNil(t, u)
 
     // ACTION
-    processedUser := Process(user)
+    processedUser := user.Process(u)
 
     // ASSERTIONS
     // Use 'assert' for simple scalar values
@@ -46,7 +50,7 @@ func TestUserProcessing(t *testing.T) {
     // Use 'go-cmp' for complex objects
     // Testify's output for large structs can be unreadable.
     // cmp.Diff shows exactly which field differs (-want +got)
-    want := User{
+    want := user.User{
         Email:    "test@example.com",
         Status:   "processed",
         IsActive: true,
@@ -61,43 +65,39 @@ func TestUserProcessing(t *testing.T) {
 
 ## Table-Driven Tests (The Gold Standard)
 
-This is the dominant pattern in Go. Combine it with `t.Parallel()` for speed.
+This is the dominant pattern in Go. Key the table by case name with a map, and combine it with `t.Parallel()` for speed. Map iteration order is random, which exposes cases that depend on each other, and duplicate case names fail to compile.
 
 ```go
 func TestParseURL(t *testing.T) {
-    tests := []struct {
-        name    string
+    tests := map[string]struct {
         input   string
         want    string // simplified for example
         wantErr string // use string to match partial error messages
     }{
-        {
-            name:  "valid http",
+        "valid http": {
             input: "http://example.com",
             want:  "example.com",
         },
-        {
-            name:    "missing protocol",
+        "missing protocol": {
             input:   "example.com",
             wantErr: "invalid URL",
         },
     }
 
-    for _, tt := range tests {
-        tt := tt // Capture variable for parallel execution
-        t.Run(tt.name, func(t *testing.T) {
+    for name, tc := range tests {
+        t.Run(name, func(t *testing.T) {
             t.Parallel()
 
-            got, err := ParseURL(tt.input)
+            got, err := urlparse.Parse(tc.input)
 
-            if tt.wantErr != "" {
+            if tc.wantErr != "" {
                 require.Error(t, err)
-                assert.Contains(t, err.Error(), tt.wantErr)
+                assert.Contains(t, err.Error(), tc.wantErr)
                 return
             }
 
             require.NoError(t, err)
-            assert.Equal(t, tt.want, got)
+            assert.Equal(t, tc.want, got)
         })
     }
 }
@@ -144,60 +144,54 @@ func TestUserDAO(t *testing.T) {
 
 ## Mocking Strategies
 
-### 1. Interface Fakes (Preferred)
+Mock only what sits outside the repo: other services, vendor clients, and infrastructure (pubsub, clock, flags). Use a real database. Never mock the repo's own packages.
 
-For internal logic, handwritten fakes are often cleaner than mock frameworks. They are type-safe and refactor-friendly.
+### 1. Generated Mocks (Most Common)
+
+Where the repo already uses `go.uber.org/mock`, follow it. The client package declares a small interface type and a `go:generate` directive, and tests use the generated mock.
 
 ```go
-// Dependency Interface
-type EmailSender interface {
-    Send(to, msg string) error
+// pkg/emailclient/emailclient.go
+//go:generate go tool mockgen -source=emailclient.go -destination=../mockemailclient/mockemailclient.go -typed -package=mockemailclient
+
+type Client interface {
+    Send(ctx context.Context, to, msg string) error
+}
+```
+
+```go
+func TestRegistration(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    email := mockemailclient.NewMockClient(ctrl)
+    svc := registration.NewService(email)
+
+    email.EXPECT().Send(gomock.Any(), "user@example.com", gomock.Any()).Return(nil)
+
+    require.NoError(t, svc.Register(t.Context(), "user@example.com"))
+}
+```
+
+### 2. Handwritten Fakes
+
+In repos without a mock generator, a small fake for the boundary client is cleaner than a mock framework. It is type-safe and refactor-friendly.
+
+```go
+type fakeSender struct {
+    sent []string
 }
 
-// Handmade Fake
-type FakeSender struct {
-    SentMessages []string
-}
-
-func (f *FakeSender) Send(to, msg string) error {
-    f.SentMessages = append(f.SentMessages, to)
+func (f *fakeSender) Send(_ context.Context, to, _ string) error {
+    f.sent = append(f.sent, to)
     return nil
 }
 
 func TestRegistration(t *testing.T) {
-    fake := &FakeSender{}
-    svc := NewService(fake)
+    fake := &fakeSender{}
+    svc := registration.NewService(fake)
 
-    svc.Register("user@example.com")
+    require.NoError(t, svc.Register(t.Context(), "user@example.com"))
 
-    assert.Equal(t, 1, len(fake.SentMessages))
-    assert.Equal(t, "user@example.com", fake.SentMessages[0])
-}
-```
-
-### 2. Testify Mocks (For External Libs)
-
-Use `testify/mock` when the interface is huge or complex (e.g., AWS SDKs) and a handwritten fake is too much work.
-
-```go
-import "github.com/stretchr/testify/mock"
-
-type MockS3 struct {
-    mock.Mock
-}
-
-func (m *MockS3) GetObject(key string) ([]byte, error) {
-    args := m.Called(key)
-    return args.Get(0).([]byte), args.Error(1)
-}
-
-func TestDownload(t *testing.T) {
-    m := new(MockS3)
-    m.On("GetObject", "avatar.jpg").Return([]byte("data"), nil)
-
-    // ... test logic ...
-
-    m.AssertExpectations(t)
+    assert.Equal(t, []string{"user@example.com"}, fake.sent)
 }
 ```
 
