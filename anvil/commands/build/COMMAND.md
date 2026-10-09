@@ -38,7 +38,9 @@ Use a worktree on a feature branch (see **using-git-worktrees**). An early versi
 - Build the thinnest complete path first: one slice through every layer that works end to end. Then widen it. A tracer bullet, as in _The Pragmatic Programmer_.
 - Follow `references/test-driven-development.md` (relative to this command's location) for each slice. Stop at green. Structural cleanup happens when refining in step 5.
 - Commit as you go, one commit per logical step, creating a history as you go.
-- For large changes, build slice by slice. Run slices in parallel only when they touch separate areas, and give each subagent the design doc and its slice. Each slice goes through steps 3 to 5 before the next one depends on it.
+- Build the first slice yourself. For large changes, build slice by slice, and hand further slices to **fixer** subagents when that's faster than building them yourself. Run them in parallel only when they touch separate areas. Each slice goes through steps 3 to 5 before the next one depends on it.
+
+When dispatching **fixer**, give it the design doc, its slice or findings, the path to `references/test-driven-development.md`, and the style skill to load. Merge the assumptions it reports into the build note.
 
 Don't stop to polish yet. The point is to learn what the change really involves, and the devil's advocate may still send it back for a rebuild.
 
@@ -63,7 +65,7 @@ Don't tell it which round this is, and don't pass earlier findings or how you re
 ### 5. Refine or rebuild
 
 - **Premise or approach is wrong:** don't patch it. Record what you learned in the design doc, delete the branch, and rebuild from step 1. An early version is cheap; a patched wrong approach is not. Delete the old build note file.
-- **Otherwise, refine:** fix the findings, then re-read the whole diff as one change and clean up its structure: pass-through layers, shallow modules, duplicated concepts, growing switches, unclear names, and code in the wrong place. Use the matching style skill (e.g. **go-style**) and **refactoring-code**. Keep tests green and commit cleanup separately from behavior changes. Update the build note and re-run step 4.
+- **Otherwise, refine:** fix the findings (hand bounded ones to **fixer** when that's faster), then re-read the whole diff as one change and clean up its structure: pass-through layers, shallow modules, duplicated concepts, growing switches, unclear names, and code in the wrong place. Use the matching style skill (e.g. **go-style**) and **refactoring-code**. Keep tests green and commit cleanup separately from behavior changes. Update the build note and re-run step 4.
 - Move on once the devil's advocate finds nothing worth changing and the cleanup pass leaves the diff unchanged.
 - Count devil's advocate reviews per approach. After three reviews of the same approach without moving on, stop and bring the user the latest findings and any concern that kept coming back. A rebuild starts a new count; after two rebuilds, stop and bring the user what each approach taught you, since the design doc likely needs revisiting.
 
@@ -73,7 +75,7 @@ Load **verification-before-completion** and exercise the change locally as it de
 
 ### 7. Agent code review
 
-Read `../review/COMMAND.md` relative to this command's location and follow it. Treat its `$ARGUMENTS` as "the full branch diff against `<base>`", so skip its scope questions. On REQUEST CHANGES, fix every Critical and Important finding without asking, committing each fix separately (don't amend earlier commits), then re-run the review as that command says. Reviewers check structure again with fresh eyes, since authors miss their own mistakes.
+Read `../review/COMMAND.md` relative to this command's location and follow it. Treat its `$ARGUMENTS` as "the full branch diff against `<base>`", so skip its scope questions. On REQUEST CHANGES, fix every Critical and Important finding without asking (yourself or via **fixer**), committing each fix separately (don't amend earlier commits), then re-run the review as that command says. Reviewers check structure again with fresh eyes, since authors miss their own mistakes.
 
 ### 8. Human code review
 
