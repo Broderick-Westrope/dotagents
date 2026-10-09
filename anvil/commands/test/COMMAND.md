@@ -3,11 +3,6 @@ description: Run tests and analyze failures
 argument_hint: "[test-command]"
 ---
 
-**DELEGATION ONLY**: Do NOT run any commands or investigate the codebase yourself. Your only job is to immediately delegate to the **haiku** agent as a subagent, passing the prompt template below with `$ARGUMENTS` substituted.
-
-## Subagent Prompt for Haiku
-
-```
 Run tests and analyze any failures.
 
 User arguments: $ARGUMENTS
@@ -34,4 +29,3 @@ Provide a summary including:
 - Total tests run
 - Passed/failed/skipped counts
 - For failures: clear, actionable feedback
-```

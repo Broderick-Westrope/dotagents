@@ -1,6 +1,6 @@
 # Feature Spec Template
 
-Use this template for product feature definitions. The output feeds into `Skill(ce:grilling)` for the technical design doc and `Skill(ce:design)` for UI implementation.
+Use this template for product feature definitions. The output feeds into the **grilling** skill for the technical design doc and the **design** skill for UI implementation.
 
 **Save to:** `**/specs/YYYY-MM-DD-<feature-name>.md`
 
@@ -140,7 +140,7 @@ Add this section at the bottom of every spec. It maps the spec to what downstrea
 ```markdown
 ## Handoff
 
-### For the Technical Design Doc (ce:grilling)
+### For the Technical Design Doc (grilling)
 
 Extract these fields for the design doc:
 
@@ -152,7 +152,7 @@ Extract these fields for the design doc:
 Technical constraints: [Performance requirements, integrations, compatibility]
 Dependencies: [External services, other features, infrastructure]
 
-### For Design (ce:design)
+### For Design (design)
 
 Experience qualities: [2-3 qualities from experience definition]
 Reference products: [Competitor patterns to match or improve on]

@@ -28,7 +28,6 @@ Quick workflows for everyday development tasks:
 | [/document](anvil/commands/document/COMMAND.md)             | Create or improve documentation                                    |
 | [/grill](anvil/commands/grill/COMMAND.md)                   | Think through a feature and write a design doc                     |
 | [/build](anvil/commands/build/COMMAND.md)                   | Build an early version, then challenge and review the diff         |
-| [/init](anvil/commands/init/COMMAND.md)                     | Initialize or audit a repository's agent configuration             |
 | [/audit-context](anvil/commands/audit-context/COMMAND.md)   | Identify knowledge gaps in project context and collect human input |
 | [/post-mortem](anvil/commands/post-mortem/COMMAND.md)       | Review a session to assess execution and extract improvements      |
 | [/wtp-pruning](anvil/commands/wtp-pruning/COMMAND.md)       | Classify wtp worktrees and flag the stale ones                     |
@@ -94,10 +93,10 @@ Reusable development patterns:
 
 **Git & Code Review Workflow:**
 
+Worktree management (`using-git-worktrees`, `finishing-a-development-branch`) ships with Anvil as builtin skills, alongside a built-in `wtp`.
+
 | Skill                                                                              | Description                                                  |
 | ---------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [using-git-worktrees](skills/using-git-worktrees/SKILL.md)                         | Isolated git worktrees for feature development               |
-| [finishing-a-development-branch](skills/finishing-a-development-branch/SKILL.md)   | Structured merge, PR, or cleanup when implementation is done |
 | [receiving-code-review](skills/receiving-code-review/SKILL.md)                     | Evaluate and respond to code review feedback                 |
 
 **Meta Skills:**

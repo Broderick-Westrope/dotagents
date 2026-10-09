@@ -102,37 +102,37 @@ Structure your review as follows:
 - **Change type**: [Feature | Bug Fix | Refactor | Enhancement]
 - **Scope**: [Brief 1-2 sentence description]
 
-## Critical Issues ⛔
+## Critical Issues
 
 [Must be fixed before merge - blocking issues]
 
 - `file.ts:123` - [Specific issue with explanation and suggested fix]
 
-## Important Issues ⚠️
+## Important Issues
 
 [Should be addressed - convention violations, best practice deviations, missing tests, performance]
 
 - `file.ts:456` - [Specific issue with explanation]
 
-## Product & UX Issues 🎯
+## Product & UX Issues
 
 [User-facing concerns - missing states, broken flows, accessibility, inconsistent patterns]
 
 - `file.ts:234` - [Issue from user's perspective]
 
-## Developer Experience Issues 🔧
+## Developer Experience Issues
 
 [DX concerns - confusing APIs, poor error messages, hard to extend, high cognitive load]
 
 - `file.ts:567` - [Issue from other developers' perspective]
 
-## Documentation Updates Needed 📝
+## Documentation Updates Needed
 
 [Docs that are now outdated or missing - README, API docs, comments, examples]
 
 - `README.md` - [What needs updating and why]
 
-## Suggestions 💡
+## Suggestions
 
 [Optional - only include if genuinely valuable]
 

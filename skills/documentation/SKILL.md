@@ -1,7 +1,6 @@
 ---
 name: documentation
 description: Create or improve documentation by routing to the right approach. Handles code comments (inline audit/cleanup), system docs (READMEs, API docs, architecture), and templates. Use when writing, auditing, or improving any form of documentation.
-argument-hint: "<file-path-or-doc-type>"
 ---
 
 # Documentation
@@ -14,19 +13,19 @@ Determine the task type from arguments and context, then load the matching refer
 
 | Signal | Task type | Load | Execute with |
 |--------|-----------|------|--------------|
-| Source file path (`.ts`, `.js`, `.py`, `.go`, `.rs`, etc.) | Code comments | [references/code-comments.md](references/code-comments.md) | `@ce:haiku` agent |
-| Mentions "comments", "inline docs", "code comments" | Code comments | [references/code-comments.md](references/code-comments.md) | `@ce:haiku` agent |
-| "Clean up comments" in a folder or unstaged changes | Code comments | [references/code-comments.md](references/code-comments.md) | `@ce:haiku` agent |
-| Markdown file path (`.md`) | System docs | [references/systems.md](references/systems.md) | General subagent |
-| Mentions README, API docs, architecture, `/docs/` | System docs | [references/systems.md](references/systems.md) | General subagent |
-| Multi-file scope or new documentation | System docs | [references/systems.md](references/systems.md) | General subagent |
+| Source file path (`.ts`, `.js`, `.py`, `.go`, `.rs`, etc.) | Code comments | [references/code-comments.md](references/code-comments.md) | Direct |
+| Mentions "comments", "inline docs", "code comments" | Code comments | [references/code-comments.md](references/code-comments.md) | Direct |
+| "Clean up comments" in a folder or unstaged changes | Code comments | [references/code-comments.md](references/code-comments.md) | Direct |
+| Markdown file path (`.md`) | System docs | [references/systems.md](references/systems.md) | **fixer** agent |
+| Mentions README, API docs, architecture, `/docs/` | System docs | [references/systems.md](references/systems.md) | **fixer** agent |
+| Multi-file scope or new documentation | System docs | [references/systems.md](references/systems.md) | **fixer** agent |
 | Ambiguous | - | Ask user to clarify scope | - |
 
 ## Execution
 
-### Code comments (delegate to `@ce:haiku`)
+### Code comments (handle directly)
 
-Pass these instructions when delegating:
+Code-comment work is small, so follow these steps yourself:
 
 1. Read target file(s) completely, identify language and patterns
 2. Audit comments using the code-comments reference checklist
@@ -36,7 +35,7 @@ Pass these instructions when delegating:
 
 Scope: only inline code comments. If asked about markdown/README/docs content, switch to system docs path.
 
-### System docs (spawn general subagent)
+### System docs (delegate to the **fixer** agent)
 
 Pass these instructions when delegating:
 
@@ -54,10 +53,10 @@ Pass these instructions when delegating:
 **Architecture Documentation:**
 1. Read core modules, trace dependencies, identify design decisions
 2. Document decisions focusing on WHY, not just WHAT
-3. Add diagrams using `Skill(ce:visualizing-with-mermaid)` for flows
+3. Add diagrams using the **visualizing-with-mermaid** skill for flows
 4. Write docs in `/docs/architecture/`
 
-For writing style and tone, use `Skill(ce:writer)` with **The Engineer** persona.
+For writing style and tone, use the **writer** skill with **The Engineer** persona.
 
 ### Location standards
 

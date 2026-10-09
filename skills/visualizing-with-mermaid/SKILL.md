@@ -61,7 +61,7 @@ Use **subgraphs** for: deployment boundaries, logical layers, team ownership, tr
 
 ## When to Use Something Else
 
-If the concept needs animation, user interaction (sliders, play/pause, click-to-explore), or step-through state changes to be understood, use `Skill(ce:visualizing-topics)` instead. That skill produces self-contained interactive HTML files. This skill produces static Mermaid code blocks.
+If the concept needs animation, user interaction (sliders, play/pause, click-to-explore), or step-through state changes to be understood, use the **visualizing-topics** skill instead. That skill produces self-contained interactive HTML files. This skill produces static Mermaid code blocks.
 
 ## Workflow
 

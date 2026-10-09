@@ -3,41 +3,40 @@ description: Create a well-formatted git commit for current changes
 argument_hint: "[context]"
 ---
 
-Create a git commit using the appropriate path based on your current knowledge.
+Create a git commit for the current changes.
 
-## Decision: Direct vs Delegate
-
-**Commit directly** if you have clear context about the changes:
-- You just implemented, fixed, or modified something in this conversation
-- You know exactly what files changed and why
-- The intent of the change is unambiguous
-
-**Delegate to haiku agent** if ambiguous:
-- User invoked `/commit` without prior context in this conversation
-- You're unsure what changes exist or their purpose
-- The user is asking about changes you didn't make
-
-## Path A: Direct Commit (You Have Context)
+User arguments: $ARGUMENTS
+Default context: staged (use "unstaged" only if user specifies)
 
 Load the **preflight-checks** skill.
 
-1. **Preflight checks:**
-   Run preflight checks on staged files before committing. Fix formatting/lint issues, re-stage fixed files.
+Don't commit in the repository's root worktree (where `git rev-parse --git-dir` equals `git rev-parse --git-common-dir`) unless the user or a repository memory file explicitly says to. The user invoking /commit there counts as explicitly saying to.
 
-2. **Quick verification:**
+1. **Gather context** (if you didn't just make these changes yourself in this conversation, or are unsure what changed and why):
+   - `git log -n 10 --oneline` to learn the project's existing casing and scoping conventions
+   - `git status` to see staged, unstaged, and untracked files
+   - `git diff --cached` (for staged) or `git diff` (for unstaged) to read the code changes
+
+2. **Stage by explicit path:**
    ```bash
-   git diff --cached --name-only  # or git diff --name-only for unstaged
+   git add <path>...
    ```
-   Confirm the files match what you expect from your work.
+   Never use `git add -A`, `git add .`, or `git commit -a`. Confirm with `git diff --cached --name-only` that the staged files match what you expect.
 
-3. **Draft the message** following Conventional Commits (schema below).
+3. **Preflight checks:**
+   Run preflight checks on staged files before committing. Fix formatting/lint issues, re-stage fixed files by path.
 
-4. **Execute:**
+4. **Draft the message** in the style the repository's `git log` already uses. If it has no consistent style, use Conventional Commits (schema below):
+   - Capture the *intent* of the change (Why was this done?), not just the syntax (What changed?)
+   - Infer the **scope** from the directory name or module (e.g., `src/auth/login.ts` -> `auth`). Avoid file extensions in scopes
+
+5. **Execute:**
    ```bash
    git commit -m "your_header" -m "your_body"
    ```
+   Pass the header and body as separate `-m` flags for proper newline formatting.
 
-5. **Handle pre-commit failure** (max 3 attempts):
+6. **Handle pre-commit failure** (max 3 attempts):
 
    If `git commit` fails (exit code != 0):
 
@@ -48,51 +47,13 @@ Load the **preflight-checks** skill.
       - Linters with auto-fix: `eslint --fix`, `ruff check --fix`
       - Type errors / test failures: read the error, fix the code
 
-   c. Re-stage fixed files and retry the commit.
+   c. Re-stage fixed files by path and retry the commit.
 
    d. After 3 failed attempts, **escalate**:
       - Status: FAILED (after 3 attempts)
       - Attempts log: what was tried each round
       - Remaining errors: current error output
       - Drafted message: the commit message for when errors are resolved
-
-## Path B: Delegate to Haiku Agent (Ambiguous)
-
-Delegate to the **haiku** agent as a subagent with this prompt:
-
-```
-Create a git commit.
-
-User arguments: $ARGUMENTS
-Default context: staged (use "unstaged" only if user specifies)
-
-**Step 1: Context Gathering**
-- Execute `git log -n 10 --oneline` to learn the project's existing casing and scoping conventions
-- Execute `git diff --cached --name-only` (for staged) or `git diff --name-only` (for unstaged) to see the file list
-- Execute `git diff --cached` (for staged) or `git diff` (for unstaged) to read the code changes
-
-**Step 2: Analysis & Drafting**
-- Analyze the *intent* of the change (Why was this done?), not just the syntax (What changed?)
-- Infer the **scope** from the directory name or module (e.g., `src/auth/login.ts` -> `auth`). Avoid file extensions in scopes
-- Draft the message following **Conventional Commits** (rules below)
-
-**Step 3: Execution**
-- Print the drafted message clearly so the user sees what is being committed
-- Execute: `git commit -m "your_header" -m "your_body"`
-- Pass the header and body as separate `-m` flags for proper newline formatting
-
-**Failure Handling (Pre-commit Hooks)**
-
-If `git commit` fails (exit code != 0), try to fix it (max 3 attempts):
-1. Parse the error output to identify the failure type
-2. For formatting/lint errors: run the project's formatter/linter with --fix flag
-3. Re-stage changed files and retry the commit
-4. If still failing after 3 attempts, REPORT with:
-   - Status: FAILED
-   - Attempts: What was tried each round
-   - Error Output: Current errors
-   - Drafted Message: The commit message for when errors are resolved
-```
 
 ## Commit Message Style
 
@@ -106,5 +67,5 @@ Follow **The Contributor** persona from the **writer** skill for commit message 
 - Breaking: Use `feat!:` or `fix!:` prefix
 
 **Important:**
-- Do not add Claude attribution footers (no "Generated by..." / "Co-authored-by...")
+- Include any attribution lines Anvil is configured to add; don't add any others.
 - If the diff is massive, focus on the *primary* architectural change rather than listing every file

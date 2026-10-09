@@ -9,12 +9,12 @@ description: Analyzes logs efficiently through targeted search and iterative ref
 
 ## Delegation
 
-For log files over a few hundred lines, delegate to the `@ce:log-reader` agent. It runs on haiku to keep costs low and context clean. Prompt it with:
+For log files over a few hundred lines, delegate to the **explorer** agent. It is read-only and cheap, which keeps costs low and your context clean. Prompt it with:
 - What to investigate (error text, time window, correlation IDs)
 - Which log files or directories to search
 - The `scripts/` utilities available (see [Utility Scripts](#utility-scripts) below)
 
-The agent has this skill preloaded, so it already knows the methodology. Keep your prompt tight and specific - don't paste log contents into the delegation message.
+The explorer can't load skills, so state the filter-first approach in the prompt. Keep your prompt tight and specific - don't paste log contents into the delegation message.
 
 ## Core Principles
 

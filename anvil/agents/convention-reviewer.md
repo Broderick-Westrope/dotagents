@@ -87,37 +87,37 @@ Structure your review as follows:
 - **Scope**: [Brief 1-2 sentence description]
 - **Convention sources**: [List what was found: CLAUDE.md, .eslintrc, inferred patterns, loaded skills]
 
-## Critical Issues ⛔
+## Critical Issues
 
 [Must be fixed before merge - blocking convention violations or critical bugs spotted opportunistically]
 
 - `file.ts:123` - [Specific issue with explanation and suggested fix] (source: CLAUDE.md rule X)
 
-## Important Issues ⚠️
+## Important Issues
 
 [Should be addressed - convention violations, pattern deviations]
 
 - `file.ts:456` - [Specific issue with explanation] (source: inferred pattern from existing codebase)
 
-## Product & UX Issues 🎯
+## Product & UX Issues
 
 [User-facing concerns - only if spotted opportunistically while reviewing conventions]
 
 - `file.ts:234` - [Issue from user's perspective]
 
-## Developer Experience Issues 🔧
+## Developer Experience Issues
 
 [DX concerns related to convention adherence - inconsistent APIs, naming that breaks patterns]
 
 - `file.ts:567` - [Issue from other developers' perspective]
 
-## Documentation Updates Needed 📝
+## Documentation Updates Needed
 
 [Convention docs that are now outdated, missing, or contradicted by the codebase]
 
 - `README.md` - [What needs updating and why]
 
-## Suggestions 💡
+## Suggestions
 
 [Optional - only include if genuinely valuable]
 
