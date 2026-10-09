@@ -20,7 +20,6 @@ tools:
   - multiedit
 skills:
   - grilling
-  - drafting-tsds
   - planning-products
 mcps:
   muninn:
@@ -63,7 +62,7 @@ The **grilling** skill handles both targeted refinement and approach exploration
 
 Write the design doc in the format the **grilling** skill defines, to `plans/design-YYYY-MM-DD-<topic>.md`. Cover the problem, goal, scope, constraints, success criteria, design decisions with the alternatives declined, and the files that matter. Leave out implementation steps.
 
-Load the **drafting-tsds** skill when the user needs a TSD for stakeholders instead.
+In Eucalyptus repos, when the user needs a TSD for stakeholders, load **euc-tsd-writing** and work from the company template.
 
 ### Phase 4: Adversarial Review
 

@@ -26,7 +26,6 @@ Quick workflows for everyday development tasks:
 | [/fix-issue](anvil/commands/fix-issue/COMMAND.md)           | Fix a GitHub issue by number                                       |
 | [/pr](anvil/commands/pr/COMMAND.md)                         | Create a pull request with auto-generated description              |
 | [/document](anvil/commands/document/COMMAND.md)             | Create or improve documentation                                    |
-| [/draft-tsd](anvil/commands/draft-tsd/COMMAND.md)           | Draft a technical specification from rough ideas or topics         |
 | [/grill](anvil/commands/grill/COMMAND.md)                   | Think through a feature and write a design doc                     |
 | [/build](anvil/commands/build/COMMAND.md)                   | Build an early version, then challenge and review the diff         |
 | [/init](anvil/commands/init/COMMAND.md)                     | Initialize or audit a repository's agent configuration             |
@@ -84,7 +83,6 @@ Reusable development patterns:
 | [writer](skills/writer/SKILL.md)                         | Writing style guide with 7 personas (Architect, Engineer, PM, Marketer, Educator, Contributor, UX Writer) |
 | [strategy-writer](skills/strategy-writer/SKILL.md)       | Executive-quality strategic documents in Economist/HBR style                                              |
 | [documentation](skills/documentation/SKILL.md)           | Route to the right documentation approach (code comments, system docs, templates)                         |
-| [drafting-tsds](skills/drafting-tsds/SKILL.md)           | Structured TSDs that evaluate architectural options                                                       |
 
 **Data & Infrastructure:**
 
