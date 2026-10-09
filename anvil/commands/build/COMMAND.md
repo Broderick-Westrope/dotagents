@@ -23,7 +23,7 @@ Build progress:
 - [ ] 3. Write the build note
 - [ ] 4. Devil's advocate review
 - [ ] 5. Refine or rebuild
-- [ ] 6. Verify on the real artifact
+- [ ] 6. Exercise the change locally
 - [ ] 7. Agent code review
 - [ ] 8. Human code review
 ```
@@ -67,14 +67,16 @@ Don't tell it which round this is, and don't pass earlier findings or how you re
 - Move on once the devil's advocate finds nothing worth changing and the cleanup pass leaves the diff unchanged.
 - Count devil's advocate reviews per approach. After three reviews of the same approach without moving on, stop and bring the user the latest findings and any concern that kept coming back. A rebuild starts a new count; after two rebuilds, stop and bring the user what each approach taught you, since the design doc likely needs revisiting.
 
-### 6. Verify on the real artifact
+### 6. Exercise the change locally
 
-Tests passing is not enough. Exercise the change the way a user would:
+Tests passing is not enough. Run what you built and use it the way a user would, but only against things that live on this machine or that the repo already sets up for testing:
 
-- **APIs:** call endpoints with realistic payloads.
-- **CLIs and TUIs:** run the real binary and drive it.
-- **Integrations:** hit the real service where it's safe to.
-- **Parsers:** feed real data, not just fixtures.
+- **APIs and services:** run them locally and call them with realistic but made-up payloads.
+- **CLIs and TUIs:** build the binary and drive it.
+- **Dependencies:** use local containers, test databases, emulators, and the sandbox or test accounts the repo already configures.
+- **Data:** use fixtures or synthetic data shaped like the real thing.
+
+Never touch deployed environments (production or shared staging), real customer or patient data, or anything that sends messages, emails, or payments. If the only way to check something needs a live system, don't do it. Tell the user what you would check and how, and leave it for them.
 
 Fix friction you notice (confusing errors, noisy output, inconsistent behavior). See **verification-before-completion**.
 
