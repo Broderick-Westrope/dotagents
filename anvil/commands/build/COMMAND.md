@@ -69,7 +69,7 @@ Don't tell it which round this is, and don't pass earlier findings or how you re
 
 ### 6. Exercise the change locally
 
-Load **verification-before-completion** and exercise the change locally as it describes. Fix friction you notice (confusing errors, noisy output, inconsistent behavior).
+Load **verification-before-completion** and exercise the change locally as it describes. Fix bugs and friction you notice (confusing errors, noisy output, inconsistent behavior).
 
 ### 7. Agent code review
 
