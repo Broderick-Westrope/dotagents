@@ -57,7 +57,7 @@ Reusable development patterns:
 | -------------------------------------------------------------------- | ----------------------------------------------------------- |
 | [refactoring-code](skills/refactoring-code/SKILL.md)                 | Behavior-preserving code improvements                       |
 | [go-style](skills/go-style/SKILL.md)                                 | Go package depth, extraction, interface types, errors, tests |
-| [design-red-flags](skills/design-red-flags/SKILL.md)                 | Unlisted. Structural smells with how to spot and fix them (Ousterhout, Fowler, Feathers) |
+| [codebase-design](skills/codebase-design/SKILL.md)                   | Unlisted. Red flags, review severity and design comparison (Ousterhout, Fowler, Feathers) |
 | [surveying-architecture](skills/surveying-architecture/SKILL.md)     | Unlisted. Procedure behind `/survey-architecture`            |
 | [optimizing-performance](skills/optimizing-performance/SKILL.md)     | Measurement-driven optimization                             |
 | [handling-errors](skills/handling-errors/SKILL.md)                   | Error handling best practices                               |

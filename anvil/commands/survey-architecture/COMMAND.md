@@ -1,7 +1,7 @@
 ---
 description: Survey an existing codebase or area for structural problems and rank improvement candidates
 argument_hint: "[path-package-or-subsystem]"
-skills: [surveying-architecture, design-red-flags]
+skills: [surveying-architecture, codebase-design]
 ---
 
 Survey the architecture of: `$ARGUMENTS`

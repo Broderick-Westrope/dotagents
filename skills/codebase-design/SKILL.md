@@ -1,16 +1,18 @@
 ---
-name: design-red-flags
-description: "A checklist of structural design problems (shallow modules, pass-throughs, information leakage, shotgun surgery and others), each with how to spot it, the fix, and the test that confirms it. Used by architecture surveys, code review and design decisions."
+name: codebase-design
+description: "Structural design knowledge: red flags to spot in code (shallow modules, pass-throughs, information leakage, shotgun surgery and others) with their fixes, how severe each is in review, and the axes for comparing design options. Used by architecture surveys, code review and design decisions."
 unlisted: true
 ---
 
-# Design Red Flags
+# Codebase Design
 
 The next contributor to any codebase is probably an agent that sees only the files it opened, copies the nearest example, and takes the shortest path that compiles. Every flag below gets copied and spreads. Catch them while they are small.
 
 Sources: Ousterhout's *A Philosophy of Software Design* (depth, information hiding, pass-throughs), Fowler's *Refactoring* chapter 3 (code smells), Feathers' *Working Effectively with Legacy Code* (seams). For the vocabulary (module, interface, deep, shallow, seam) and Go-specific rules, load the **go-style** skill when the code is Go.
 
-## How to Use It
+Spot problems in code with the red flags below. Choose between designs with **Comparing Designs** at the end.
+
+## How to Use the Red Flags
 
 - A flag is a judgement call, not a rule. Report one only when you can point at `file:line` and say what it costs: which change got harder, which reader has to trace further, which bug it invites.
 - The repo's own docs and consistent patterns win over this list. If the repo deliberately does something listed here, it is not a finding.
@@ -65,3 +67,28 @@ Before reporting a flag, check it holds:
 2. Run the deletion test: imagine removing the module or layer. Say what would happen to the callers.
 3. Count the evidence: how many callers, files or commits show the problem. One instance is usually a note, not a finding.
 4. Name the cost in one sentence. If you can't, drop it.
+
+## Severity in Review
+
+When reviewing a diff, treat these as Important at least, because agents copy them into the next change:
+
+- A change that pushes a file past about 1,000 lines, or adds another concern to a file already past it.
+- A new pass-through, middle man, or interface type with one implementation.
+- Shotgun surgery: one logical change spread across many files because a decision has no single owner.
+- A new branch in a growing switch, or a second way to do a task that already has one.
+
+Also look for **code judo**: a restructuring that would delete whole branches, layers or files rather than tidy them. Suggest it even when the diff is locally fine. Don't ask for helpers extracted only to shorten a function.
+
+## Comparing Designs
+
+When choosing between design options, compare each on these axes and name the tradeoffs rather than just picking a winner:
+
+- **Depth:** how much behavior sits behind how small an interface. Prefer fewer, deeper modules.
+- **Locality:** how many files a typical future change touches. Each decision should have one owner.
+- **Seams:** where the option lets behavior change without editing callers. Prefer a package's exported API as the seam. An interface type needs a real second implementation (another service, a vendor client, out-of-process infrastructure); otherwise it is speculative.
+- **Deletion:** whether the option removes layers or adds them. Prefer the one that leaves less code to read.
+- **Testability:** whether behavior can be tested through the public interface, without mocking the repo's own code.
+- **Reversibility and migration cost:** what it takes to undo, and how callers move over.
+- **Correctness, performance and operational complexity**, where they differ between options.
+
+Screen each option against the red flags. An option that introduces one needs a stated reason.

@@ -8,7 +8,7 @@ unlisted: true
 
 A survey finds where the structure of existing code is costing the most, and ranks it. It is not a rescue. It proposes no new interfaces and changes no code. The output is a short list of candidates the user can pick from, each backed by evidence they can check.
 
-Load the **design-red-flags** skill for the checklist, and **go-style** when the code is Go.
+Load the **codebase-design** skill for the checklist, and **go-style** when the code is Go.
 
 ## Steps
 
@@ -54,7 +54,7 @@ Skip generated files (sqlc output, protobuf, mocks) and vendored code. The inter
 Split the scoped area into two to four parts and dispatch one **explorer** per part, in parallel. Give each explorer:
 
 - The paths to cover and the hotspot files inside them.
-- The flag names from **design-red-flags**, and the instruction to report each finding as: flag name, `file:line`, the evidence (callers, duplicates, commit counts), and the one-sentence cost.
+- The flag names from **codebase-design**, and the instruction to report each finding as: flag name, `file:line`, the evidence (callers, duplicates, commit counts), and the one-sentence cost.
 - The import direction to check: which packages import which, and any that point the wrong way.
 - An instruction to note friction as they go: places where answering "where does X come from" means opening more than three files, or holding several pieces of state at once.
 
@@ -92,7 +92,7 @@ Save it where the repo keeps design and analysis docs (check `plans/` and `docs/
 
 ### 1. <Short name> (Strong | Worth exploring | Speculative)
 
-- **Flags:** <names from design-red-flags>
+- **Flags:** <names from codebase-design>
 - **Evidence:** <file:line references, counts>
 - **Cost today:** <what is harder because of it>
 - **Deletion test:** <what callers would lose>
