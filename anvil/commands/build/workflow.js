@@ -177,7 +177,7 @@ function main(input) {
 function rebuildWorktree(ctx, keptAs) {
   const transition = () => {
     const dirty = bash("git status --porcelain --untracked-files=all --ignored", { cwd: ctx.worktree }).stdout.trim()
-    if (dirty && ask("Rebuilding discards uncommitted and ignored files in " + ctx.worktree + ":\n" + dirty +
+    if (dirty && ask("Rebuilding discards uncommitted and ignored files in " + ctx.worktree + ":\n" + truncateLines(dirty, 40) +
       "\n\nCommitted work is kept at " + keptAs + ".", { options: ["stop", "discard"] }) === "stop") {
       throw new Error("stopped before rebuild; " + ctx.worktree + " is untouched")
     }
@@ -426,6 +426,13 @@ function tell(builder, prompt, opts) {
 // fill reads a reference and replaces {{name}} placeholders from vars.
 function fill(path, vars) {
   return reference(path).replace(/\{\{(\w+)\}\}/g, (m, name) => (name in vars ? String(vars[name]) : m))
+}
+
+// truncateLines keeps the first max lines of text and counts the rest.
+function truncateLines(text, max) {
+  const lines = text.split("\n")
+  if (lines.length <= max) return text
+  return lines.slice(0, max).join("\n") + "\n…and " + (lines.length - max) + " more"
 }
 
 function formatFindings(findings) {

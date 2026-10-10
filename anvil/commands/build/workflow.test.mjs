@@ -468,3 +468,19 @@ test("a request that merely mentions a path is still built as a request", () => 
     assert.ok(sim.turns[0].prompt.includes("this request:\n\n" + raw), raw)
   }
 })
+
+test("the discard question lists at most 40 files and counts the rest", () => {
+  const lines = n => Array.from({ length: n }, (_, i) => "!! ignored-" + (i + 1) + ".log").join("\n")
+  const answer = (q, options) => (q.startsWith("Rebuilding discards") ? "discard" : options[0])
+  const long = { da: ["wrong-approach", "clean"], status: lines(45), answer }
+  mustSucceed(runBuild(long))
+  const ask = long.asks.find(a => a.startsWith("Rebuilding discards"))
+  assert.match(ask, /ignored-40\.log\n…and 5 more\n/)
+  assert.doesNotMatch(ask, /ignored-41\.log/)
+
+  const exact = { da: ["wrong-approach", "clean"], status: lines(40), answer }
+  mustSucceed(runBuild(exact))
+  const exactAsk = exact.asks.find(a => a.startsWith("Rebuilding discards"))
+  assert.match(exactAsk, /ignored-40\.log\n\n/)
+  assert.doesNotMatch(exactAsk, /more/)
+})
