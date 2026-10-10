@@ -371,6 +371,8 @@ function resolveInputs(raw) {
     docPath = root + "/" + newest
   } else if (bash("test -f " + q(raw), { cwd: root, check: false }).exitCode === 0) {
     docPath = isAbsolute(raw) ? raw : root + "/" + raw
+  } else if (!/\s/.test(raw) && (raw.endsWith(".md") || raw.includes("/"))) {
+    throw new Error("design doc " + raw + " not found")
   }
   const slug = slugFor(docPath || raw)
   let branch = "feat/" + slug

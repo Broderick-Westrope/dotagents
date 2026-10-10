@@ -443,3 +443,28 @@ test("a detached HEAD fails before anything is created", () => {
   assert.equal(ran(sim, "wtp add").length, 0)
   assert.equal(sim.turns.length, 0)
 })
+
+test("a design doc path that doesn't exist fails instead of becoming a request", () => {
+  for (const raw of ["plans/design-typo.md", "design-typo.md", "plans/design-typo"]) {
+    const sim = {
+      raw,
+      da: ["clean"],
+      bashFn: cmd => (cmd.startsWith("test -f") ? { exitCode: 1 } : undefined),
+    }
+    const { error } = runBuild(sim)
+    assert.equal(error?.message, "design doc " + raw + " not found", raw)
+    assert.equal(ran(sim, "wtp add").length, 0, raw)
+  }
+})
+
+test("a request that merely mentions a path is still built as a request", () => {
+  for (const raw of ["add retries to internal/net/retry.go", "refactor"]) {
+    const sim = {
+      raw,
+      da: ["clean"],
+      bashFn: cmd => (cmd.startsWith("test -f") ? { exitCode: 1 } : undefined),
+    }
+    mustSucceed(runBuild(sim))
+    assert.ok(sim.turns[0].prompt.includes("this request:\n\n" + raw), raw)
+  }
+})
