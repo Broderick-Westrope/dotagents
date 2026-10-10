@@ -43,7 +43,7 @@ Present the top themes by new count. For each, give:
 
 1. The rule, in one sentence.
 2. The highest rung that would actually hold: delete-the-need, type, lint, hook or permission, test, golden example, skill rule, CLAUDE.md.
-3. The exact file to change, and whether it belongs in a company skill (the repo convention applies to everyone), a personal skill, or an agent prompt.
+3. The exact file to change, and whether it belongs in a company skill (the repo convention applies to everyone), a personal skill, or an agent prompt. Judgement calls that the user keeps catching in review belong in the House Checklist in `anvil/agents/convention-reviewer.md`. Before calling a rule a company convention, check that most org repos already follow it (muninn or local clones); if they don't, it's a personal preference.
 
 Before proposing a prose rule, grep the existing skills and agent prompts for it. If it's already written and still being corrected, prose isn't holding, so go up a rung. If a skill contradicts the rule, fix the skill first.
 
