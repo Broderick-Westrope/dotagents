@@ -17,8 +17,8 @@ requires({
   ],
 })
 
-// Caps from the /build process: three DA reviews per approach, two
-// rebuilds, and (illustratively) three review passes.
+// Caps on each loop: three DA reviews per approach, three approaches (two
+// rebuilds), and three review passes.
 const MAX_DA_ROUNDS = 3
 const MAX_APPROACHES = 3
 const MAX_REVIEW_PASSES = 3
@@ -156,9 +156,6 @@ function main(input) {
     lessons.push(tell(builder, fill("references/lesson.md",
       Object.assign({}, ctx, { verdict: verdict.lesson || formatFindings(verdict.findings) })), { schema: Lesson }))
     if (approach === MAX_APPROACHES) break
-    // Removal and recreation happen in one hold, so nothing the user
-    // queued runs against a missing worktree. The old tip is kept under a
-    // hidden ref, so committed work (the builder's or yours) is never lost.
     const keptAs = "refs/build-attempts/" + ctx.branch + "/" + approach
     rebuildWorktree(ctx, keptAs)
     builder = session.new({
@@ -174,6 +171,7 @@ function main(input) {
 
 // rebuildWorktree removes the worktree and recreates it from the base in
 // one hold, so nothing the user queued runs against a missing worktree.
+// The old tip is kept at keptAs, so committed work is never lost.
 // Background jobs the run's sessions own could keep writing there, so it
 // asks before stopping them.
 function rebuildWorktree(ctx, keptAs) {
