@@ -353,12 +353,12 @@ function requireValidAudit(raw, dispositions) {
   }
   const missing = raw.filter(f => !byId[f.id]).map(f => f.id)
   if (missing.length > 0) throw new Error("audit skipped findings: " + missing.join(", "))
-  for (const d of dispositions) resolveDisposition(d, byId)
+  for (const d of dispositions) checkDuplicateChain(d, byId)
 }
 
-// resolveDisposition follows duplicateOf links to the confirmed or
-// rejected finding they end at.
-function resolveDisposition(d, byId) {
+// checkDuplicateChain follows duplicateOf links from d and throws unless
+// they end at a confirmed or rejected finding.
+function checkDuplicateChain(d, byId) {
   const seen = new Set()
   while (d.verdict === "duplicate") {
     if (seen.has(d.id)) throw new Error("audit has a duplicate cycle through " + d.id)
@@ -367,7 +367,6 @@ function resolveDisposition(d, byId) {
     if (!target) throw new Error("audit marks " + d.id + " a duplicate of unknown finding " + d.duplicateOf)
     d = target
   }
-  return d
 }
 
 function resolveInputs(raw) {
