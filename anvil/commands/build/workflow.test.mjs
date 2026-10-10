@@ -170,7 +170,7 @@ test("the rebuild status check counts ignored files", () => {
   mustSucceed(runBuild(sim))
   const checks = ran(sim, "git status --porcelain").filter(b => b.inHold)
   assert.equal(checks.length, 1)
-  assert.equal(checks[0].cmd, "git status --porcelain --ignored")
+  assert.equal(checks[0].cmd, "git status --porcelain --untracked-files=all --ignored")
 })
 
 test("answering stop to the discard question throws without touching the worktree", () => {
@@ -231,7 +231,7 @@ test("a rebuilt approach's DA never gets the rejected approach's note", () => {
 test("uncommitted work is committed by the builder before review", () => {
   const sim = {
     da: ["clean"],
-    bashFn: (cmd, n) => (cmd === "git status --porcelain" && n === 0 ? { stdout: " M a.go\n" } : undefined),
+    bashFn: (cmd, n) => (cmd === "git status --porcelain --untracked-files=all" && n === 0 ? { stdout: " M a.go\n" } : undefined),
   }
   mustSucceed(runBuild(sim))
   const commitTurn = sim.turns.find(t => /commit/i.test(t.prompt) && t.prompt.includes("a.go"))
@@ -243,7 +243,7 @@ test("uncommitted work is committed by the builder before review", () => {
 test("work that stays uncommitted stops before review when the user says stop", () => {
   const sim = {
     da: ["clean"],
-    bashFn: cmd => (cmd === "git status --porcelain" ? { stdout: " M a.go\n" } : undefined),
+    bashFn: cmd => (cmd === "git status --porcelain --untracked-files=all" ? { stdout: " M a.go\n" } : undefined),
     answer: (q, options) => (options.includes("stop") ? "stop" : options[0]),
   }
   const { error } = runBuild(sim)
@@ -281,7 +281,7 @@ test("the DA only reviews committed work and re-reviews if HEAD moves", () => {
     da: ["clean", "clean"],
     heads: 0,
     bashFn: (cmd, n) => {
-      if (cmd === "git status --porcelain" && n === 0) return { stdout: " M wip.go\n" }
+      if (cmd === "git status --porcelain --untracked-files=all" && n === 0) return { stdout: " M wip.go\n" }
       if (cmd === "git rev-parse HEAD") return { stdout: (sim.heads++ === 0 ? "abc" : "def") + "\n" }
       return undefined
     },
@@ -295,7 +295,7 @@ test("the DA only reviews committed work and re-reviews if HEAD moves", () => {
 test("the commit request never tells the builder to remove files", () => {
   const sim = {
     da: ["clean"],
-    bashFn: (cmd, n) => (cmd === "git status --porcelain" && n === 0 ? { stdout: "?? user-notes.txt\n" } : undefined),
+    bashFn: (cmd, n) => (cmd === "git status --porcelain --untracked-files=all" && n === 0 ? { stdout: "?? user-notes.txt\n" } : undefined),
   }
   mustSucceed(runBuild(sim))
   const commitTurn = sim.turns.find(t => t.prompt.includes("user-notes.txt"))
@@ -316,4 +316,12 @@ test("blocking findings from a review of a version that has since changed are di
   const fixTurns = sim.turns.filter(t => t.prompt.includes("have been audited"))
   assert.ok(sim.reviewPasses >= 2, "a stale pass must be reviewed again")
   assert.ok(fixTurns.length < sim.reviewPasses, "the stale pass's findings must not reach the builder")
+})
+
+test("every worktree status check lists untracked files whatever git's config says", () => {
+  const sim = { da: ["changes", "wrong-approach", "clean"] }
+  mustSucceed(runBuild(sim))
+  const checks = ran(sim, "git status")
+  assert.ok(checks.length > 2)
+  for (const c of checks) assert.match(c.cmd, /--untracked-files=all/, c.cmd)
 })

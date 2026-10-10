@@ -174,7 +174,7 @@ function main(input) {
 // asks before stopping them.
 function rebuildWorktree(ctx, keptAs) {
   const transition = () => {
-    const dirty = bash("git status --porcelain --ignored", { cwd: ctx.worktree }).stdout.trim()
+    const dirty = bash("git status --porcelain --untracked-files=all --ignored", { cwd: ctx.worktree }).stdout.trim()
     if (dirty && ask("Rebuilding discards uncommitted and ignored files in " + ctx.worktree + ":\n" + dirty +
       "\n\nCommitted work is kept at " + keptAs + ".", { options: ["stop", "discard"] }) === "stop") {
       throw new Error("stopped before rebuild; " + ctx.worktree + " is untouched")
@@ -281,7 +281,7 @@ function review(builder, ctx) {
 // requireCommitted makes sure everything in the worktree is committed,
 // asking the builder and then the user before giving up.
 function requireCommitted(builder, ctx) {
-  const uncommitted = () => bash("git status --porcelain", { cwd: ctx.worktree }).stdout.trim()
+  const uncommitted = () => bash("git status --porcelain --untracked-files=all", { cwd: ctx.worktree }).stdout.trim()
   let dirty = uncommitted()
   if (!dirty) return
   tell(builder, "These files in `" + ctx.worktree + "` aren't committed, so review wouldn't see them:\n" + dirty +
@@ -302,7 +302,7 @@ function head(ctx) {
 // unchangedSince reports whether the worktree is still exactly what was
 // reviewed: same HEAD, nothing uncommitted.
 function unchangedSince(ctx, reviewedHead) {
-  return head(ctx) === reviewedHead && bash("git status --porcelain", { cwd: ctx.worktree }).stdout.trim() === ""
+  return head(ctx) === reviewedHead && bash("git status --porcelain --untracked-files=all", { cwd: ctx.worktree }).stdout.trim() === ""
 }
 
 // runAudit asks a fresh auditor to dispose of every finding, retrying once

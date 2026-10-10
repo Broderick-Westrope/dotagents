@@ -239,7 +239,7 @@ function defaultBash(sim, cmd) {
     const file = cmd.slice("test -s ".length).replace(/^'|'$/g, "")
     return { exitCode: fs.existsSync(file) && fs.statSync(file).size > 0 ? 0 : 1 }
   }
-  if (starts("git status --porcelain --ignored")) return { stdout: sim.status || "" }
+  if (starts("git status --porcelain --untracked-files=all --ignored")) return { stdout: sim.status || "" }
   if (starts("git status --porcelain")) return { stdout: "" }
   if (starts("git rev-parse HEAD")) return { stdout: "abc123\n" }
   return {}
