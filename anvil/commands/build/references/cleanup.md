@@ -1,0 +1,3 @@
+Re-read the whole diff against `{{base}}` in `{{worktree}}` as one change and clean up its structure against the red flags in **codebase-design**: pass-through layers, shallow modules, duplicated concepts, growing switches, unclear names, and code in the wrong place. Use the matching style skill and **refactoring-code**. Keep tests green, and commit cleanup separately from behaviour changes. If the structure is already clean, change nothing.
+
+If you change anything, rewrite the build note at `{{note}}` so it describes the current version, not the history of changes.

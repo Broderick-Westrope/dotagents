@@ -404,7 +404,7 @@ test("a clean DA, a verified build and an approving review hand over with a stru
     worktree: "/wt/feat-x",
     note: sim.tmp + "/build-note-approach-1.md",
   })
-  assert.deepEqual(sim.statuses.map(([step]) => step), ["build", "devils-advocate", "exercise", "review", "hand over"])
+  assert.deepEqual(sim.statuses.map(([step]) => step), ["build", "devils-advocate", "cleanup", "exercise", "review", "hand over"])
   assert.equal(sim.daPrompts.length, 1)
   assert.equal(sim.reviewPasses, 1)
   assert.equal(sim.auditPrompts.length, 0)
@@ -561,4 +561,63 @@ test("refining checks the whole diff against the red flags in codebase-design", 
   const refine = sim.turns.find(t => t.prompt.includes("f-changes-1"))
   assert.ok(refine, "the builder must get the DA's findings")
   assert.match(refine.prompt, /red flags in \*\*codebase-design\*\*/)
+})
+
+const cleanupTurns = sim => sim.turns.filter(t => t.prompt.startsWith("Re-read the whole diff"))
+
+test("a clean DA verdict gets one cleanup pass, and an unchanged diff moves on", () => {
+  const sim = { da: ["clean"] }
+  mustSucceed(runBuild(sim))
+  const cleanups = cleanupTurns(sim)
+  assert.equal(cleanups.length, 1)
+  assert.match(cleanups[0].prompt, /red flags in \*\*codebase-design\*\*/)
+  assert.equal(sim.daPrompts.length, 1)
+  assert.match(lastAsk(sim), /Ready for your review/)
+})
+
+test("a cleanup that moves HEAD is committed and reviewed by another DA round", () => {
+  const sim = {
+    da: ["clean", "clean"],
+    // The first cleanup commits and leaves a file uncommitted; later ones change nothing.
+    bashFn: (cmd, n) => {
+      if (cmd === "git rev-parse HEAD") return { stdout: (cleanupTurns(sim).length >= 1 ? "h1" : "h0") + "\n" }
+      if (cmd === "git status --porcelain --untracked-files=all" && cleanupTurns(sim).length === 1 && !sim.dirtied) {
+        sim.dirtied = true
+        return { stdout: " M tidy.go\n" }
+      }
+      return undefined
+    },
+  }
+  mustSucceed(runBuild(sim))
+  assert.equal(sim.daPrompts.length, 2)
+  assert.equal(cleanupTurns(sim).length, 2)
+  assert.ok(sim.turns.some(t => t.prompt.includes("tidy.go")), "the builder must commit the cleanup before the next DA round")
+  assert.match(lastAsk(sim), /Ready for your review/)
+})
+
+test("a cleanup that leaves uncommitted changes on the same HEAD gets another DA round", () => {
+  const sim = {
+    da: ["clean", "clean"],
+    bashFn: cmd => {
+      if (cmd === "git status --porcelain --untracked-files=all" && cleanupTurns(sim).length === 1 && !sim.dirtied) {
+        sim.dirtied = true
+        return { stdout: " M tidy.go\n" }
+      }
+      return undefined
+    },
+  }
+  mustSucceed(runBuild(sim))
+  assert.equal(sim.daPrompts.length, 2)
+})
+
+test("cleanups that keep changing the work count toward the DA cap", () => {
+  const sim = {
+    da: ["clean", "clean", "clean", "clean", "clean"],
+    bashFn: cmd => (cmd === "git rev-parse HEAD" ? { stdout: "h" + cleanupTurns(sim).length + "\n" } : undefined),
+  }
+  const { error } = runBuild(sim)
+  assert.equal(error?.message, "the cleanup pass still changed the work after the last of 5 devil's advocate reviews")
+  assert.equal(sim.daPrompts.length, 5)
+  assert.equal(sim.reviewPasses ?? 0, 0)
+  assert.match(lastAsk(sim), /cleanup pass after its last of 5 reviews changed the work/)
 })

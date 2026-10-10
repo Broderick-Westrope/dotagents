@@ -15,14 +15,14 @@ Build first, then challenge the diff. An early version answers open questions fa
 1. **Worktree.** Creates `feat/<slug>` from the current branch with `wtp`, skipping names that already exist as a branch or have kept attempts.
 2. **Build.** The invoking session builds the thinnest end-to-end slice first, test-first (`references/test-driven-development.md`), committing as it goes, and writes the build note to the run's temp directory. A builder that never writes the note fails the run.
 3. **Devil's advocate.** A fresh `devils-advocate` agent judges the work: clean, changes, or wrong approach.
-4. **Refine or rebuild.** Changes go back to the builder, then to a new DA round. A wrong approach is rebuilt from scratch (see below).
+4. **Refine or rebuild.** Changes go back to the builder, who fixes them and does a structural cleanup pass against the red flags in **codebase-design**, then to a new DA round. A clean verdict gets one cleanup pass too, and moves on only if that leaves the work unchanged; otherwise the cleaned-up version goes to another DA round. A wrong approach is rebuilt from scratch (see below).
 5. **Exercise.** The builder verifies the change locally with **verification-before-completion**.
 6. **Review.** Reviewers run in parallel, an auditor disposes of their findings, and the builder fixes confirmed ones.
 7. **Hand over.** The builder rewrites the note as a draft PR description, and the run returns `{outcome: "ready", branch, worktree, note}`.
 
 ## Caps
 
-- Five DA reviews per approach, three approaches (two rebuilds), three review passes.
+- Five DA reviews per approach (rounds that follow a cleanup count), three approaches (two rebuilds), three review passes.
 - Hitting any cap, or every reviewer failing, tells you why and fails the run. Only a hand-over completes it.
 
 ## Devil's advocate isolation

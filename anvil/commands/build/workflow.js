@@ -7,6 +7,7 @@ requires({
     "references/build.md",
     "references/da.md",
     "references/refine.md",
+    "references/cleanup.md",
     "references/lesson.md",
     "references/seed.md",
     "references/exercise.md",
@@ -134,18 +135,32 @@ function main(input) {
         fill("references/da.md", Object.assign({}, ctx, { note: readFile(ctx.note) })),
         { schema: DAVerdict, tools: REVIEW_TOOLS })
       const stale = !unchangedSince(ctx, reviewedHead)
-      if (!stale && verdict.kind !== "changes") break
+      if (!stale && verdict.kind === "wrong-approach") break
+      // A clean verdict only counts once a cleanup pass leaves the work
+      // unchanged; otherwise the cleaned-up version needs its own review.
+      const cleaned = !stale && verdict.kind === "clean"
+      if (cleaned) {
+        status("cleanup", "approach " + approach + ", round " + round)
+        tell(builder, fill("references/cleanup.md", ctx))
+        if (unchangedSince(ctx, reviewedHead)) break
+      }
       if (round === MAX_DA_ROUNDS) {
+        const where = "\n\nThe work is on " + ctx.branch + " at " + ctx.worktree + "."
+        if (cleaned) {
+          ask("The devil's advocate found nothing to change, but the cleanup pass after its last of " + MAX_DA_ROUNDS +
+            " reviews changed the work, so that version wasn't reviewed." + where, { options: ["ok"] })
+          throw new Error("the cleanup pass still changed the work after the last of " + MAX_DA_ROUNDS + " devil's advocate reviews")
+        }
         const why = stale ? "The work changed while the devil's advocate was reviewing it, so its last verdict doesn't count."
           : "Latest findings:\n\n" + formatFindings(verdict.findings)
         ask("The devil's advocate is still objecting after " + MAX_DA_ROUNDS +
-          " reviews of this approach. " + why +
-          "\n\nThe work is on " + ctx.branch + " at " + ctx.worktree + ".", { options: ["ok"] })
+          " reviews of this approach. " + why + where, { options: ["ok"] })
         throw new Error("the devil's advocate still objected after " + MAX_DA_ROUNDS + " reviews")
       }
-      if (stale) continue
+      if (stale || cleaned) continue
       status("refine", "approach " + approach + ", round " + round)
-      tell(builder, fill("references/refine.md", Object.assign({}, ctx, { findings: formatFindings(verdict.findings) })))
+      tell(builder, fill("references/refine.md", Object.assign({}, ctx, { findings: formatFindings(verdict.findings) })) +
+        "\n\n" + fill("references/cleanup.md", ctx))
       ensureNote(builder, ctx)
     }
     if (verdict.kind === "clean") return finish(builder, ctx)

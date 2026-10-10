@@ -4,6 +4,4 @@ The devil's advocate reviewed the current version and found the following. Fix e
 {{findings}}
 </findings>
 
-Then re-read the whole diff against `{{base}}` as one change and clean up its structure against the red flags in **codebase-design**: pass-through layers, shallow modules, duplicated concepts, growing switches, unclear names, and code in the wrong place. Use the matching style skill and **refactoring-code**. Commit cleanup separately from behaviour changes.
-
-Finally rewrite the build note at `{{note}}` so it describes the current version, not the history of changes.
+Then do the cleanup pass below. Whether or not it changes anything, finish by rewriting the build note at `{{note}}` so it describes the current version, not the history of changes.
