@@ -183,7 +183,7 @@ export function runBuild(sim) {
         const kind = sim.da.shift()
         return { kind, findings: [{ summary: "f-" + kind + "-" + sim.daPrompts.length }], lesson: "L" }
       }
-      if (tools) {
+      if (agent === "reviewer") {
         sim.auditPrompts.push(prompt)
         sim.auditTools.push(tools)
         return typeof sim.audit === "function" ? sim.audit(sim.auditPrompts.length) : sim.audit

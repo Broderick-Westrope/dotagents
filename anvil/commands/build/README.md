@@ -47,7 +47,7 @@ The DA and the reviewers read the committed diff. Before each DA round and revie
 - Reviewers mirror `/review`'s model table (Sonnet, Opus and a convention reviewer). A reviewer that requests changes without a critical or important finding counts as failed.
 - A fresh auditor confirms, rejects or deduplicates every finding. The script checks the audit covers each finding exactly once and that duplicate chains end at a real finding, retrying once before failing.
 - The builder only ever sees confirmed critical and important findings.
-- The DA, reviewers and auditor get only `glob`, `grep`, `ls`, `view` and `bash` (for git).
+- The DA, reviewers and auditor get the tools their agent definitions in `anvil/agents/` give them (read, LSP and sourcegraph tools, `bash` for git, and muninn); the script doesn't narrow them, since their prompts rely on all of these.
 
 ## Boundaries
 

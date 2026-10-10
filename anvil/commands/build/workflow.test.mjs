@@ -488,18 +488,17 @@ test("the discard question lists at most 40 files and counts the rest", () => {
   assert.doesNotMatch(exactAsk, /more/)
 })
 
-test("the DA, the reviewers and the auditor only get the review tools", () => {
-  const tools = ["glob", "grep", "ls", "view", "bash"]
+test("the DA, the reviewers and the auditor keep the tools their agent definitions give them", () => {
   const sim = {
     da: ["changes", "clean"],
     reviews: { [SONNET]: { verdict: "request-changes", findings: [{ severity: "important", title: "bug" }] } },
     audit: { dispositions: [{ id: "sonnet-1", verdict: "rejected", reason: "no" }] },
   }
   mustSucceed(runBuild(sim))
-  assert.deepEqual(sim.daTools, [tools, tools])
+  assert.deepEqual(sim.daTools, [undefined, undefined])
   assert.equal(sim.reviewCalls.length, 1)
-  assert.deepEqual(sim.reviewCalls[0].map(c => c.tools), [tools, tools, tools])
-  assert.deepEqual(sim.auditTools, [tools])
+  assert.deepEqual(sim.reviewCalls[0].map(c => Object.hasOwn(c, "tools")), [false, false, false])
+  assert.deepEqual(sim.auditTools, [undefined])
 })
 
 test("fill only substitutes the variables it was given", () => {
