@@ -2,6 +2,8 @@
 
 `/build` runs as a workflow (`workflow.js`): the script owns the steps, caps and context boundaries below, and the prompts it sends live in `references/`. This file is the human description of the process it enforces.
 
+Run the script's regression tests (Node 18 or later, no dependencies) from the repo root with `node --test anvil/commands/build/*.test.mjs`.
+
 Build an early version of: `$ARGUMENTS`
 
 If `$ARGUMENTS` is a path to a design doc, read it first. If it is empty, look for the most recent design doc in `plans/` and confirm it with the user before starting.
