@@ -112,6 +112,7 @@ class Fail {
 //   now:       what the now primitive returns, in Unix milliseconds
 //   random:    what the random primitive returns
 //   source:    a script to run instead of workflow.js
+//   references: reference contents keyed by path, overriding the files
 // It records every primitive name on sim.primitives and returns
 // {result, error}. Errors from top-level code are thrown, as the real
 // runtime fails before main runs.
@@ -197,6 +198,7 @@ export function runBuild(sim) {
       })
     },
     reference({ path: p }) {
+      if (sim.references && Object.hasOwn(sim.references, p)) return sim.references[p]
       return fs.readFileSync(path.join(BUILD_DIR, p), "utf8")
     },
     readFile({ path: p }) {

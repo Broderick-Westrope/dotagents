@@ -1,7 +1,10 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 
-import { runBuild } from "./fake-runtime.mjs"
+import fs from "node:fs"
+import path from "node:path"
+
+import { BUILD_DIR, runBuild } from "./fake-runtime.mjs"
 
 const SONNET = "reviewer anthropic/claude-sonnet-5-5"
 const OPUS = "reviewer anthropic/claude-opus-5-5"
@@ -497,4 +500,13 @@ test("the DA, the reviewers and the auditor only get the review tools", () => {
   assert.equal(sim.reviewCalls.length, 1)
   assert.deepEqual(sim.reviewCalls[0].map(c => c.tools), [tools, tools, tools])
   assert.deepEqual(sim.auditTools, [tools])
+})
+
+test("fill only substitutes the variables it was given", () => {
+  const src = fs.readFileSync(path.join(BUILD_DIR, "workflow.js"), "utf8")
+  const sim = {
+    source: src + '\nfunction main() { return fill("t.md", { a: 1 }) }',
+    references: { "t.md": "{{a}} {{constructor}} {{toString}} {{b}}" },
+  }
+  assert.equal(mustSucceed(runBuild(sim)), "1 {{constructor}} {{toString}} {{b}}")
 })

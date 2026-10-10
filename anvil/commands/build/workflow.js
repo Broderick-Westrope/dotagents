@@ -425,7 +425,7 @@ function tell(builder, prompt, opts) {
 
 // fill reads a reference and replaces {{name}} placeholders from vars.
 function fill(path, vars) {
-  return reference(path).replace(/\{\{(\w+)\}\}/g, (m, name) => (name in vars ? String(vars[name]) : m))
+  return reference(path).replace(/\{\{(\w+)\}\}/g, (m, name) => (Object.hasOwn(vars, name) ? String(vars[name]) : m))
 }
 
 // truncateLines keeps the first max lines of text and counts the rest.
