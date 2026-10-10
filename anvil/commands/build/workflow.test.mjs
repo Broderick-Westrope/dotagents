@@ -518,3 +518,21 @@ test("a builder that never writes the build note fails the run with a clear erro
   assert.equal(sim.turns.length, 2, "the builder is reminded once")
   assert.equal(sim.daPrompts.length, 0)
 })
+
+test("running out of review passes on a stale pass says the work changed, not that changes were requested", () => {
+  for (const findings of [[], [{ severity: "important", title: "bug" }]]) {
+    const sim = {
+      da: ["clean"],
+      heads: 0,
+      reviews: { [SONNET]: { verdict: findings.length ? "request-changes" : "approve", findings } },
+      audit: { dispositions: [{ id: "sonnet-1", verdict: "confirmed", severity: "important", reason: "yes" }] },
+      // HEAD moves during every review pass, but not during the DA round.
+      bashFn: cmd => (cmd === "git rev-parse HEAD" ? { stdout: "h" + (sim.reviewPasses ? ++sim.heads : 0) + "\n" } : undefined),
+    }
+    const { error } = runBuild(sim)
+    assert.equal(sim.reviewPasses, 3)
+    assert.equal(error?.message, "the work changed during the last of 3 review passes")
+    assert.match(lastAsk(sim), /changed during review/)
+    assert.doesNotMatch(lastAsk(sim), /still requests changes/)
+  }
+})

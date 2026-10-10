@@ -225,12 +225,14 @@ function finish(builder, ctx) {
 // the builder fix only audited, confirmed ones. It returns the labels of
 // reviewers that failed in the last pass, and throws if review gives up.
 function review(builder, ctx) {
+  let stale = false
   for (let pass = 1; pass <= MAX_REVIEW_PASSES; pass++) {
     status("review", "pass " + pass + "/" + MAX_REVIEW_PASSES)
     // Reviewers read the committed diff, so the review only covers the work
     // if it's all committed and HEAD is where it was when they looked.
     requireCommitted(builder, ctx)
     const reviewedHead = head(ctx)
+    stale = false
     const prompt = fill("references/review.md", ctx)
     const results = parallel(REVIEWERS.map(r =>
       ({ agent: r.agent, model: r.model, prompt, schema: Findings, tools: REVIEW_TOOLS })))
@@ -258,6 +260,7 @@ function review(builder, ctx) {
     })
     if (raw.length === 0) {
       if (unchangedSince(ctx, reviewedHead)) return failed
+      stale = true
       continue
     }
 
@@ -265,7 +268,10 @@ function review(builder, ctx) {
     const audit = runAudit(ctx, raw)
     // Findings about a version that has since changed are stale either
     // way, so the pass is spent and the new version is reviewed.
-    if (!unchangedSince(ctx, reviewedHead)) continue
+    if (!unchangedSince(ctx, reviewedHead)) {
+      stale = true
+      continue
+    }
     const byId = Object.fromEntries(raw.map(f => [f.id, f]))
     const blocking = audit.dispositions
       .filter(d => d.verdict === "confirmed" && d.severity !== "minor")
@@ -276,8 +282,13 @@ function review(builder, ctx) {
     // The builder only ever sees audited findings.
     tell(builder, fill("references/fix.md", Object.assign({}, ctx, { findings: JSON.stringify(blocking, null, 2) })))
   }
-  ask("Review still requests changes after " + MAX_REVIEW_PASSES + " passes. The work is on " +
-    ctx.branch + " at " + ctx.worktree + ".", { options: ["ok"] })
+  const where = " The work is on " + ctx.branch + " at " + ctx.worktree + "."
+  if (stale) {
+    ask("The work changed during review in the last of " + MAX_REVIEW_PASSES +
+      " passes, so that pass's findings don't count." + where, { options: ["ok"] })
+    throw new Error("the work changed during the last of " + MAX_REVIEW_PASSES + " review passes")
+  }
+  ask("Review still requests changes after " + MAX_REVIEW_PASSES + " passes." + where, { options: ["ok"] })
   throw new Error("review still requested changes after " + MAX_REVIEW_PASSES + " passes")
 }
 
