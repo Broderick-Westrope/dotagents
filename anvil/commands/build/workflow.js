@@ -412,9 +412,10 @@ function createWorktree(ctx) {
 }
 
 function ensureNote(builder, ctx) {
-  if (bash("test -s " + q(ctx.note), { check: false }).exitCode === 0) return
+  const written = () => bash("test -s " + q(ctx.note), { check: false }).exitCode === 0
+  if (written()) return
   tell(builder, "You didn't write the build note. Write it now to `" + ctx.note + "`, covering assumptions, decisions, rejected options, unsure and verified.")
-  readFile(ctx.note)
+  if (!written()) throw new Error("builder never wrote the build note at " + ctx.note)
 }
 
 // tell sends the builder a turn with the build's boundaries attached, so

@@ -510,3 +510,11 @@ test("fill only substitutes the variables it was given", () => {
   }
   assert.equal(mustSucceed(runBuild(sim)), "1 {{constructor}} {{toString}} {{b}}")
 })
+
+test("a builder that never writes the build note fails the run with a clear error", () => {
+  const sim = { da: ["clean"], skipNote: () => true }
+  const { error } = runBuild(sim)
+  assert.equal(error?.message, "builder never wrote the build note at " + sim.tmp + "/build-note-approach-1.md")
+  assert.equal(sim.turns.length, 2, "the builder is reminded once")
+  assert.equal(sim.daPrompts.length, 0)
+})
