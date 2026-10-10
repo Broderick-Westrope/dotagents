@@ -1,6 +1,6 @@
 ---
 name: domain-modeling
-description: "Keeps a repo's GLOSSARY.md and architecture decision records (docs/adr/) up to date. Use when naming or renaming a type, package or concept, when two names are used for the same thing (or one name for two things), when the user asks what a term means in this codebase, or when a hard-to-reverse design decision should be recorded as an ADR."
+description: "Keeps a glossary of domain terms (per repo for personal projects, one shared file per organization for work repos) and, in personal repos, architecture decision records up to date. Use when naming or renaming a type/package/concept, when two names are used for the same thing (or one name for two things), when the user asks what a term means in this codebase, or when a hard-to-reverse design decision should be recorded as an ADR."
 ---
 
 # Domain Modeling
@@ -9,9 +9,22 @@ Agents name things after whatever the nearest file calls them, so one concept pi
 
 Sources: Evans' *Domain-Driven Design* (ubiquitous language, bounded contexts) and Nygard's ADR format.
 
-## The Glossary
+## Where It Lives
 
-One `GLOSSARY.md` at the repo root. Create it the first time a term needs defining, not before.
+Check who owns the repo with `git remote get-url origin`, then:
+
+| Repo | Glossary | Decisions |
+|---|---|---|
+| Already has a committed `GLOSSARY.md` | That file | The repo's existing practice |
+| Personal (owner `Broderick-Westrope`) | `GLOSSARY.md` at the repo root, committed | ADRs in `docs/adr/` |
+| Any other owner (work) | `~/.agents/glossaries/<owner>/GLOSSARY.md`, shared by every repo of that owner. Never write it into the repo. | The PR description. No ADRs. |
+| No remote | Ask the user | Ask the user |
+
+The work glossary is shared because work repos share most of their domain concepts, and it's keyed by owner rather than checkout so every worktree sees the same file. It's local to this machine: don't copy it into any repo or into the dotagents repo.
+
+Create the glossary the first time a term needs defining, not before.
+
+## The Glossary
 
 ### Format
 
@@ -30,9 +43,9 @@ A conversation between the user and an agent, stored with its messages.
 
 - One heading per term, alphabetical.
 - Define what it is in the domain, in one to three sentences. No implementation detail beyond where it lives in code.
-- **Code:** the type or package that owns it.
+- **Code:** the type or package that owns it. In a shared work glossary, prefix the repo: `svc-orders: internal/order`. List each repo where the concept appears.
 - **Not:** the synonyms to avoid, and the nearby terms it gets confused with.
-- If the same word means different things in different parts of the system (a bounded context), give each part its own entry: `## Session (auth)` and `## Session (agent)`.
+- If the same word means different things in different parts of the system (a bounded context), give each part its own entry: `## Session (auth)` and `## Session (agent)`. In a shared work glossary, the context is usually the service: `## Order (svc-orders)`.
 
 ### When to Update It
 
@@ -45,7 +58,9 @@ Update it in the same change that introduces or renames the concept. Don't batch
 
 Before naming a new type, function or package, check the glossary. Use the existing term if one fits. If the code disagrees with the glossary, say so; don't silently follow either.
 
-## ADRs
+## Decisions
+
+In work repos, record significant decisions in the PR description: the decision, the alternatives and why they lost. The rest of this section is for personal repos.
 
 Record a decision as an ADR only when all three hold:
 
@@ -89,5 +104,5 @@ Save as `docs/adr/NNNN-short-title.md`, numbered in order. Create the directory 
 ## Done When
 
 - Every new or renamed concept in the change has a glossary entry, and the code uses the glossary's term.
-- Any decision that passes all three ADR tests has an ADR.
+- In personal repos, any decision that passes all three ADR tests has an ADR. In work repos, it's in the PR description.
 - Conflicts between code, glossary and ADRs have been raised with the user.
