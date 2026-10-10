@@ -137,16 +137,7 @@ function main(input) {
     // queued runs against a missing worktree. The old tip is kept under a
     // hidden ref, so committed work (the builder's or yours) is never lost.
     const keptAs = "refs/build-attempts/" + ctx.branch + "/" + approach
-    workflow.exclusive(() => {
-      const dirty = bash("git status --porcelain", { cwd: ctx.worktree }).stdout.trim()
-      if (dirty && ask("Rebuilding discards uncommitted changes in " + ctx.worktree + ":\n" + dirty +
-        "\n\nCommitted work is kept at " + keptAs + ".", { options: ["discard", "stop"] }) === "stop") {
-        throw new Error("stopped before rebuild; " + ctx.worktree + " is untouched")
-      }
-      bash("git update-ref " + q(keptAs) + " " + q(ctx.branch), { cwd: ctx.root })
-      bash("wtp remove --force --force-branch " + q(ctx.branch), { cwd: ctx.root })
-      ctx.worktree = createWorktree(ctx)
-    })
+    rebuildWorktree(ctx, keptAs)
     builder = session.new({
       title: "/build approach " + (approach + 1),
       seed: fill("references/seed.md", Object.assign({}, ctx, { lessons: formatLessons(lessons) })),
@@ -155,6 +146,34 @@ function main(input) {
   }
   return ask("Two rebuilds without a clean devil's advocate review. What each approach taught:\n\n" +
     formatLessons(lessons) + "\n\nThe design doc likely needs revisiting.", { options: ["ok"] })
+}
+
+// rebuildWorktree removes the worktree and recreates it from the base in
+// one hold, so nothing the user queued runs against a missing worktree.
+// Background jobs the run's sessions own could keep writing there, so it
+// asks before stopping them.
+function rebuildWorktree(ctx, keptAs) {
+  const transition = () => {
+    const dirty = bash("git status --porcelain", { cwd: ctx.worktree }).stdout.trim()
+    if (dirty && ask("Rebuilding discards uncommitted changes in " + ctx.worktree + ":\n" + dirty +
+      "\n\nCommitted work is kept at " + keptAs + ".", { options: ["discard", "stop"] }) === "stop") {
+      throw new Error("stopped before rebuild; " + ctx.worktree + " is untouched")
+    }
+    bash("git update-ref " + q(keptAs) + " " + q(ctx.branch), { cwd: ctx.root })
+    bash("wtp remove --force --force-branch " + q(ctx.branch), { cwd: ctx.root })
+    ctx.worktree = createWorktree(ctx)
+  }
+  try {
+    workflow.exclusive(transition)
+  } catch (e) {
+    if (!(e instanceof JobsRunning)) throw e
+    const jobs = e.jobs.map(j => "- " + j.id + ": " + j.command).join("\n")
+    if (ask("Rebuilding needs these background jobs stopped, since they may still write to " + ctx.worktree +
+      ":\n" + jobs, { options: ["stop them and rebuild", "stop"] }) !== "stop them and rebuild") {
+      throw new Error("stopped before rebuild; background jobs are still running")
+    }
+    workflow.exclusive(transition, { stopJobs: true })
+  }
 }
 
 function finish(builder, ctx) {
@@ -180,6 +199,14 @@ function review(builder, ctx) {
     const prompt = fill("references/review.md", ctx)
     const results = parallel(REVIEWERS.map(r =>
       ({ agent: r.agent, model: r.model, prompt, schema: Findings })))
+    // A reviewer that requests changes without a blocking finding gave
+    // no usable review, so it counts as failed rather than as approval.
+    results.forEach((r, i) => {
+      if (r.ok && r.value.verdict === "request-changes" &&
+        !r.value.findings.some(f => f.severity !== "minor")) {
+        results[i] = { ok: false, error: { message: "requested changes but listed no critical or important finding" } }
+      }
+    })
     const failed = REVIEWERS.filter((_, i) => !results[i].ok).map(r => r.label)
     if (failed.length === REVIEWERS.length) {
       ask("All reviewers failed:\n" + results.map((r, i) => REVIEWERS[i].label + ": " + r.error.message).join("\n"),
@@ -201,7 +228,7 @@ function review(builder, ctx) {
     const byId = Object.fromEntries(raw.map(f => [f.id, f]))
     const blocking = audit.dispositions
       .filter(d => d.verdict === "confirmed" && d.severity !== "minor")
-      .map(d => Object.assign({}, byId[d.id], { severity: d.severity || byId[d.id].severity, audit: d.reason }))
+      .map(d => Object.assign({}, byId[d.id], { severity: d.severity, audit: d.reason }))
     if (blocking.length === 0) return failed
 
     status("fix", blocking.length + " confirmed findings")
@@ -241,6 +268,7 @@ function requireValidAudit(raw, dispositions) {
   const byId = {}
   for (const d of dispositions) {
     if (!ids.has(d.id)) throw new Error("audit disposed of unknown finding " + d.id)
+    if (d.verdict === "confirmed" && !d.severity) throw new Error("audit confirmed " + d.id + " without a severity")
     if (byId[d.id]) throw new Error("audit disposed of " + d.id + " more than once")
     byId[d.id] = d
   }
