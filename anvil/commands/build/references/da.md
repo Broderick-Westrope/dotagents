@@ -1,6 +1,6 @@
 Review an early version of a change and challenge its premise and approach before it goes to code review.
 
-- Design doc or request: {{doc}}
+- Design doc or request: {{daDoc}}
 - Base branch: `{{base}}`
 - The change is on branch `{{branch}}`, checked out at `{{worktree}}`. Review the full diff with `git -C "{{worktree}}" diff {{base}}...HEAD`.
 

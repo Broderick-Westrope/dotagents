@@ -97,8 +97,17 @@ const Audit = {
 function main(input) {
   const ctx = resolveInputs(input.raw.trim())
   ctx.note = workflow.tmpdir() + "/build-note.md"
-  ctx.tdd = workflow.dir() + "/references/test-driven-development.md"
+  // The DA reads a snapshot taken now, so nothing written to the design doc
+  // later (by the builder or anyone else) reaches a later review round.
+  ctx.daDoc = ctx.doc
+  if (ctx.docPath) {
+    const snapshot = workflow.tmpdir() + "/design-snapshot.md"
+    bash("cp " + q(ctx.docPath) + " " + q(snapshot))
+    ctx.daDoc = "the design doc at `" + snapshot + "` (read it first)"
+  }
   const lessons = []
+  ctx.lessons = lessons
+  ctx.tdd = workflow.dir() + "/references/test-driven-development.md"
   let builder = session.current()
   ctx.worktree = createWorktree(ctx)
 
@@ -154,8 +163,8 @@ function main(input) {
 // asks before stopping them.
 function rebuildWorktree(ctx, keptAs) {
   const transition = () => {
-    const dirty = bash("git status --porcelain", { cwd: ctx.worktree }).stdout.trim()
-    if (dirty && ask("Rebuilding discards uncommitted changes in " + ctx.worktree + ":\n" + dirty +
+    const dirty = bash("git status --porcelain --ignored", { cwd: ctx.worktree }).stdout.trim()
+    if (dirty && ask("Rebuilding discards uncommitted and ignored files in " + ctx.worktree + ":\n" + dirty +
       "\n\nCommitted work is kept at " + keptAs + ".", { options: ["discard", "stop"] }) === "stop") {
       throw new Error("stopped before rebuild; " + ctx.worktree + " is untouched")
     }
@@ -187,6 +196,9 @@ function finish(builder, ctx) {
   if (failed.length > 0) message += "These reviews didn't complete: " + failed.join(", ") + "\n\n"
   message += "Worktree: " + ctx.worktree + "\nBranch: " + ctx.branch +
     "\nDraft PR description: " + ctx.note + "\n\n" + description
+  if (ctx.lessons.length > 0) {
+    message += "\n\nWhat earlier approaches taught (consider recording it in the design doc):\n\n" + formatLessons(ctx.lessons)
+  }
   return ask(message, { options: ["ok"] })
 }
 
@@ -312,6 +324,7 @@ function resolveInputs(raw) {
     root,
     base,
     branch,
+    docPath,
     doc: docPath ? "the design doc at `" + docPath + "` (read it first)" : "this request:\n\n" + raw,
   }
 }
