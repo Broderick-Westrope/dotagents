@@ -214,3 +214,16 @@ test("all reviewers failing asks and stops before the audit and handover", () =>
   assert.equal(sim.auditPrompts.length, 0)
   assert.equal(sim.turns.filter(t => t.prompt.includes("have been audited")).length, 0)
 })
+
+test("a rebuilt approach's DA never gets the rejected approach's note", () => {
+  const sim = {
+    da: ["wrong-approach", "clean"],
+    // The first build turn after the rebuild forgets its note.
+    skipNote: n => sim.turns[n - 1].session !== "invoker" && !sim.skippedOnce && (sim.skippedOnce = true),
+  }
+  mustSucceed(runBuild(sim))
+  assert.equal(sim.daPrompts.length, 2)
+  const first = sim.daPrompts[0].match(/NOTE from turn \d+/)[0]
+  assert.ok(!sim.daPrompts[1].includes(first), "the second DA saw the first approach's note")
+  assert.match(sim.daPrompts[1], /NOTE from turn \d+/)
+})

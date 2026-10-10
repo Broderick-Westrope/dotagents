@@ -96,7 +96,6 @@ const Audit = {
 
 function main(input) {
   const ctx = resolveInputs(input.raw.trim())
-  ctx.note = workflow.tmpdir() + "/build-note.md"
   // The DA reads a snapshot taken now, so nothing written to the design doc
   // later (by the builder or anyone else) reaches a later review round.
   ctx.daDoc = ctx.doc
@@ -112,6 +111,9 @@ function main(input) {
   ctx.worktree = createWorktree(ctx)
 
   for (let approach = 1; approach <= MAX_APPROACHES; approach++) {
+    // Each approach gets its own note, so a rebuilt approach's DA can never
+    // be handed the rejected approach's note if the new builder forgets one.
+    ctx.note = workflow.tmpdir() + "/build-note-approach-" + approach + ".md"
     status("build", "approach " + approach + "/" + MAX_APPROACHES)
     builder.turn(fill("references/build.md", ctx))
     ensureNote(builder, ctx)

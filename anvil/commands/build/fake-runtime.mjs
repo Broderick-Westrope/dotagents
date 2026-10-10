@@ -86,6 +86,8 @@ class Fail {
 //              counts earlier commands with the same first two words
 //   answer:    (question, options) => reply (default: the first option)
 //   holdErr:   {message, jobs}, returned once by the next hold as JobsRunning
+//   skipNote:  (turnNumber, notePath) => true to have that turn not write
+//              the build note it was asked for
 //   raw:       the /build argument
 // It returns {result, error}.
 export function runBuild(sim) {
@@ -126,6 +128,12 @@ export function runBuild(sim) {
     turn({ session, prompt, schema, skills }) {
       sim.turns.push({ session, prompt, schema, skills })
       if (schema) return { approach: "a", lesson: "l" }
+      // A builder told to write a note writes it, unless the test says
+      // this turn forgets to.
+      const notePath = (prompt.match(/`([^`]*build-note[^`]*\.md)`/) || [])[1]
+      if (notePath && !(sim.skipNote && sim.skipNote(sim.turns.length, notePath))) {
+        fs.writeFileSync(notePath, "NOTE from turn " + sim.turns.length)
+      }
       return "ok"
     },
     agent({ agent, prompt, schema, tools, model }) {
@@ -227,8 +235,8 @@ function defaultBash(sim, cmd) {
   if (starts("git show-ref")) return { exitCode: 1 }
   if (starts("wtp cd")) return { stdout: "/wt/feat-x\n" }
   if (starts("test -s")) {
-    fs.writeFileSync(sim.note, "NOTE")
-    return {}
+    const file = cmd.slice("test -s ".length).replace(/^'|'$/g, "")
+    return { exitCode: fs.existsSync(file) && fs.statSync(file).size > 0 ? 0 : 1 }
   }
   if (starts("git status --porcelain")) return { stdout: sim.status || "" }
   return {}
