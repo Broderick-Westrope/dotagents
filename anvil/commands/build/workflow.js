@@ -136,9 +136,10 @@ function main(input) {
       if (round === MAX_DA_ROUNDS) {
         const why = stale ? "The work changed while the devil's advocate was reviewing it, so its last verdict doesn't count."
           : "Latest findings:\n\n" + formatFindings(verdict.findings)
-        return ask("The devil's advocate is still objecting after " + MAX_DA_ROUNDS +
+        ask("The devil's advocate is still objecting after " + MAX_DA_ROUNDS +
           " reviews of this approach. " + why +
           "\n\nThe work is on " + ctx.branch + " at " + ctx.worktree + ".", { options: ["ok"] })
+        throw new Error("the devil's advocate still objected after " + MAX_DA_ROUNDS + " reviews")
       }
       if (stale) continue
       status("refine", "approach " + approach + ", round " + round)
@@ -164,8 +165,9 @@ function main(input) {
     })
     workflow.focus(builder)
   }
-  return ask("Two rebuilds without a clean devil's advocate review. What each approach taught:\n\n" +
+  ask("Two rebuilds without a clean devil's advocate review. What each approach taught:\n\n" +
     formatLessons(lessons) + "\n\nThe design doc likely needs revisiting.", { options: ["ok"] })
+  throw new Error("no approach passed the devil's advocate after two rebuilds")
 }
 
 // rebuildWorktree removes the worktree and recreates it from the base in
@@ -205,7 +207,6 @@ function finish(builder, ctx) {
   status("exercise", "verifying locally")
   tell(builder, fill("references/exercise.md", ctx), { skills: ["verification-before-completion"] })
   const failed = review(builder, ctx)
-  if (failed === null) return
   status("hand over", ctx.branch)
   const description = tell(builder, fill("references/handover.md", ctx))
   let message = "Ready for your review.\n\n"
@@ -215,12 +216,13 @@ function finish(builder, ctx) {
   if (ctx.lessons.length > 0) {
     message += "\n\nWhat earlier approaches taught (consider recording it in the design doc):\n\n" + formatLessons(ctx.lessons)
   }
-  return ask(message, { options: ["ok"] })
+  ask(message, { options: ["ok"] })
+  return { outcome: "ready", branch: ctx.branch, worktree: ctx.worktree, note: ctx.note }
 }
 
 // review runs the reviewers in parallel, audits their findings, and has
 // the builder fix only audited, confirmed ones. It returns the labels of
-// reviewers that failed in the last pass, or null if it stopped early.
+// reviewers that failed in the last pass, and throws if review gives up.
 function review(builder, ctx) {
   for (let pass = 1; pass <= MAX_REVIEW_PASSES; pass++) {
     status("review", "pass " + pass + "/" + MAX_REVIEW_PASSES)
@@ -243,7 +245,7 @@ function review(builder, ctx) {
     if (failed.length === REVIEWERS.length) {
       ask("All reviewers failed:\n" + results.map((r, i) => REVIEWERS[i].label + ": " + r.error.message).join("\n"),
         { options: ["ok"] })
-      return null
+      throw new Error("all reviewers failed")
     }
     const raw = []
     results.forEach((r, i) => {
@@ -275,7 +277,7 @@ function review(builder, ctx) {
   }
   ask("Review still requests changes after " + MAX_REVIEW_PASSES + " passes. The work is on " +
     ctx.branch + " at " + ctx.worktree + ".", { options: ["ok"] })
-  return null
+  throw new Error("review still requested changes after " + MAX_REVIEW_PASSES + " passes")
 }
 
 // requireCommitted makes sure everything in the worktree is committed,

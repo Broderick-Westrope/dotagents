@@ -18,7 +18,8 @@ function mustSucceed(out) {
 
 test("stops after three DA rounds with the latest findings, and the DA never sees earlier ones", () => {
   const sim = { da: ["changes", "changes", "changes"] }
-  mustSucceed(runBuild(sim))
+  const { error } = runBuild(sim)
+  assert.equal(error?.message, "the devil's advocate still objected after 3 reviews")
   assert.equal(sim.daPrompts.length, 3)
   assert.equal(sim.asks.length, 1)
   assert.match(sim.asks[0], /after 3 reviews/)
@@ -32,7 +33,8 @@ test("stops after three DA rounds with the latest findings, and the DA never see
 
 test("stops after two rebuilds, removing the worktree under exclusive and focusing each new session", () => {
   const sim = { da: ["wrong-approach", "wrong-approach", "wrong-approach"] }
-  mustSucceed(runBuild(sim))
+  const { error } = runBuild(sim)
+  assert.equal(error?.message, "no approach passed the devil's advocate after two rebuilds")
   assert.equal(sim.asks.length, 1)
   assert.match(sim.asks[0], /Two rebuilds/)
   assert.equal(sim.newSessions.length, 2)
@@ -64,7 +66,8 @@ test("only audited, confirmed findings reach the builder's fix prompt", () => {
       ],
     },
   }
-  mustSucceed(runBuild(sim))
+  const { error } = runBuild(sim)
+  assert.equal(error?.message, "review still requested changes after 3 passes")
   const fixes = sim.turns.filter(t => t.prompt.includes("have been audited"))
   assert.equal(fixes.length, 3)
   for (const f of fixes) {
@@ -208,7 +211,8 @@ test("all reviewers failing asks and stops before the audit and handover", () =>
     da: ["clean"],
     reviews: { [SONNET]: { fail: "s down" }, [OPUS]: { fail: "o down" }, [CONVENTION]: { fail: "c down" } },
   }
-  mustSucceed(runBuild(sim))
+  const { error } = runBuild(sim)
+  assert.equal(error?.message, "all reviewers failed")
   assert.equal(sim.asks.length, 1)
   assert.equal(sim.asks[0], "All reviewers failed:\nSonnet: s down\nOpus: o down\nConvention: c down")
   assert.equal(sim.auditPrompts.length, 0)
@@ -386,4 +390,23 @@ test("an audit that is valid on its retry is used", () => {
   assert.equal(sim.turns.filter(t => t.prompt.includes("have been audited")).length, 0)
   assert.equal(sim.reviewPasses, 1)
   assert.match(lastAsk(sim), /Ready for your review/)
+})
+
+test("a clean DA, a verified build and an approving review hand over with a structured result", () => {
+  const sim = { da: ["clean"] }
+  const result = mustSucceed(runBuild(sim))
+  assert.deepEqual(result, {
+    outcome: "ready",
+    branch: "feat/x",
+    worktree: "/wt/feat-x",
+    note: sim.tmp + "/build-note-approach-1.md",
+  })
+  assert.deepEqual(sim.statuses.map(([step]) => step), ["build", "devils-advocate", "exercise", "review", "hand over"])
+  assert.equal(sim.daPrompts.length, 1)
+  assert.equal(sim.reviewPasses, 1)
+  assert.equal(sim.auditPrompts.length, 0)
+  assert.equal(sim.asks.length, 1)
+  assert.match(sim.asks[0], /^Ready for your review\./)
+  assert.match(sim.asks[0], /Branch: feat\/x/)
+  assert.doesNotMatch(sim.asks[0], /didn't complete/)
 })
