@@ -5,7 +5,7 @@ description: "Go design conventions for any Go repository: package depth, when t
 
 # Go Style
 
-This skill covers design decisions. Naming, formatting, enums, and time injection live in **euc-go**, which applies in every Go repo. **euc-go-microservice** adds service layout rules in Eucalyptus services.
+This skill covers design decisions. Naming, formatting, enums, comments, and time injection live in **euc-go**, and those rules apply in every Go repo. **euc-go-microservice** adds service layout rules in Eucalyptus services.
 
 ## Precedence
 
@@ -13,7 +13,13 @@ This skill covers design decisions. Naming, formatting, enums, and time injectio
 2. Company skills (`euc-*`) in Eucalyptus repos.
 3. This skill.
 
-The rules below are written to agree with Eucalyptus practice. They sharpen euc-go's "no single-implementation interfaces" and "prefer inlining" rather than contradict them. If you find a real conflict, follow the higher rule and tell the user. A rule that helps agents is worth proposing to the team, so don't diverge silently.
+Outside Eucalyptus repos, euc-go's design rules give way to this skill. Inside them, these are the known differences:
+
+- **Error messages.** euc-go's "no dynamic values in messages" assumes telemetry, which every Eucalyptus service has. Repos without telemetry follow the Errors section below.
+- **Extraction.** euc-go is stricter: it prefers duplication at call sites over a small helper, even one used a few times. Follow euc-go there. This skill's three-or-more rule applies elsewhere.
+- **Mocking.** euc-go's "mock dependencies injected via constructors" means the boundary dependencies listed under Interface Types. Don't read it as permission to mock the repo's own packages or the database.
+
+If you find another conflict, follow the higher rule and always tell the user. A rule that helps agents is worth proposing to the team. Divergences must be called out so they can be improved upon.
 
 ## Vocabulary
 
