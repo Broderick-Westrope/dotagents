@@ -291,3 +291,29 @@ test("the DA only reviews committed work and re-reviews if HEAD moves", () => {
   assert.ok(commitIdx >= 0, "builder must commit before the DA")
   assert.equal(sim.daPrompts.length, 2, "a HEAD change during the DA review means another DA round")
 })
+
+test("the commit request never tells the builder to remove files", () => {
+  const sim = {
+    da: ["clean"],
+    bashFn: (cmd, n) => (cmd === "git status --porcelain" && n === 0 ? { stdout: "?? user-notes.txt\n" } : undefined),
+  }
+  mustSucceed(runBuild(sim))
+  const commitTurn = sim.turns.find(t => t.prompt.includes("user-notes.txt"))
+  assert.ok(commitTurn)
+  assert.doesNotMatch(commitTurn.prompt, /remove the rest/i)
+  assert.match(commitTurn.prompt, /leave anything else untouched/i)
+  assert.match(commitTurn.prompt, /don't delete, revert or stash/i)
+})
+
+test("blocking findings from a review of a version that has since changed are discarded", () => {
+  const sim = {
+    da: ["clean"],
+    reviews: { [SONNET]: { verdict: "request-changes", findings: [{ severity: "important", title: "stale bug" }] } },
+    audit: { dispositions: [{ id: "sonnet-1", verdict: "confirmed", severity: "important", reason: "yes" }] },
+    bashFn: cmd => (cmd === "git rev-parse HEAD" ? { stdout: (sim.reviewPasses === 1 && !sim.checked ? (sim.checked = "abc") : "def") + "\n" } : undefined),
+  }
+  runBuild(sim)
+  const fixTurns = sim.turns.filter(t => t.prompt.includes("have been audited"))
+  assert.ok(sim.reviewPasses >= 2, "a stale pass must be reviewed again")
+  assert.ok(fixTurns.length < sim.reviewPasses, "the stale pass's findings must not reach the builder")
+})

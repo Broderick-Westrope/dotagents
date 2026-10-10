@@ -260,14 +260,14 @@ function review(builder, ctx) {
 
     status("audit", raw.length + " findings")
     const audit = runAudit(ctx, raw)
+    // Findings about a version that has since changed are stale either
+    // way, so the pass is spent and the new version is reviewed.
+    if (!unchangedSince(ctx, reviewedHead)) continue
     const byId = Object.fromEntries(raw.map(f => [f.id, f]))
     const blocking = audit.dispositions
       .filter(d => d.verdict === "confirmed" && d.severity !== "minor")
       .map(d => Object.assign({}, byId[d.id], { severity: d.severity, audit: d.reason }))
-    if (blocking.length === 0) {
-      if (unchangedSince(ctx, reviewedHead)) return failed
-      continue
-    }
+    if (blocking.length === 0) return failed
 
     status("fix", blocking.length + " confirmed findings")
     // The builder only ever sees audited findings.
@@ -285,7 +285,7 @@ function requireCommitted(builder, ctx) {
   let dirty = uncommitted()
   if (!dirty) return
   tell(builder, "These files in `" + ctx.worktree + "` aren't committed, so review wouldn't see them:\n" + dirty +
-    "\n\nCommit the ones that belong to the change and remove the rest, then reply.")
+    "\n\nCommit the ones that are part of your change. Leave anything else untouched (the user may have made it); don't delete, revert or stash it. Then reply.")
   dirty = uncommitted()
   if (!dirty) return
   if (ask("Review only sees committed work, and " + ctx.worktree + " still has uncommitted changes:\n" + dirty,
