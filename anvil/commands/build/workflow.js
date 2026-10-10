@@ -17,9 +17,9 @@ requires({
   ],
 })
 
-// Caps on each loop: three DA reviews per approach, three approaches (two
+// Caps on each loop: five DA reviews per approach, three approaches (two
 // rebuilds), and three review passes.
-const MAX_DA_ROUNDS = 3
+const MAX_DA_ROUNDS = 5
 const MAX_APPROACHES = 3
 const MAX_REVIEW_PASSES = 3
 

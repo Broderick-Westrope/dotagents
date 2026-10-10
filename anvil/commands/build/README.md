@@ -22,7 +22,7 @@ Build first, then challenge the diff. An early version answers open questions fa
 
 ## Caps
 
-- Three DA reviews per approach, three approaches (two rebuilds), three review passes.
+- Five DA reviews per approach, three approaches (two rebuilds), three review passes.
 - Hitting any cap, or every reviewer failing, tells you why and fails the run. Only a hand-over completes it.
 
 ## Devil's advocate isolation

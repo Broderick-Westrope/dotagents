@@ -19,15 +19,15 @@ function mustSucceed(out) {
   return out.result
 }
 
-test("stops after three DA rounds with the latest findings, and the DA never sees earlier ones", () => {
-  const sim = { da: ["changes", "changes", "changes"] }
+test("stops after five DA rounds with the latest findings, and the DA never sees earlier ones", () => {
+  const sim = { da: ["changes", "changes", "changes", "changes", "changes"] }
   const { error } = runBuild(sim)
-  assert.equal(error?.message, "the devil's advocate still objected after 3 reviews")
-  assert.equal(sim.daPrompts.length, 3)
+  assert.equal(error?.message, "the devil's advocate still objected after 5 reviews")
+  assert.equal(sim.daPrompts.length, 5)
   assert.equal(sim.asks.length, 1)
-  assert.match(sim.asks[0], /after 3 reviews/)
-  assert.match(sim.asks[0], /f-changes-3/)
-  assert.doesNotMatch(sim.asks[0], /f-changes-[12]/)
+  assert.match(sim.asks[0], /after 5 reviews/)
+  assert.match(sim.asks[0], /f-changes-5/)
+  assert.doesNotMatch(sim.asks[0], /f-changes-[1-4]/)
   for (const p of sim.daPrompts) {
     assert.match(p, /NOTE/)
     assert.doesNotMatch(p, /f-changes/, "DA must not see earlier findings")
