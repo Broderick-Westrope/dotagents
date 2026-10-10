@@ -133,15 +133,20 @@ function main(input) {
     lessons.push(builder.turn(fill("references/lesson.md",
       Object.assign({}, ctx, { verdict: verdict.lesson || formatFindings(verdict.findings) })), { schema: Lesson }))
     if (approach === MAX_APPROACHES) break
+    // Removal and recreation happen in one hold, so nothing the user
+    // queued runs against a missing worktree. The old tip is kept under a
+    // hidden ref, so committed work (the builder's or yours) is never lost.
+    const keptAs = "refs/build-attempts/" + ctx.branch + "/" + approach
     workflow.exclusive(() => {
       const dirty = bash("git status --porcelain", { cwd: ctx.worktree }).stdout.trim()
-      if (dirty && ask("Discard " + ctx.worktree + "? It has uncommitted changes:\n" + dirty,
-        { options: ["discard", "stop"] }) === "stop") {
+      if (dirty && ask("Rebuilding discards uncommitted changes in " + ctx.worktree + ":\n" + dirty +
+        "\n\nCommitted work is kept at " + keptAs + ".", { options: ["discard", "stop"] }) === "stop") {
         throw new Error("stopped before rebuild; " + ctx.worktree + " is untouched")
       }
+      bash("git update-ref " + q(keptAs) + " " + q(ctx.branch), { cwd: ctx.root })
       bash("wtp remove --force --force-branch " + q(ctx.branch), { cwd: ctx.root })
+      ctx.worktree = createWorktree(ctx)
     })
-    ctx.worktree = createWorktree(ctx)
     builder = session.new({
       title: "/build approach " + (approach + 1),
       seed: fill("references/seed.md", Object.assign({}, ctx, { lessons: formatLessons(lessons) })),
@@ -159,9 +164,10 @@ function finish(builder, ctx) {
   if (failed === null) return
   status("hand over", ctx.branch)
   const description = builder.turn(fill("references/handover.md", ctx))
-  let message = "Ready for your review.\n\nWorktree: " + ctx.worktree + "\nBranch: " + ctx.branch +
+  let message = "Ready for your review.\n\n"
+  if (failed.length > 0) message += "These reviews didn't complete: " + failed.join(", ") + "\n\n"
+  message += "Worktree: " + ctx.worktree + "\nBranch: " + ctx.branch +
     "\nDraft PR description: " + ctx.note + "\n\n" + description
-  if (failed.length > 0) message += "\n\nThese reviews didn't complete: " + failed.join(", ")
   return ask(message, { options: ["ok"] })
 }
 
@@ -189,10 +195,7 @@ function review(builder, ctx) {
     if (raw.length === 0) return failed
 
     status("audit", raw.length + " findings")
-    const audit = agent("reviewer",
-      fill("references/audit.md", Object.assign({}, ctx, { findings: JSON.stringify(raw, null, 2) })),
-      { schema: Audit, tools: READ_ONLY })
-    requireOneDispositionEach(raw, audit.dispositions)
+    const audit = runAudit(ctx, raw)
     const byId = Object.fromEntries(raw.map(f => [f.id, f]))
     const blocking = audit.dispositions
       .filter(d => d.verdict === "confirmed" && d.severity !== "minor")
@@ -208,12 +211,53 @@ function review(builder, ctx) {
   return null
 }
 
-// Schemas can't say "one disposition per input", so the script checks it.
-function requireOneDispositionEach(raw, dispositions) {
-  const seen = {}
-  for (const d of dispositions) seen[d.id] = (seen[d.id] || 0) + 1
-  const missing = raw.filter(f => seen[f.id] !== 1).map(f => f.id)
-  if (missing.length > 0) throw new Error("audit must dispose of every finding exactly once; check: " + missing.join(", "))
+// runAudit asks a fresh auditor to dispose of every finding, retrying once
+// with the problem spelled out if the audit is malformed.
+function runAudit(ctx, raw) {
+  const prompt = fill("references/audit.md", Object.assign({}, ctx, { findings: JSON.stringify(raw, null, 2) }))
+  let problem = null
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const audit = agent("reviewer",
+      problem ? prompt + "\n\nA previous audit of these findings was rejected: " + problem + ". Avoid that." : prompt,
+      { schema: Audit, tools: READ_ONLY })
+    try {
+      requireValidAudit(raw, audit.dispositions)
+      return audit
+    } catch (e) {
+      problem = e.message
+    }
+  }
+  throw new Error("audit still invalid after a retry: " + problem)
+}
+
+// Schemas can't say "one disposition per input" or that a duplicate must
+// point at a real, resolved finding, so the script checks both. It throws
+// rather than let a malformed audit drop a finding.
+function requireValidAudit(raw, dispositions) {
+  const ids = new Set(raw.map(f => f.id))
+  const byId = {}
+  for (const d of dispositions) {
+    if (!ids.has(d.id)) throw new Error("audit disposed of unknown finding " + d.id)
+    if (byId[d.id]) throw new Error("audit disposed of " + d.id + " more than once")
+    byId[d.id] = d
+  }
+  const missing = raw.filter(f => !byId[f.id]).map(f => f.id)
+  if (missing.length > 0) throw new Error("audit skipped findings: " + missing.join(", "))
+  for (const d of dispositions) resolveDisposition(d, byId)
+}
+
+// resolveDisposition follows duplicateOf links to the confirmed or
+// rejected finding they end at.
+function resolveDisposition(d, byId) {
+  const seen = new Set()
+  while (d.verdict === "duplicate") {
+    if (seen.has(d.id)) throw new Error("audit has a duplicate cycle through " + d.id)
+    seen.add(d.id)
+    const target = byId[d.duplicateOf]
+    if (!target) throw new Error("audit marks " + d.id + " a duplicate of unknown finding " + d.duplicateOf)
+    d = target
+  }
+  return d
 }
 
 function resolveInputs(raw) {
@@ -225,7 +269,7 @@ function resolveInputs(raw) {
     if (ask("Build " + newest + "?", { options: ["build it", "stop"] }) !== "build it") throw new Error("stopped")
     docPath = root + "/" + newest
   } else if (bash("test -f " + q(raw), { cwd: root, check: false }).exitCode === 0) {
-    docPath = raw.startsWith("/") ? raw : root + "/" + raw
+    docPath = isAbsolute(raw) ? raw : root + "/" + raw
   }
   const base = bash("git rev-parse --abbrev-ref HEAD", { cwd: root }).stdout.trim()
   const slug = slugFor(docPath || raw)
@@ -239,6 +283,11 @@ function resolveInputs(raw) {
     branch,
     doc: docPath ? "the design doc at `" + docPath + "` (read it first)" : "this request:\n\n" + raw,
   }
+}
+
+// isAbsolute recognises POSIX, drive-letter and UNC paths.
+function isAbsolute(path) {
+  return /^(\/|[A-Za-z]:[\\/]|\\\\)/.test(path)
 }
 
 function slugFor(text) {
