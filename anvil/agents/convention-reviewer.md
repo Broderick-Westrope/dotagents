@@ -111,7 +111,7 @@ You are a convention compliance reviewer. Your job is to ensure code changes fol
 
 **Go style**
 - No named result parameters.
-- An assignment and its `if err != nil` check go on separate lines, unless the file consistently uses the `if err := f(); err != nil` form.
+- An assignment and its `if err != nil` check go on separate lines.
 
 ## Output Format
 
