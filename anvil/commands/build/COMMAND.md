@@ -67,7 +67,7 @@ Don't tell it which round this is, and don't pass earlier findings or how you re
 - **Premise or approach is wrong:** don't patch it. Record what you learned in the design doc, delete the branch, and rebuild from step 1. An early version is cheap; a patched wrong approach is not. Delete the old build note file.
 - **Otherwise, refine:** fix the findings (hand bounded ones to **fixer** when that's faster), then re-read the whole diff as one change and clean up its structure against the red flags in **codebase-design**: pass-through layers, shallow modules, duplicated concepts, growing switches, unclear names, and code in the wrong place. Use the matching style skill (e.g. **go-style**) and **refactoring-code**. Keep tests green and commit cleanup separately from behavior changes. Update the build note and re-run step 4.
 - Move on once the devil's advocate finds nothing worth changing and the cleanup pass leaves the diff unchanged.
-- Count devil's advocate reviews per approach. After three reviews of the same approach without moving on, stop and bring the user the latest findings and any concern that kept coming back. A rebuild starts a new count; after two rebuilds, stop and bring the user what each approach taught you, since the design doc likely needs revisiting.
+- Count devil's advocate reviews per approach. After five reviews of the same approach without moving on, stop and bring the user the latest findings and any concern that kept coming back. A rebuild starts a new count; after two rebuilds, stop and bring the user what each approach taught you, since the design doc likely needs revisiting.
 
 ### 6. Exercise the change locally
 
