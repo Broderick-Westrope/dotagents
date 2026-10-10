@@ -1,7 +1,8 @@
 // A fake of Anvil's workflow runtime for testing workflow.js under plain
-// Node. The script runs in a fresh vm context behind a prelude shaped like
-// the real one: every primitive crosses the boundary as JSON, and errors
-// come back as the context's own error classes so `instanceof` works.
+// Node. PRELUDE mirrors internal/workflow/prelude.js in Anvil and must
+// change with it: every primitive crosses the boundary as JSON, errors come
+// back as the context's own error classes so `instanceof` works, and Date
+// and Math.random go through the recorded now and random primitives.
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
@@ -15,9 +16,8 @@ const PRELUDE = `"use strict";
   class BashError extends Error { constructor(m) { super(m); this.name = "BashError"; } }
   class SchemaError extends Error { constructor(m) { super(m); this.name = "SchemaError"; } }
   class Cancelled extends Error { constructor(m) { super(m); this.name = "Cancelled"; } }
-  class Interrupted extends Error { constructor(m) { super(m); this.name = "Interrupted"; } }
   class JobsRunning extends Error { constructor(m) { super(m); this.name = "JobsRunning"; } }
-  const errorTypes = { BashError, SchemaError, Cancelled, Interrupted, JobsRunning };
+  const errorTypes = { BashError, SchemaError, Cancelled, JobsRunning };
   const native = global.__native;
   delete global.__native;
 
@@ -37,12 +37,17 @@ const PRELUDE = `"use strict";
     });
   }
 
+  const now = () => invoke("now");
+  const random = () => invoke("random");
+
   Object.assign(global, {
-    BashError, SchemaError, Cancelled, Interrupted, JobsRunning,
-    requires: (r) => { invoke("requires", r); },
+    BashError, SchemaError, Cancelled, JobsRunning,
+    requires() {},
+    now, random,
     bash: (cmd, opts) => invoke("bash", Object.assign({}, opts, { cmd })),
     agent: (name, prompt, opts) => invoke("agent", Object.assign({}, opts, { agent: name, prompt })),
     parallel: (calls) => invoke("parallel", { calls }),
+    skill: (name) => invoke("skill", { name }),
     reference: (path) => invoke("reference", { path }),
     readFile: (path) => invoke("readFile", { path }),
     ask: (question, opts) => invoke("ask", Object.assign({}, opts, { question })),
@@ -65,6 +70,21 @@ const PRELUDE = `"use strict";
       },
     }),
   });
+
+  Math.random = random;
+  const RealDate = global.Date;
+  RealDate.now = now;
+  global.Date = new Proxy(RealDate, {
+    construct(target, args, newTarget) {
+      if (args.length === 0) {
+        throw new Error("new Date() without arguments isn't replay-safe; use new Date(now())");
+      }
+      return Reflect.construct(target, args, newTarget);
+    },
+    apply() {
+      throw new Error("Date() isn't replay-safe; use new Date(now())");
+    },
+  });
 })(globalThis);
 `
 
@@ -80,7 +100,7 @@ class Fail {
 // on it. sim may set:
 //   da:        DA verdict kinds to return, in order
 //   reviews:   reviewer output keyed by "agent model"; {fail: msg} fails it
-//   audit:     the audit agent's output
+//   audit:     the audit agent's output, or n => output for the nth audit
 //   status:    stdout of `git status --porcelain --ignored`
 //   bashFn:    (cmd, n) => {stdout, stderr, exitCode} | undefined, where n
 //              counts earlier commands with the same first two words
@@ -89,7 +109,12 @@ class Fail {
 //   skipNote:  (turnNumber, notePath) => true to have that turn not write
 //              the build note it was asked for
 //   raw:       the /build argument
-// It returns {result, error}.
+//   now:       what the now primitive returns, in Unix milliseconds
+//   random:    what the random primitive returns
+//   source:    a script to run instead of workflow.js
+// It records every primitive name on sim.primitives and returns
+// {result, error}. Errors from top-level code are thrown, as the real
+// runtime fails before main runs.
 export function runBuild(sim) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "build-test-"))
   const note = path.join(tmp, "build-note.md")
@@ -105,14 +130,22 @@ export function runBuild(sim) {
     newSessions: [],
     focused: [],
     holds: [],
+    primitives: [],
     released: 0,
     inHold: false,
   })
   const prefixCounts = {}
+  let inMain = false
 
   const handlers = {
-    requires(r) {
-      sim.requires = r
+    now() {
+      return sim.now ?? 1760054400000
+    },
+    random() {
+      return sim.random ?? 0.5
+    },
+    skill({ name }) {
+      return "SKILL " + name
     },
     bash({ cmd, cwd, check }) {
       const prefix = cmd.split(" ").slice(0, 2).join(" ")
@@ -145,7 +178,7 @@ export function runBuild(sim) {
       }
       if (tools) {
         sim.auditPrompts.push(prompt)
-        return sim.audit
+        return typeof sim.audit === "function" ? sim.audit(sim.auditPrompts.length) : sim.audit
       }
       throw new Error("unexpected agent call: " + agent + " " + model)
     },
@@ -203,6 +236,10 @@ export function runBuild(sim) {
   }
 
   const native = (name, argsJSON) => {
+    if (!inMain) {
+      return JSON.stringify({ ok: false, error: { name: "Error", message: "primitives can't be called at top level; call them from main" } })
+    }
+    sim.primitives.push(name)
     const h = handlers[name]
     if (!h) throw new Error("unknown primitive " + name)
     try {
@@ -216,9 +253,15 @@ export function runBuild(sim) {
 
   const context = vm.createContext({ __native: native })
   vm.runInContext(PRELUDE, context)
-  const src = fs.readFileSync(path.join(BUILD_DIR, "workflow.js"), "utf8")
-  vm.runInContext(src, context, { filename: "workflow.js" })
+  const src = sim.source ?? fs.readFileSync(path.join(BUILD_DIR, "workflow.js"), "utf8")
+  try {
+    vm.runInContext(src, context, { filename: "workflow.js" })
+  } catch (e) {
+    fs.rmSync(tmp, { recursive: true, force: true })
+    throw e
+  }
   context.__input = JSON.stringify({ raw: sim.raw === undefined ? "plans/design-2026-10-10-x.md" : sim.raw })
+  inMain = true
   try {
     const out = vm.runInContext("main(JSON.parse(__input))", context, { timeout: 5000 })
     return { result: out === undefined ? undefined : JSON.parse(JSON.stringify(out)) }

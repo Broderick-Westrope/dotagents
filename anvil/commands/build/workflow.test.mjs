@@ -325,3 +325,65 @@ test("every worktree status check lists untracked files whatever git's config sa
   assert.ok(checks.length > 2)
   for (const c of checks) assert.match(c.cmd, /--untracked-files=all/, c.cmd)
 })
+
+// q mirrors workflow.js's shell quoting, so tests can assert exact commands.
+const q = s => "'" + String(s).replace(/'/g, "'\\''") + "'"
+
+test("a free-text request with shell metacharacters is quoted when probed as a file", () => {
+  const raw = "-it's $(touch pwned)\nand `more`"
+  const sim = { raw, da: ["clean"] }
+  mustSucceed(runBuild(sim))
+  assert.equal(ran(sim, "test -f")[0].cmd, "test -f " + q(raw))
+  assert.ok(sim.turns[0].prompt.includes(raw), "the request reaches the builder verbatim")
+})
+
+test("a design doc path with shell metacharacters is quoted when snapshotted", () => {
+  const raw = "-it's$(touch-pwned).md"
+  const sim = {
+    raw,
+    da: ["clean"],
+    bashFn: cmd => (cmd === "test -f " + q(raw) ? { exitCode: 0 } : undefined),
+  }
+  mustSucceed(runBuild(sim))
+  const cp = ran(sim, "cp ")[0].cmd
+  assert.ok(cp.startsWith("cp " + q("/repo/" + raw) + " "), cp)
+})
+
+test("a base branch with shell metacharacters is quoted when creating the worktree", () => {
+  const base = "it's$(touch-pwned)"
+  const sim = {
+    da: ["clean"],
+    bashFn: cmd => (cmd.startsWith("git rev-parse --abbrev-ref") ? { stdout: base + "\n" } : undefined),
+  }
+  mustSucceed(runBuild(sim))
+  assert.equal(ran(sim, "wtp add")[0].cmd, "wtp add -b " + q("feat/x") + " --stay " + q(base))
+})
+
+test("a DA verdict on work that changed during its review is discarded without refining", () => {
+  const sim = {
+    da: ["changes", "clean"],
+    // HEAD moves while the first DA round is reviewing, then holds still.
+    bashFn: cmd => (cmd === "git rev-parse HEAD" ? { stdout: (sim.daPrompts.length >= 1 ? "h1" : "h0") + "\n" } : undefined),
+  }
+  mustSucceed(runBuild(sim))
+  assert.equal(sim.daPrompts.length, 2)
+  assert.equal(sim.turns.filter(t => t.prompt.includes("f-changes-1")).length, 0, "a stale verdict must not reach the builder")
+  assert.equal(sim.statuses.filter(([step]) => step === "refine").length, 0)
+  assert.match(lastAsk(sim), /Ready for your review/)
+})
+
+test("an audit that is valid on its retry is used", () => {
+  const sim = {
+    da: ["clean"],
+    reviews: { [SONNET]: { verdict: "request-changes", findings: [{ severity: "important", title: "real bug" }] } },
+    audit: n => (n === 1
+      ? { dispositions: [] }
+      : { dispositions: [{ id: "sonnet-1", verdict: "rejected", reason: "not a bug" }] }),
+  }
+  mustSucceed(runBuild(sim))
+  assert.equal(sim.auditPrompts.length, 2)
+  assert.match(sim.auditPrompts[1], /previous audit of these findings was rejected: audit skipped findings: sonnet-1/)
+  assert.equal(sim.turns.filter(t => t.prompt.includes("have been audited")).length, 0)
+  assert.equal(sim.reviewPasses, 1)
+  assert.match(lastAsk(sim), /Ready for your review/)
+})
