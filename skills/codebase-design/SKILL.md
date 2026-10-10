@@ -8,7 +8,23 @@ unlisted: true
 
 The next contributor to any codebase is probably an agent that sees only the files it opened, copies the nearest example, and takes the shortest path that compiles. Every flag below gets copied and spreads. Catch them while they are small.
 
-Sources: Ousterhout's *A Philosophy of Software Design* (depth, information hiding, pass-throughs), Fowler's *Refactoring* chapter 3 (code smells), Feathers' *Working Effectively with Legacy Code* (seams). For the vocabulary (module, interface, deep, shallow, seam) and Go-specific rules, load the **go-style** skill when the code is Go.
+Sources: Ousterhout's *A Philosophy of Software Design* (depth, information hiding, pass-throughs), Fowler's *Refactoring* chapter 3 (code smells), Feathers' *Working Effectively with Legacy Code* (seams). For Go-specific rules, also load the **go-style** skill.
+
+## Vocabulary
+
+Use these terms exactly. Mixing them up leads agents to add interface types when the goal was a smaller module API.
+
+| Term | Meaning |
+|---|---|
+| **Module** | A unit of code with a public surface and hidden internals: a package, a class, a service. The language's style skill says which unit counts. |
+| **Interface** | Everything a caller must know to use a module: its public names plus their behavior, error modes, ordering rules, and invariants. |
+| **Interface type** | A language-level declaration such as a Go `interface`, a TypeScript `interface` or an abstract class. One way to build a seam, and a separate decision. |
+| **Deep** | A lot of behavior behind a small interface. |
+| **Shallow** | The interface is about as complex as what it hides, so the module adds a layer without removing any work. |
+| **Seam** | A place where behavior can change without editing callers. A module's interface is the default seam. An interface type is only worth declaring when a real second implementation exists. |
+| **Deletion test** | Imagine deleting the module or layer. If the complexity vanishes, it was a pass-through. If it reappears across several callers, it earns its place. |
+
+The interface is also the test surface. If behavior can't be tested through it, the module is probably hiding a second module.
 
 Spot problems in code with the red flags below. Choose between designs with **Comparing Designs** at the end.
 

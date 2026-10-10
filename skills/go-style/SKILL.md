@@ -23,16 +23,14 @@ If you find another conflict, follow the higher rule and always tell the user. A
 
 ## Vocabulary
 
-Use these terms exactly. Mixing them up leads agents to add interface types when the goal was a smaller package API.
+The design terms (module, interface, interface type, deep, shallow, seam, deletion test) are defined in the **codebase-design** skill. In Go they map to:
 
-| Term | Meaning in Go |
+| Term | In Go |
 |---|---|
 | **Module** | A package. (Not a Go module from `go.mod`.) |
 | **Interface** | A package's exported API: its identifiers plus their behavior, error modes, ordering rules, and invariants. |
 | **Interface type** | A Go `interface { ... }` declaration. A separate decision, covered below. |
-| **Deep** | A lot of behavior behind a small exported surface. |
-| **Shallow** | The exported surface is about as complex as what it hides. |
-| **Seam** | A place where behavior can be swapped without editing callers. |
+| **Seam** | By default, a package's exported API. |
 
 ## Packages
 

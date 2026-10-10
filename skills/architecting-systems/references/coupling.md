@@ -4,16 +4,11 @@ Coupling is the #1 cause of systems becoming painful at scale. Every unnecessary
 
 ## Deep Modules, Small Interfaces
 
-A module's *interface* is everything a caller must know to use it: its public names plus their behavior, error modes, ordering rules, and invariants. That is not the same as a language-level `interface` declaration. In Go, the module is the package and its interface is the exported API.
-
-The best modules are **deep**: a lot of behavior behind a small interface. A **shallow** module's interface is about as complex as what it hides, so it adds a layer without removing any work.
-
-- **The deletion test:** imagine deleting the module. If the complexity vanishes, it was a pass-through. If it reappears across several callers, it earns its place.
-- **The interface is the test surface.** If behavior can't be tested through it, there is probably a second module hiding inside.
+Aim for deep modules behind small interfaces, and apply the deletion test to every layer. The terms and the test are defined in the **codebase-design** skill.
 
 ## When to Declare an Abstraction
 
-Declare an interface type (or protocol, or abstract class) only at a real **seam**: a place where behavior genuinely varies. "One adapter is a hypothetical seam, two is a real one." A test fake counts as the second adapter only when the real implementation can't run in tests, such as an external API client, another service, or out-of-process infrastructure. A fake for the repo's own code doesn't count; test against the real code instead.
+Declare an interface type (or protocol, or abstract class) only at a real seam. "One adapter is a hypothetical seam, two is a real one." A test fake counts as the second adapter only when the real implementation can't run in tests, such as an external API client, another service, or out-of-process infrastructure. A fake for the repo's own code doesn't count; test against the real code instead.
 
 | Dependency | Abstraction? |
 |---|---|
