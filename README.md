@@ -28,6 +28,7 @@ Quick workflows for everyday development tasks:
 | [/audit-context](anvil/commands/audit-context/COMMAND.md)   | Identify knowledge gaps in project context and collect human input |
 | [/post-mortem](anvil/commands/post-mortem/COMMAND.md)       | Review a session to assess execution and extract improvements      |
 | [/wtp-pruning](anvil/commands/wtp-pruning/COMMAND.md)       | Classify wtp worktrees and flag the stale ones                     |
+| [/survey-architecture](anvil/commands/survey-architecture/COMMAND.md) | Rank structural problems in existing code with evidence  |
 
 ### Skills
 
@@ -56,6 +57,8 @@ Reusable development patterns:
 | -------------------------------------------------------------------- | ----------------------------------------------------------- |
 | [refactoring-code](skills/refactoring-code/SKILL.md)                 | Behavior-preserving code improvements                       |
 | [go-style](skills/go-style/SKILL.md)                                 | Go package depth, extraction, interface types, errors, tests |
+| [design-red-flags](skills/design-red-flags/SKILL.md)                 | Unlisted. Structural smells with how to spot and fix them (Ousterhout, Fowler, Feathers) |
+| [surveying-architecture](skills/surveying-architecture/SKILL.md)     | Unlisted. Procedure behind `/survey-architecture`            |
 | [optimizing-performance](skills/optimizing-performance/SKILL.md)     | Measurement-driven optimization                             |
 | [handling-errors](skills/handling-errors/SKILL.md)                   | Error handling best practices                               |
 | [migrating-code](skills/migrating-code/SKILL.md)                     | Safe migration patterns for databases, APIs, and frameworks |
@@ -67,6 +70,7 @@ Reusable development patterns:
 | [grilling](skills/grilling/SKILL.md)                                 | Interview and design exploration, adapts to the user's clarity   |
 | [planning-products](skills/planning-products/SKILL.md)               | Product feature definition from a PM perspective                 |
 | [architecting-systems](skills/architecting-systems/SKILL.md)         | Clean, scalable system architecture for the build phase          |
+| [domain-modeling](skills/domain-modeling/SKILL.md)                   | Keep a GLOSSARY.md and ADRs so names and decisions stay consistent |
 | [design](skills/design/SKILL.md)                                     | Frontend design skill                                            |
 | [onboarding-systems](skills/onboarding-systems/SKILL.md)             | Guided onboarding into complex microservices                     |
 
@@ -171,8 +175,8 @@ The root `anvil-plugin.json` points Anvil at `skills/`, `anvil/commands/`, and `
 **Clean up legacy code:**
 
 ```bash
-/explain src/legacy/payment-processor.js
-/refactor src/legacy/payment-processor.js
+/survey-architecture internal/agent   # ranked candidates with evidence
+/refactor internal/agent/agent.go     # act on one candidate
 ```
 
 ### Commands vs Skills vs Agents

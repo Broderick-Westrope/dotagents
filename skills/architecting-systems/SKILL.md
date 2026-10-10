@@ -82,4 +82,4 @@ Every architectural decision has a complexity cost. Spend that budget where it m
 | "Every PR touches 10 files" | Feature code is scattered; colocate it |
 | "The shared folder keeps growing" | Boundaries are in the wrong place |
 
-**Writing architecture documents?** This skill covers how to build. For how to write about it (ADRs, design docs, tradeoff analyses), load the **writer** skill and use The Architect persona.
+**Existing code?** This skill covers building. To find structural problems in code that already exists, use the `/survey-architecture` command. For naming concepts and recording hard-to-reverse decisions as ADRs, load the **domain-modeling** skill. For the prose of design docs and tradeoff analyses, load the **writer** skill and use The Architect persona.
