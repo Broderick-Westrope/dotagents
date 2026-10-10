@@ -198,6 +198,8 @@ dotagents/
 └── assets/
 ```
 
+A command is usually just a `COMMAND.md` prompt. A command that runs as an Anvil workflow, like `/build`, adds a `workflow.js` script (named in its `COMMAND.md` front matter), with a `README.md` describing what it enforces and Node tests alongside. Run `/build`'s tests with `cd anvil/commands/build && node --test`.
+
 ## Resources
 
 - [Anvil](https://github.com/Broderick-Westrope/anvil)
