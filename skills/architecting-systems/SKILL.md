@@ -33,7 +33,7 @@ Default to established patterns, standard libraries, and proven conventions. Nov
 |--------|------|
 | Framework conventions | Custom project structures |
 | Standard library tools | Bespoke utilities for solved problems |
-| Established patterns (MVC, repository, etc.) | Clever abstractions |
+| Established patterns (MVC, a single data-access layer, etc.) | Clever abstractions |
 | Boring technology that works | Exciting technology that might |
 
 **The test:** If someone new joins the team, how quickly can they find things and understand the structure? If the answer involves a tour guide, the conventions aren't strong enough.
