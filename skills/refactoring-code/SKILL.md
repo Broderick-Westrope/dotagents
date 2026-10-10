@@ -87,7 +87,7 @@ Structural smells and their fixes live in **codebase-design**. Local ones:
 | Smell | Refactoring |
 |-------|-------------|
 | Deep nesting | Early returns, guard clauses |
-| Magic numbers | Named constants |
+| Magic numbers | Named constants, declared in the function unless more than one function uses them |
 | Long parameter list | Parameter object |
 
 ## When to Stop

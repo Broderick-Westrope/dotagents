@@ -16,7 +16,7 @@ Use these terms exactly. Mixing them up leads agents to add interface types when
 
 | Term | Meaning |
 |---|---|
-| **Module** | A unit of code with a public surface and hidden internals: a package, a class, a service. The language's style skill says which unit counts. |
+| **Module** | A unit of code with a public surface and hidden internals: a package, a class, a service. If a language has a style skill, it will say which unit counts. |
 | **Surface** | Everything a caller must know to use a module: its public names plus their behavior, error modes, ordering rules, and invariants. |
 | **Interface type** | A language-level declaration such as a Go `interface`, a TypeScript `interface` or an abstract class. One way to build a seam, and a separate decision. |
 | **Deep** | A lot of behavior behind a small surface. |
@@ -24,7 +24,7 @@ Use these terms exactly. Mixing them up leads agents to add interface types when
 | **Seam** | A place where behavior can change without editing callers. A module's surface is the default seam. An interface type is only worth declaring when a real second implementation exists. |
 | **Deletion test** | Imagine deleting the module or layer. If the complexity vanishes, it was a pass-through. If it reappears across several callers, it earns its place. |
 
-The surface is also the test surface. If behavior can't be tested through it, the module is probably hiding a second module.
+The surface is also the test surface. If behavior can't be tested through it, the module is probably hiding a second module, or its surface gives callers no way to drive or observe that behavior (for example, a clock or input it reads internally).
 
 Spot problems in code with the red flags below. Choose between designs with **Comparing Designs** at the end.
 
@@ -39,7 +39,7 @@ Spot problems in code with the red flags below. Choose between designs with **Co
 
 | Flag | Spot it | Fix |
 |---|---|---|
-| **Shallow module** | The exported surface is about as complex as what it hides. Callers must understand the internals to use it. | Merge it into its caller, or move more of the work behind its surface. |
+| **Shallow module** | The exported surface is about as complex as what it hides. Callers must understand the internals to use it. | Merge it into its caller, move more of the work behind its surface, or shrink the surface by hiding or combining what callers don't need. |
 | **Pass-through** | A function or type forwards calls to another with the same or nearly the same signature. Deletion test: delete it and the complexity vanishes. | Inline and delete. |
 | **Middle man** | Most methods of a type just delegate to one other type. A pass-through at type scale. | Let callers use the delegate directly. |
 | **Speculative generality** | An interface type with one implementation and no test-only need, a config option nobody sets, a parameter always passed the same value, a hook with no users. | Delete it. Add the interface type when the second implementation arrives; until then the module's surface is the seam. |
@@ -51,7 +51,7 @@ Spot problems in code with the red flags below. Choose between designs with **Co
 |---|---|---|
 | **Information leakage** | Two modules both know the same decision: a format, a protocol, a key layout, an ordering rule. Changing it means editing both. | Give the decision one owner and have the other call it. |
 | **Temporal decomposition** | Code is split by the order things happen (read, then parse, then save) rather than by what each part knows, so one piece of knowledge is spread across steps. | Regroup around the knowledge. |
-| **Feature envy** | A function spends most of its time reading another module's data. | Move it to the data it uses. |
+| **Feature envy** | A function spends most of its time reading another module's data. | Move the function to the module whose data it uses, or move the data to the function if that's where it belongs. |
 | **Message chains** | `a.B().C().D()`: the caller navigates a structure it shouldn't know. | Give the first object a method that answers the real question. |
 | **Primitive obsession** | Domain concepts passed around as raw strings, ints or maps, with validation repeated at each use. | Introduce a type that parses once and owns the rules. |
 | **Data clumps** | The same three or four values travel together through many signatures. | Make them one type. |

@@ -17,7 +17,7 @@ Check who owns the repo with `git remote get-url origin`, then:
 |---|---|---|
 | Already has a committed `GLOSSARY.md` | That file | The repo's existing practice |
 | Personal (owner `Broderick-Westrope`) | `GLOSSARY.md` at the repo root, committed | ADRs in `docs/adr/` |
-| Any other owner (work) | `~/.agents/glossaries/<owner>/GLOSSARY.md`, shared by every repo of that owner. Never write it into the repo. | The PR description. No ADRs. |
+| Any other owner (e.g. `eucalyptusvc` for work) | `~/.agents/glossaries/<owner>/GLOSSARY.md`, shared by every repo of that owner. Never write it into the repo. | The PR description. No ADRs. |
 | No remote | Ask the user | Ask the user |
 
 The work glossary is shared because work repos share most of their domain concepts, and it's keyed by owner rather than checkout so every worktree sees the same file. It's local to this machine: don't copy it into any repo or into the dotagents repo.
