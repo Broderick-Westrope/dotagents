@@ -432,3 +432,14 @@ test("a branch name whose earlier attempts are still kept is skipped", () => {
   mustSucceed(runBuild(sim))
   assert.equal(ran(sim, "wtp add")[0].cmd, "wtp add -b 'feat/x-2' --stay 'main'")
 })
+
+test("a detached HEAD fails before anything is created", () => {
+  const sim = {
+    da: ["clean"],
+    bashFn: cmd => (cmd.startsWith("git rev-parse --abbrev-ref") ? { stdout: "HEAD\n" } : undefined),
+  }
+  const { error } = runBuild(sim)
+  assert.equal(error?.message, "HEAD is detached; check out the base branch first")
+  assert.equal(ran(sim, "wtp add").length, 0)
+  assert.equal(sim.turns.length, 0)
+})

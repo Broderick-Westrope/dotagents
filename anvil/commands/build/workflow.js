@@ -361,6 +361,8 @@ function resolveDisposition(d, byId) {
 
 function resolveInputs(raw) {
   const root = bash("git rev-parse --show-toplevel").stdout.trim()
+  const base = bash("git rev-parse --abbrev-ref HEAD", { cwd: root }).stdout.trim()
+  if (base === "HEAD") throw new Error("HEAD is detached; check out the base branch first")
   let docPath = null
   if (raw === "") {
     const newest = bash("ls -t plans/design-*.md 2>/dev/null | head -n 1", { cwd: root, check: false }).stdout.trim()
@@ -370,7 +372,6 @@ function resolveInputs(raw) {
   } else if (bash("test -f " + q(raw), { cwd: root, check: false }).exitCode === 0) {
     docPath = isAbsolute(raw) ? raw : root + "/" + raw
   }
-  const base = bash("git rev-parse --abbrev-ref HEAD", { cwd: root }).stdout.trim()
   const slug = slugFor(docPath || raw)
   let branch = "feat/" + slug
   for (let n = 2; branchTaken(root, branch); n++) {
