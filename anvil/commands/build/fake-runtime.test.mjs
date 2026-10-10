@@ -35,3 +35,34 @@ test("skill and workflow.dir are available, and Interrupted is not", () => {
   const sim = { source: 'function main() { return [skill("go-style"), typeof workflow.dir(), typeof Interrupted] }' }
   assert.deepEqual(runBuild(sim).result, ["SKILL go-style", "string", "undefined"])
 })
+
+test("turn() inside workflow.exclusive throws without running the turn", () => {
+  const sim = {
+    source: `function main() {
+      const s = session.current()
+      return workflow.exclusive(() => {
+        try { s.turn("x"); return "ran" } catch (e) { return e.message }
+      })
+    }`,
+  }
+  assert.equal(runBuild(sim).result, "turn() can't run inside workflow.exclusive")
+  assert.equal(sim.turns.length, 0)
+  assert.equal(sim.released, 1)
+})
+
+test("turn() only runs in the invoking session and sessions the run created", () => {
+  const sim = {
+    // Captures the native bridge before the prelude hides it, to reach a
+    // session no handle can name.
+    beforePrelude: 'const n = __native; globalThis.rawTurn = s => JSON.parse(n("turn", JSON.stringify({ session: s, prompt: "x" })))',
+    source: `function main() {
+      session.current().turn("a")
+      session.new({ title: "t" }).turn("b")
+      return rawTurn("stranger")
+    }`,
+  }
+  const out = runBuild(sim).result
+  assert.equal(out.ok, false)
+  assert.equal(out.error.message, `session "stranger" doesn't belong to this run`)
+  assert.deepEqual(sim.turns.map(t => t.session), ["invoker", "new-1"])
+})

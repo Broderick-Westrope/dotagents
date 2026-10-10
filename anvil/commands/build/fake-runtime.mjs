@@ -114,6 +114,8 @@ class Fail {
 //   random:    what the random primitive returns
 //   source:    a script to run instead of workflow.js
 //   references: reference contents keyed by path, overriding the files
+//   beforePrelude: a script run before the prelude hides __native, so a
+//              test can call primitives no prelude function exposes
 // It records every primitive name on sim.primitives and returns
 // {result, error}. Errors from top-level code are thrown, as the real
 // runtime fails before main runs.
@@ -141,6 +143,7 @@ export function runBuild(sim) {
     inHold: false,
   })
   const prefixCounts = {}
+  const sessions = new Set(["invoker"])
   let inMain = false
 
   const handlers = {
@@ -165,6 +168,9 @@ export function runBuild(sim) {
       return res
     },
     turn({ session, prompt, schema, skills }) {
+      if (!sessions.has(session)) throw new Fail("Error", `session "${session}" doesn't belong to this run`)
+      // The run's sessions are held, so the turn could never start.
+      if (sim.inHold) throw new Fail("Error", "turn() can't run inside workflow.exclusive")
       sim.turns.push({ session, prompt, schema, skills })
       if (schema) return { approach: "a", lesson: "l" }
       // A builder told to write a note writes it, unless the test says
@@ -223,7 +229,9 @@ export function runBuild(sim) {
     },
     "session.new"(opts) {
       sim.newSessions.push(opts)
-      return "new-" + sim.newSessions.length
+      const id = "new-" + sim.newSessions.length
+      sessions.add(id)
+      return id
     },
     "workflow.tmpdir"() {
       return tmp
@@ -266,6 +274,7 @@ export function runBuild(sim) {
   }
 
   const context = vm.createContext({ __native: native })
+  if (sim.beforePrelude) vm.runInContext(sim.beforePrelude, context)
   vm.runInContext(PRELUDE, context)
   const src = sim.source ?? fs.readFileSync(path.join(BUILD_DIR, "workflow.js"), "utf8")
   try {
