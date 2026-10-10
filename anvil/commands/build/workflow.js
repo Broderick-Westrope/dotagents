@@ -207,7 +207,7 @@ function rebuildWorktree(ctx, keptAs) {
       throw new Error("stopped before rebuild; " + ctx.worktree + " is untouched")
     }
     // The empty old value makes git refuse to overwrite an existing ref.
-    bash("git update-ref " + q(keptAs) + " " + q(ctx.branch) + " ''", { cwd: ctx.root })
+    bash("git update-ref " + q(keptAs) + " " + q("refs/heads/" + ctx.branch) + " ''", { cwd: ctx.root })
     bash("wtp remove --force --force-branch " + q(ctx.branch), { cwd: ctx.root })
     try {
       ctx.worktree = createWorktree(ctx)

@@ -101,7 +101,7 @@ test("saves the old tip with git update-ref before wtp remove", () => {
     .map(c => ["git update-ref", "wtp remove", "wtp add"].find(p => c.startsWith(p)))
     .filter(Boolean)
   assert.deepEqual(order, ["wtp add", "git update-ref", "wtp remove", "wtp add"])
-  assert.equal(ran(sim, "git update-ref")[0].cmd, "git update-ref 'refs/build-attempts/feat/x/1' 'feat/x' ''")
+  assert.equal(ran(sim, "git update-ref")[0].cmd, "git update-ref 'refs/build-attempts/feat/x/1' 'refs/heads/feat/x' ''")
 })
 
 test("model-supplied finding ids can't merge findings", () => {
