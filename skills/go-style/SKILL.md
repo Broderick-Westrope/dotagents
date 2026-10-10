@@ -13,13 +13,13 @@ This skill covers design decisions. Naming, formatting, enums, comments, and tim
 2. Company skills (`euc-*`) in Eucalyptus repos.
 3. This skill.
 
-Outside Eucalyptus repos, euc-go's design rules (errors, extraction, interfaces, mocking) give way to this skill. Inside them, these are the known differences:
+Outside Eucalyptus repos, euc-go's design rules give way to this skill. Inside them, these are the known differences:
 
 - **Error messages.** euc-go's "no dynamic values in messages" assumes telemetry, which every Eucalyptus service has. Repos without telemetry follow the Errors section below.
 - **Extraction.** euc-go is stricter: it prefers duplication at call sites over a small helper, even one used a few times. Follow euc-go there. This skill's three-or-more rule applies elsewhere.
 - **Mocking.** euc-go's "mock dependencies injected via constructors" means the boundary dependencies listed under Interface Types. Don't read it as permission to mock the repo's own packages or the database.
 
-If you find another conflict, follow the higher rule and tell the user. A rule that helps agents is worth proposing to the team, so don't diverge silently.
+If you find another conflict, follow the higher rule and always tell the user. A rule that helps agents is worth proposing to the team. Divergences must be called out so they can be improved upon.
 
 ## Vocabulary
 
