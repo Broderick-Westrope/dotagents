@@ -190,7 +190,9 @@ function review(builder, ctx) {
     results.forEach((r, i) => {
       if (!r.ok) return
       r.value.findings.forEach((f, j) =>
-        raw.push(Object.assign({ id: REVIEWERS[i].label.toLowerCase() + "-" + (j + 1), reviewer: REVIEWERS[i].label }, f)))
+        // The script's id and reviewer are assigned last so model output
+        // can't overwrite them and collapse two findings into one.
+        raw.push(Object.assign({}, f, { id: REVIEWERS[i].label.toLowerCase() + "-" + (j + 1), reviewer: REVIEWERS[i].label })))
     })
     if (raw.length === 0) return failed
 
@@ -235,6 +237,7 @@ function runAudit(ctx, raw) {
 // rather than let a malformed audit drop a finding.
 function requireValidAudit(raw, dispositions) {
   const ids = new Set(raw.map(f => f.id))
+  if (ids.size !== raw.length) throw new Error("findings must have unique ids")
   const byId = {}
   for (const d of dispositions) {
     if (!ids.has(d.id)) throw new Error("audit disposed of unknown finding " + d.id)
