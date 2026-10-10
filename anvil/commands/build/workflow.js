@@ -181,7 +181,8 @@ function rebuildWorktree(ctx, keptAs) {
       "\n\nCommitted work is kept at " + keptAs + ".", { options: ["stop", "discard"] }) === "stop") {
       throw new Error("stopped before rebuild; " + ctx.worktree + " is untouched")
     }
-    bash("git update-ref " + q(keptAs) + " " + q(ctx.branch), { cwd: ctx.root })
+    // The empty old value makes git refuse to overwrite an existing ref.
+    bash("git update-ref " + q(keptAs) + " " + q(ctx.branch) + " ''", { cwd: ctx.root })
     bash("wtp remove --force --force-branch " + q(ctx.branch), { cwd: ctx.root })
     try {
       ctx.worktree = createWorktree(ctx)
@@ -372,7 +373,7 @@ function resolveInputs(raw) {
   const base = bash("git rev-parse --abbrev-ref HEAD", { cwd: root }).stdout.trim()
   const slug = slugFor(docPath || raw)
   let branch = "feat/" + slug
-  for (let n = 2; bash("git show-ref --verify --quiet refs/heads/" + q(branch), { cwd: root, check: false }).exitCode === 0; n++) {
+  for (let n = 2; branchTaken(root, branch); n++) {
     branch = "feat/" + slug + "-" + n
   }
   return {
@@ -382,6 +383,13 @@ function resolveInputs(raw) {
     docPath,
     doc: docPath ? "the design doc at `" + docPath + "` (read it first)" : "this request:\n\n" + raw,
   }
+}
+
+// branchTaken reports whether branch exists or still has attempts kept
+// from an earlier /build, which a new run must not mix with its own.
+function branchTaken(root, branch) {
+  return bash("git show-ref --verify --quiet refs/heads/" + q(branch), { cwd: root, check: false }).exitCode === 0 ||
+    bash("git for-each-ref --count=1 " + q("refs/build-attempts/" + branch + "/"), { cwd: root }).stdout.trim() !== ""
 }
 
 // isAbsolute recognises POSIX, drive-letter and UNC paths.

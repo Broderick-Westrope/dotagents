@@ -98,7 +98,7 @@ test("saves the old tip with git update-ref before wtp remove", () => {
     .map(c => ["git update-ref", "wtp remove", "wtp add"].find(p => c.startsWith(p)))
     .filter(Boolean)
   assert.deepEqual(order, ["wtp add", "git update-ref", "wtp remove", "wtp add"])
-  assert.equal(ran(sim, "git update-ref")[0].cmd, "git update-ref 'refs/build-attempts/feat/x/1' 'feat/x'")
+  assert.equal(ran(sim, "git update-ref")[0].cmd, "git update-ref 'refs/build-attempts/feat/x/1' 'feat/x' ''")
 })
 
 test("model-supplied finding ids can't merge findings", () => {
@@ -409,4 +409,26 @@ test("a clean DA, a verified build and an approving review hand over with a stru
   assert.match(sim.asks[0], /^Ready for your review\./)
   assert.match(sim.asks[0], /Branch: feat\/x/)
   assert.doesNotMatch(sim.asks[0], /didn't complete/)
+})
+
+test("an existing kept attempt is never overwritten", () => {
+  const sim = {
+    da: ["wrong-approach", "clean"],
+    bashFn: cmd => (cmd.startsWith("git update-ref") ? { exitCode: 128, stderr: "reference already exists" } : undefined),
+  }
+  const { error } = runBuild(sim)
+  assert.match(error?.message ?? "", /git update-ref/)
+  assert.equal(ran(sim, "wtp remove").length, 0)
+  assert.equal(sim.newSessions.length, 0)
+})
+
+test("a branch name whose earlier attempts are still kept is skipped", () => {
+  const sim = {
+    da: ["clean"],
+    bashFn: cmd => (cmd === "git for-each-ref --count=1 " + q("refs/build-attempts/feat/x/")
+      ? { stdout: "abc commit\trefs/build-attempts/feat/x/1\n" }
+      : undefined),
+  }
+  mustSucceed(runBuild(sim))
+  assert.equal(ran(sim, "wtp add")[0].cmd, "wtp add -b 'feat/x-2' --stay 'main'")
 })
