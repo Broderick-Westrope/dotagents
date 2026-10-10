@@ -4,7 +4,7 @@ Language-specific patterns for testing Go applications using the standard librar
 
 ## Contents
 
-- [The Pragmatic Assertion Strategy](#the-pragmatic-assertion-strategy)
+- [Assertion Strategy](#assertion-strategy)
 - [Table-Driven Tests](#table-driven-tests-the-gold-standard)
 - [Integration Testing (Testcontainers)](#integration-testing-testcontainers)
 - [Mocking Strategies](#mocking-strategies)
@@ -12,20 +12,17 @@ Language-specific patterns for testing Go applications using the standard librar
 - [HTTP Handlers with httptest](#http-handlers-with-httptest)
 - [Tooling Quick Reference](#tooling-quick-reference)
 
-## The Pragmatic Assertion Strategy
+## Assertion Strategy
 
-Don't be a purist. Use tools where they help, but know their limits.
-
-- **Use `testify/require`** for setup and errors (stop the test immediately).
-- **Use `testify/assert`** for simple value checks (booleans, strings, counts).
-- **Use `google/go-cmp`** for complex structs (superior diff output).
+- **Use `testify/require` by default.** A failed check stops the test, so later lines never run against bad state or pile on follow-on failures.
+- **Use `google/go-cmp` for structs and slices.** One `cmp.Diff` replaces a run of field-by-field checks and shows exactly which field differs.
+- **Use `testify/assert` only when several independent checks each say something on their own**, such as every header on a response, where seeing all mismatches at once saves reruns.
 
 ```go
 package user_test
 
 import (
     "testing"
-    "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
     "github.com/google/go-cmp/cmp"
 
@@ -43,9 +40,8 @@ func TestUserProcessing(t *testing.T) {
     processedUser := user.Process(u)
 
     // ASSERTIONS
-    // Use 'assert' for simple scalar values
-    assert.Equal(t, "processed", processedUser.Status)
-    assert.True(t, processedUser.IsActive)
+    require.Equal(t, "processed", processedUser.Status)
+    require.True(t, processedUser.IsActive)
 
     // Use 'go-cmp' for complex objects
     // Testify's output for large structs can be unreadable.
@@ -92,12 +88,12 @@ func TestParseURL(t *testing.T) {
 
             if tc.wantErr != "" {
                 require.Error(t, err)
-                assert.Contains(t, err.Error(), tc.wantErr)
+                require.Contains(t, err.Error(), tc.wantErr)
                 return
             }
 
             require.NoError(t, err)
-            assert.Equal(t, tc.want, got)
+            require.Equal(t, tc.want, got)
         })
     }
 }
@@ -112,7 +108,6 @@ import (
     "context"
     "testing"
     "github.com/testcontainers/testcontainers-go/modules/postgres"
-    "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
 )
 
@@ -191,7 +186,7 @@ func TestRegistration(t *testing.T) {
 
     require.NoError(t, svc.Register(t.Context(), "user@example.com"))
 
-    assert.Equal(t, []string{"user@example.com"}, fake.sent)
+    require.Equal(t, []string{"user@example.com"}, fake.sent)
 }
 ```
 
@@ -230,11 +225,11 @@ func TestHandleHealth(t *testing.T) {
 
     // Assert
     res := w.Result()
-    assert.Equal(t, 200, res.StatusCode)
+    require.Equal(t, 200, res.StatusCode)
 
-    // Helper for reading body
-    body, _ := io.ReadAll(res.Body)
-    assert.JSONEq(t, `{"status": "ok"}`, string(body))
+    body, err := io.ReadAll(res.Body)
+    require.NoError(t, err)
+    require.JSONEq(t, `{"status": "ok"}`, string(body))
 }
 ```
 
@@ -242,8 +237,8 @@ func TestHandleHealth(t *testing.T) {
 
 | Tool                | Purpose        | Best Use Case                                   |
 | ------------------- | -------------- | ----------------------------------------------- |
-| **testify/assert**  | Assertions     | 90% of unit tests. Fast, readable.              |
-| **testify/require** | Assertions     | Checking errors/nil before proceeding.          |
+| **testify/require** | Assertions     | The default for every check.                    |
+| **testify/assert**  | Assertions     | Independent checks worth reporting together.    |
 | **google/go-cmp**   | Comparison     | Complex structs, huge slices, map diffs.        |
 | **testcontainers**  | Infrastructure | Database/Cache integration tests.               |
 | **httptest**        | HTTP           | Testing API handlers without starting a server. |

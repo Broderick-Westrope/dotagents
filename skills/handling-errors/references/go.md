@@ -111,7 +111,7 @@ func process(path string) error {
 // Custom error type with additional context
 type ValidationError struct {
     Field string
-    Value interface{}
+    Value any
     Err   error
 }
 
