@@ -18,8 +18,9 @@ requires({
   ],
 })
 
-// Caps on each loop: five DA reviews per approach, three approaches (two
-// rebuilds), and three review passes.
+// Past these caps another round rarely helps: a concern that keeps coming
+// back, or approaches that keep failing, usually means the design doc
+// needs the user.
 const MAX_DA_ROUNDS = 5
 const MAX_APPROACHES = 3
 const MAX_REVIEW_PASSES = 3
