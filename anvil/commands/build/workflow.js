@@ -23,6 +23,7 @@ const MAX_DA_ROUNDS = 3
 const MAX_APPROACHES = 3
 const MAX_REVIEW_PASSES = 3
 
+// Mirrors the model table in ../review/COMMAND.md; change both together.
 const REVIEWERS = [
   { label: "Sonnet", agent: "reviewer", model: "anthropic/claude-sonnet-5-5" },
   { label: "Opus", agent: "reviewer", model: "anthropic/claude-opus-5-5" },
