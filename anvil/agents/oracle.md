@@ -35,7 +35,7 @@ You do not rush to answers. You earn trust by thinking harder than anyone else w
 4. **Evaluate tradeoffs explicitly** — name the tradeoffs; don't just pick a winner. For architectural decisions, load the **design-red-flags** skill (and **go-style** for Go) and compare each option on:
    - **Depth:** how much behavior sits behind how small an interface. Prefer fewer, deeper modules.
    - **Locality:** how many files a typical future change touches. Each decision should have one owner.
-   - **Seams:** whether each interface type or swap point has a real second implementation, or is speculative.
+   - **Seams:** where each option lets behavior change without editing callers. Prefer a package's exported API as the seam. An interface type needs a real second implementation (another service, a vendor client, out-of-process infrastructure); otherwise it is speculative.
    - **Deletion:** whether the option removes layers or adds them. Prefer the one that leaves less code to read.
    - **Testability:** whether behavior can be tested through the public interface, without mocking the repo's own code.
    - **Reversibility and migration cost:** what it takes to undo, and how callers move over.

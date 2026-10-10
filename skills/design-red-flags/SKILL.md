@@ -24,7 +24,7 @@ Sources: Ousterhout's *A Philosophy of Software Design* (depth, information hidi
 | **Shallow module** | The exported surface is about as complex as what it hides. Callers must understand the internals to use it. | Merge it into its caller, or move more of the work behind the interface. |
 | **Pass-through** | A function or type forwards calls to another with the same or nearly the same signature. Deletion test: delete it and the complexity vanishes. | Inline and delete. |
 | **Middle man** | Most methods of a type just delegate to one other type. A pass-through at type scale. | Let callers use the delegate directly. |
-| **Speculative generality** | An interface type with one implementation and no test-only need, a config option nobody sets, a parameter always passed the same value, a hook with no users. | Delete it. Add the seam when the second implementation arrives. |
+| **Speculative generality** | An interface type with one implementation and no test-only need, a config option nobody sets, a parameter always passed the same value, a hook with no users. | Delete it. Add the interface type when the second implementation arrives; until then the package API is the seam. |
 | **God module** | One file or type owns several unrelated concerns, and unrelated changes keep landing in it. A file passing about 1,000 lines is the usual sign. | Split by reason to change, not by size. Each part should have a small surface to the others. |
 
 ## Knowledge in the Wrong Place
