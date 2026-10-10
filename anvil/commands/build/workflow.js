@@ -43,7 +43,7 @@ const Finding = {
 const DAVerdict = {
   type: "object",
   properties: {
-    kind: { enum: ["clean", "changes", "wrong-approach"] },
+    kind: { type: "string", enum: ["clean", "changes", "wrong-approach"] },
     findings: { type: "array", items: Finding },
     lesson: { type: "string" },
   },
@@ -54,11 +54,11 @@ const Lesson = {
   properties: { approach: { type: "string" }, lesson: { type: "string" } },
   required: ["approach", "lesson"],
 }
-const Severity = { enum: ["critical", "important", "minor"] }
+const Severity = { type: "string", enum: ["critical", "important", "minor"] }
 const Findings = {
   type: "object",
   properties: {
-    verdict: { enum: ["approve", "request-changes"] },
+    verdict: { type: "string", enum: ["approve", "request-changes"] },
     findings: {
       type: "array",
       items: {
@@ -85,7 +85,7 @@ const Audit = {
         type: "object",
         properties: {
           id: { type: "string" },
-          verdict: { enum: ["confirmed", "rejected", "duplicate"] },
+          verdict: { type: "string", enum: ["confirmed", "rejected", "duplicate"] },
           severity: Severity,
           reason: { type: "string" },
           duplicateOf: { type: "string" },

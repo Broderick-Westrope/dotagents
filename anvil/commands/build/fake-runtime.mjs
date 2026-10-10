@@ -126,6 +126,7 @@ export function runBuild(sim) {
     daTools: [],
     auditTools: [],
     reviewCalls: [],
+    schemas: [],
     auditPrompts: [],
     asks: [],
     bashes: [],
@@ -174,6 +175,7 @@ export function runBuild(sim) {
       return "ok"
     },
     agent({ agent, prompt, schema, tools, model }) {
+      if (schema) sim.schemas.push(schema)
       if (agent === "devils-advocate") {
         sim.daPrompts.push(prompt)
         sim.daTools.push(tools)
@@ -191,6 +193,7 @@ export function runBuild(sim) {
     parallel({ calls }) {
       sim.reviewPasses = (sim.reviewPasses || 0) + 1
       sim.reviewCalls.push(calls)
+      for (const c of calls) if (c.schema) sim.schemas.push(c.schema)
       return calls.map(c => {
         const out = (sim.reviews || {})[c.agent + " " + c.model] || { verdict: "approve", findings: [] }
         if (out.fail) return { ok: false, error: { message: out.fail } }

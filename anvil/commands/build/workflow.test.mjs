@@ -536,3 +536,21 @@ test("running out of review passes on a stale pass says the work changed, not th
     assert.doesNotMatch(lastAsk(sim), /still requests changes/)
   }
 })
+
+test("every enum in the output schemas is typed as a string", () => {
+  const sim = {
+    da: ["clean"],
+    reviews: { [SONNET]: { verdict: "request-changes", findings: [{ severity: "important", title: "bug" }] } },
+    audit: { dispositions: [{ id: "sonnet-1", verdict: "rejected", reason: "no" }] },
+  }
+  mustSucceed(runBuild(sim))
+  const enums = []
+  const walk = node => {
+    if (!node || typeof node !== "object") return
+    if (node.enum) enums.push(node)
+    Object.values(node).forEach(walk)
+  }
+  sim.schemas.forEach(walk)
+  assert.ok(enums.length >= 5, "found " + enums.length + " enums")
+  for (const e of enums) assert.equal(e.type, "string", JSON.stringify(e))
+})
