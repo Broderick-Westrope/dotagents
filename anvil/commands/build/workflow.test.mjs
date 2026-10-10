@@ -554,3 +554,11 @@ test("every enum in the output schemas is typed as a string", () => {
   assert.ok(enums.length >= 5, "found " + enums.length + " enums")
   for (const e of enums) assert.equal(e.type, "string", JSON.stringify(e))
 })
+
+test("refining checks the whole diff against the red flags in codebase-design", () => {
+  const sim = { da: ["changes", "clean"] }
+  mustSucceed(runBuild(sim))
+  const refine = sim.turns.find(t => t.prompt.includes("f-changes-1"))
+  assert.ok(refine, "the builder must get the DA's findings")
+  assert.match(refine.prompt, /red flags in \*\*codebase-design\*\*/)
+})
