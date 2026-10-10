@@ -10,7 +10,7 @@ The builder's note on what it assumed and decided:
 {{note}}
 </build_note>
 
-Judge the current version on its own. Attack the assumptions in the note and the ones the diff hides. Check that the change does what the design doc asks and nothing it rules out. Don't edit anything.
+Judge the current version on its own. Attack the assumptions in the note and the ones the diff hides. Check that the change does what the design doc asks and nothing it rules out. If the change includes database migrations, protobuf or public API contracts, or spans several services, focus on reversibility and rollout order. Don't edit anything.
 
 Finish by calling `submit_result` with:
 

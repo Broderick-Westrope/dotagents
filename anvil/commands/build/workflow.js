@@ -3,6 +3,7 @@ requires({
   agents: ["devils-advocate", "reviewer", "convention-reviewer"],
   references: [
     "references/test-driven-development.md",
+    "references/boundaries.md",
     "references/build.md",
     "references/da.md",
     "references/refine.md",
@@ -115,25 +116,33 @@ function main(input) {
     // be handed the rejected approach's note if the new builder forgets one.
     ctx.note = workflow.tmpdir() + "/build-note-approach-" + approach + ".md"
     status("build", "approach " + approach + "/" + MAX_APPROACHES)
-    builder.turn(fill("references/build.md", ctx))
+    tell(builder, fill("references/build.md", ctx))
     ensureNote(builder, ctx)
 
     let verdict
     for (let round = 1; ; round++) {
       status("devils-advocate", "approach " + approach + ", round " + round + "/" + MAX_DA_ROUNDS)
+      // The DA reads the committed diff, so its verdict only covers work
+      // that's committed and unchanged while it looked.
+      requireCommitted(builder, ctx)
+      const reviewedHead = head(ctx)
       // The DA sees only the doc, the note and the base branch: no
       // earlier rounds, no conversation with the builder.
       verdict = agent("devils-advocate",
         fill("references/da.md", Object.assign({}, ctx, { note: readFile(ctx.note) })),
         { schema: DAVerdict })
-      if (verdict.kind !== "changes") break
+      const stale = !unchangedSince(ctx, reviewedHead)
+      if (!stale && verdict.kind !== "changes") break
       if (round === MAX_DA_ROUNDS) {
+        const why = stale ? "The work changed while the devil's advocate was reviewing it, so its last verdict doesn't count."
+          : "Latest findings:\n\n" + formatFindings(verdict.findings)
         return ask("The devil's advocate is still objecting after " + MAX_DA_ROUNDS +
-          " reviews of this approach. Latest findings:\n\n" + formatFindings(verdict.findings) +
+          " reviews of this approach. " + why +
           "\n\nThe work is on " + ctx.branch + " at " + ctx.worktree + ".", { options: ["ok"] })
       }
+      if (stale) continue
       status("refine", "approach " + approach + ", round " + round)
-      builder.turn(fill("references/refine.md", Object.assign({}, ctx, { findings: formatFindings(verdict.findings) })))
+      tell(builder, fill("references/refine.md", Object.assign({}, ctx, { findings: formatFindings(verdict.findings) })))
       ensureNote(builder, ctx)
     }
     if (verdict.kind === "clean") return finish(builder, ctx)
@@ -141,7 +150,7 @@ function main(input) {
     // The approach is wrong: record what it taught, then rebuild from the
     // base in a fresh session so the next builder isn't anchored to it.
     status("rebuild", "approach " + approach + " was judged wrong")
-    lessons.push(builder.turn(fill("references/lesson.md",
+    lessons.push(tell(builder, fill("references/lesson.md",
       Object.assign({}, ctx, { verdict: verdict.lesson || formatFindings(verdict.findings) })), { schema: Lesson }))
     if (approach === MAX_APPROACHES) break
     // Removal and recreation happen in one hold, so nothing the user
@@ -194,11 +203,11 @@ function rebuildWorktree(ctx, keptAs) {
 
 function finish(builder, ctx) {
   status("exercise", "verifying locally")
-  builder.turn(fill("references/exercise.md", ctx), { skills: ["verification-before-completion"] })
+  tell(builder, fill("references/exercise.md", ctx), { skills: ["verification-before-completion"] })
   const failed = review(builder, ctx)
   if (failed === null) return
   status("hand over", ctx.branch)
-  const description = builder.turn(fill("references/handover.md", ctx))
+  const description = tell(builder, fill("references/handover.md", ctx))
   let message = "Ready for your review.\n\n"
   if (failed.length > 0) message += "These reviews didn't complete: " + failed.join(", ") + "\n\n"
   message += "Worktree: " + ctx.worktree + "\nBranch: " + ctx.branch +
@@ -262,7 +271,7 @@ function review(builder, ctx) {
 
     status("fix", blocking.length + " confirmed findings")
     // The builder only ever sees audited findings.
-    builder.turn(fill("references/fix.md", Object.assign({}, ctx, { findings: JSON.stringify(blocking, null, 2) })))
+    tell(builder, fill("references/fix.md", Object.assign({}, ctx, { findings: JSON.stringify(blocking, null, 2) })))
   }
   ask("Review still requests changes after " + MAX_REVIEW_PASSES + " passes. The work is on " +
     ctx.branch + " at " + ctx.worktree + ".", { options: ["ok"] })
@@ -275,7 +284,7 @@ function requireCommitted(builder, ctx) {
   const uncommitted = () => bash("git status --porcelain", { cwd: ctx.worktree }).stdout.trim()
   let dirty = uncommitted()
   if (!dirty) return
-  builder.turn("These files in `" + ctx.worktree + "` aren't committed, so review wouldn't see them:\n" + dirty +
+  tell(builder, "These files in `" + ctx.worktree + "` aren't committed, so review wouldn't see them:\n" + dirty +
     "\n\nCommit the ones that belong to the change and remove the rest, then reply.")
   dirty = uncommitted()
   if (!dirty) return
@@ -391,8 +400,14 @@ function createWorktree(ctx) {
 
 function ensureNote(builder, ctx) {
   if (bash("test -s " + q(ctx.note), { check: false }).exitCode === 0) return
-  builder.turn("You didn't write the build note. Write it now to `" + ctx.note + "`, covering assumptions, decisions, rejected options, unsure and verified.")
+  tell(builder, "You didn't write the build note. Write it now to `" + ctx.note + "`, covering assumptions, decisions, rejected options, unsure and verified.")
   readFile(ctx.note)
+}
+
+// tell sends the builder a turn with the build's boundaries attached, so
+// they survive compaction and reach every session, including rebuilds.
+function tell(builder, prompt, opts) {
+  return builder.turn(prompt + "\n\n" + reference("references/boundaries.md"), opts)
 }
 
 // fill reads a reference and replaces {{name}} placeholders from vars.

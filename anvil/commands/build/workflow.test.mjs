@@ -254,10 +254,40 @@ test("work that stays uncommitted stops before review when the user says stop", 
 test("a change to HEAD during review is reviewed again before hand-over", () => {
   const sim = {
     da: ["clean"],
-    heads: 0,
-    bashFn: cmd => (cmd === "git rev-parse HEAD" ? { stdout: (sim.heads++ === 0 ? "abc" : "def") + "\n" } : undefined),
+    // HEAD moves once the first code review pass has started.
+    bashFn: cmd => (cmd === "git rev-parse HEAD" ? { stdout: (sim.reviewPasses ? "def" : "abc") + "\n" } : undefined),
   }
   mustSucceed(runBuild(sim))
   assert.equal(sim.reviewPasses, 2)
   assert.match(lastAsk(sim), /Ready for your review/)
+})
+
+test("every builder turn carries the publication and deployment boundaries", () => {
+  const sim = {
+    da: ["changes", "wrong-approach", "clean"],
+    reviews: { [SONNET]: { verdict: "request-changes", findings: [{ severity: "important", title: "bug" }] } },
+    audit: { dispositions: [{ id: "sonnet-1", verdict: "confirmed", severity: "important", reason: "yes" }] },
+  }
+  runBuild(sim)
+  assert.ok(sim.turns.length > 4)
+  for (const t of sim.turns) {
+    assert.match(t.prompt, /Don't push, merge or open a pull request/, "turn without boundaries: " + t.prompt.slice(0, 80))
+    assert.match(t.prompt, /shared environment/)
+  }
+})
+
+test("the DA only reviews committed work and re-reviews if HEAD moves", () => {
+  const sim = {
+    da: ["clean", "clean"],
+    heads: 0,
+    bashFn: (cmd, n) => {
+      if (cmd === "git status --porcelain" && n === 0) return { stdout: " M wip.go\n" }
+      if (cmd === "git rev-parse HEAD") return { stdout: (sim.heads++ === 0 ? "abc" : "def") + "\n" }
+      return undefined
+    },
+  }
+  mustSucceed(runBuild(sim))
+  const commitIdx = sim.turns.findIndex(t => t.prompt.includes("wip.go"))
+  assert.ok(commitIdx >= 0, "builder must commit before the DA")
+  assert.equal(sim.daPrompts.length, 2, "a HEAD change during the DA review means another DA round")
 })
