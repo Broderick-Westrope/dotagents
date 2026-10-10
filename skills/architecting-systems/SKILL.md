@@ -21,6 +21,8 @@ Load the relevant reference based on what you're working on:
 
 Load multiple references when the task spans topics. For most greenfield work, start with **Structure** and **Coupling**.
 
+When choosing between structures, compare the options using Comparing Designs in the **codebase-design** skill, and screen each against its red flags.
+
 ---
 
 ## Core Principles (All Topics)

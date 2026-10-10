@@ -50,14 +50,7 @@ test('sets error state', () => {
 
 ### Phase 3: Identify Issues
 
-| Issue | Indicators | Fix |
-|-------|------------|-----|
-| Mixed concerns | A switch or if/else chain that gains a case per feature; two booleans kept in sync | Change the shape: lookup table, state machine, or typed model |
-| Pass-through layers | Wrappers with one caller that add nothing; the deletion test makes complexity vanish | Inline and delete |
-| Shallow module | Exported surface about as complex as what it hides | Merge into its caller or deepen the module |
-| Duplication | The same logic with the same meaning in 3+ places | Extract one concept |
-| Poor naming | `x`, `data`, `temp` | Rename to intent |
-| Type gaps | `any` types, assertions | Add proper types |
+Load the **codebase-design** skill and check the target against its red flags (pass-throughs, shallow modules, growing switches, duplicated concepts, information leakage and the rest). Name each issue by flag, with `file:line`. Beyond structure, also look for names that don't say what a thing is (`x`, `data`, `temp`) and type gaps (`any`, unchecked assertions).
 
 Length alone is not an issue. A long function that reads top to bottom as one concern stays inline. **Inline small steps, extract concepts.** For language-specific rules, load the matching style skill (e.g. **go-style**).
 
@@ -89,14 +82,12 @@ Length alone is not an issue. A long function that reads top to bottom as one co
 
 ## Quick Reference
 
+Structural smells and their fixes live in **codebase-design**. Local ones:
+
 | Smell | Refactoring |
 |-------|-------------|
-| Growing switch over types | Lookup table or state machine |
-| One-caller wrapper | Inline it |
-| Duplicate concept (3+ places) | Extract one function or type |
 | Deep nesting | Early returns, guard clauses |
 | Magic numbers | Named constants |
-| Large component doing several jobs | Split along reasons to change |
 | Long parameter list | Parameter object |
 
 ## When to Stop
