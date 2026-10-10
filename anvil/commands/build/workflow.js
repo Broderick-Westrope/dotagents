@@ -170,7 +170,12 @@ function rebuildWorktree(ctx, keptAs) {
     }
     bash("git update-ref " + q(keptAs) + " " + q(ctx.branch), { cwd: ctx.root })
     bash("wtp remove --force --force-branch " + q(ctx.branch), { cwd: ctx.root })
-    ctx.worktree = createWorktree(ctx)
+    try {
+      ctx.worktree = createWorktree(ctx)
+    } catch (e) {
+      throw new Error("couldn't recreate the worktree for " + ctx.branch + " (" + (e.stderr || e.message).trim() +
+        "); the previous attempt is kept at " + keptAs)
+    }
   }
   try {
     workflow.exclusive(transition)

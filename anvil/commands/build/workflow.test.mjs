@@ -193,8 +193,8 @@ test("a failed worktree recreation fails the run instead of building on", () => 
     bashFn: (cmd, n) => (cmd.startsWith("wtp add") && n === 1 ? { exitCode: 1, stderr: "boom" } : undefined),
   }
   const { error } = runBuild(sim)
-  assert.equal(error?.name, "BashError")
-  assert.equal(error.exitCode, 1)
+  assert.match(error?.message ?? "", /refs\/build-attempts\/feat\/[^ ]+\/1/, "the error must say where the old work is kept")
+  assert.match(error.message, /boom/)
   assert.equal(sim.newSessions.length, 0)
   assert.equal(sim.daPrompts.length, 1)
   assert.equal(sim.da.length, 1, "no further DA round")
