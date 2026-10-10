@@ -122,6 +122,9 @@ export function runBuild(sim) {
     tmp,
     note,
     daPrompts: [],
+    daTools: [],
+    auditTools: [],
+    reviewCalls: [],
     auditPrompts: [],
     asks: [],
     bashes: [],
@@ -172,18 +175,21 @@ export function runBuild(sim) {
     agent({ agent, prompt, schema, tools, model }) {
       if (agent === "devils-advocate") {
         sim.daPrompts.push(prompt)
+        sim.daTools.push(tools)
         if (sim.da.length === 0) throw new Error("unexpected DA call")
         const kind = sim.da.shift()
         return { kind, findings: [{ summary: "f-" + kind + "-" + sim.daPrompts.length }], lesson: "L" }
       }
       if (tools) {
         sim.auditPrompts.push(prompt)
+        sim.auditTools.push(tools)
         return typeof sim.audit === "function" ? sim.audit(sim.auditPrompts.length) : sim.audit
       }
       throw new Error("unexpected agent call: " + agent + " " + model)
     },
     parallel({ calls }) {
       sim.reviewPasses = (sim.reviewPasses || 0) + 1
+      sim.reviewCalls.push(calls)
       return calls.map(c => {
         const out = (sim.reviews || {})[c.agent + " " + c.model] || { verdict: "approve", findings: [] }
         if (out.fail) return { ok: false, error: { message: out.fail } }

@@ -28,7 +28,8 @@ const REVIEWERS = [
   { label: "Opus", agent: "reviewer", model: "anthropic/claude-opus-5-5" },
   { label: "Convention", agent: "convention-reviewer", model: "anthropic/claude-opus-5-5" },
 ]
-const READ_ONLY = ["glob", "grep", "ls", "view", "bash"]
+// Bash is there for git; it isn't read-only.
+const REVIEW_TOOLS = ["glob", "grep", "ls", "view", "bash"]
 
 const Finding = {
   type: "object",
@@ -130,7 +131,7 @@ function main(input) {
       // earlier rounds, no conversation with the builder.
       verdict = agent("devils-advocate",
         fill("references/da.md", Object.assign({}, ctx, { note: readFile(ctx.note) })),
-        { schema: DAVerdict })
+        { schema: DAVerdict, tools: REVIEW_TOOLS })
       const stale = !unchangedSince(ctx, reviewedHead)
       if (!stale && verdict.kind !== "changes") break
       if (round === MAX_DA_ROUNDS) {
@@ -233,7 +234,7 @@ function review(builder, ctx) {
     const reviewedHead = head(ctx)
     const prompt = fill("references/review.md", ctx)
     const results = parallel(REVIEWERS.map(r =>
-      ({ agent: r.agent, model: r.model, prompt, schema: Findings })))
+      ({ agent: r.agent, model: r.model, prompt, schema: Findings, tools: REVIEW_TOOLS })))
     // A reviewer that requests changes without a blocking finding gave
     // no usable review, so it counts as failed rather than as approval.
     results.forEach((r, i) => {
@@ -316,7 +317,7 @@ function runAudit(ctx, raw) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     const audit = agent("reviewer",
       problem ? prompt + "\n\nA previous audit of these findings was rejected: " + problem + ". Avoid that." : prompt,
-      { schema: Audit, tools: READ_ONLY })
+      { schema: Audit, tools: REVIEW_TOOLS })
     try {
       requireValidAudit(raw, audit.dispositions)
       return audit

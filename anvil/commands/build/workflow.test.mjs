@@ -484,3 +484,17 @@ test("the discard question lists at most 40 files and counts the rest", () => {
   assert.match(exactAsk, /ignored-40\.log\n\n/)
   assert.doesNotMatch(exactAsk, /more/)
 })
+
+test("the DA, the reviewers and the auditor only get the review tools", () => {
+  const tools = ["glob", "grep", "ls", "view", "bash"]
+  const sim = {
+    da: ["changes", "clean"],
+    reviews: { [SONNET]: { verdict: "request-changes", findings: [{ severity: "important", title: "bug" }] } },
+    audit: { dispositions: [{ id: "sonnet-1", verdict: "rejected", reason: "no" }] },
+  }
+  mustSucceed(runBuild(sim))
+  assert.deepEqual(sim.daTools, [tools, tools])
+  assert.equal(sim.reviewCalls.length, 1)
+  assert.deepEqual(sim.reviewCalls[0].map(c => c.tools), [tools, tools, tools])
+  assert.deepEqual(sim.auditTools, [tools])
+})
