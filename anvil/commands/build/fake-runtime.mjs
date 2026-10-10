@@ -150,6 +150,7 @@ export function runBuild(sim) {
       throw new Error("unexpected agent call: " + agent + " " + model)
     },
     parallel({ calls }) {
+      sim.reviewPasses = (sim.reviewPasses || 0) + 1
       return calls.map(c => {
         const out = (sim.reviews || {})[c.agent + " " + c.model] || { verdict: "approve", findings: [] }
         if (out.fail) return { ok: false, error: { message: out.fail } }
@@ -238,6 +239,8 @@ function defaultBash(sim, cmd) {
     const file = cmd.slice("test -s ".length).replace(/^'|'$/g, "")
     return { exitCode: fs.existsSync(file) && fs.statSync(file).size > 0 ? 0 : 1 }
   }
-  if (starts("git status --porcelain")) return { stdout: sim.status || "" }
+  if (starts("git status --porcelain --ignored")) return { stdout: sim.status || "" }
+  if (starts("git status --porcelain")) return { stdout: "" }
+  if (starts("git rev-parse HEAD")) return { stdout: "abc123\n" }
   return {}
 }

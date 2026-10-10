@@ -167,7 +167,7 @@ function rebuildWorktree(ctx, keptAs) {
   const transition = () => {
     const dirty = bash("git status --porcelain --ignored", { cwd: ctx.worktree }).stdout.trim()
     if (dirty && ask("Rebuilding discards uncommitted and ignored files in " + ctx.worktree + ":\n" + dirty +
-      "\n\nCommitted work is kept at " + keptAs + ".", { options: ["discard", "stop"] }) === "stop") {
+      "\n\nCommitted work is kept at " + keptAs + ".", { options: ["stop", "discard"] }) === "stop") {
       throw new Error("stopped before rebuild; " + ctx.worktree + " is untouched")
     }
     bash("git update-ref " + q(keptAs) + " " + q(ctx.branch), { cwd: ctx.root })
@@ -215,6 +215,10 @@ function finish(builder, ctx) {
 function review(builder, ctx) {
   for (let pass = 1; pass <= MAX_REVIEW_PASSES; pass++) {
     status("review", "pass " + pass + "/" + MAX_REVIEW_PASSES)
+    // Reviewers read the committed diff, so the review only covers the work
+    // if it's all committed and HEAD is where it was when they looked.
+    requireCommitted(builder, ctx)
+    const reviewedHead = head(ctx)
     const prompt = fill("references/review.md", ctx)
     const results = parallel(REVIEWERS.map(r =>
       ({ agent: r.agent, model: r.model, prompt, schema: Findings })))
@@ -240,7 +244,10 @@ function review(builder, ctx) {
         // can't overwrite them and collapse two findings into one.
         raw.push(Object.assign({}, f, { id: REVIEWERS[i].label.toLowerCase() + "-" + (j + 1), reviewer: REVIEWERS[i].label })))
     })
-    if (raw.length === 0) return failed
+    if (raw.length === 0) {
+      if (unchangedSince(ctx, reviewedHead)) return failed
+      continue
+    }
 
     status("audit", raw.length + " findings")
     const audit = runAudit(ctx, raw)
@@ -248,7 +255,10 @@ function review(builder, ctx) {
     const blocking = audit.dispositions
       .filter(d => d.verdict === "confirmed" && d.severity !== "minor")
       .map(d => Object.assign({}, byId[d.id], { severity: d.severity, audit: d.reason }))
-    if (blocking.length === 0) return failed
+    if (blocking.length === 0) {
+      if (unchangedSince(ctx, reviewedHead)) return failed
+      continue
+    }
 
     status("fix", blocking.length + " confirmed findings")
     // The builder only ever sees audited findings.
@@ -257,6 +267,33 @@ function review(builder, ctx) {
   ask("Review still requests changes after " + MAX_REVIEW_PASSES + " passes. The work is on " +
     ctx.branch + " at " + ctx.worktree + ".", { options: ["ok"] })
   return null
+}
+
+// requireCommitted makes sure everything in the worktree is committed,
+// asking the builder and then the user before giving up.
+function requireCommitted(builder, ctx) {
+  const uncommitted = () => bash("git status --porcelain", { cwd: ctx.worktree }).stdout.trim()
+  let dirty = uncommitted()
+  if (!dirty) return
+  builder.turn("These files in `" + ctx.worktree + "` aren't committed, so review wouldn't see them:\n" + dirty +
+    "\n\nCommit the ones that belong to the change and remove the rest, then reply.")
+  dirty = uncommitted()
+  if (!dirty) return
+  if (ask("Review only sees committed work, and " + ctx.worktree + " still has uncommitted changes:\n" + dirty,
+    { options: ["I've committed them", "stop"] }) === "stop") {
+    throw new Error("stopped before review: uncommitted changes in " + ctx.worktree)
+  }
+  if (uncommitted()) throw new Error("stopped before review: " + ctx.worktree + " still has uncommitted changes")
+}
+
+function head(ctx) {
+  return bash("git rev-parse HEAD", { cwd: ctx.worktree }).stdout.trim()
+}
+
+// unchangedSince reports whether the worktree is still exactly what was
+// reviewed: same HEAD, nothing uncommitted.
+function unchangedSince(ctx, reviewedHead) {
+  return head(ctx) === reviewedHead && bash("git status --porcelain", { cwd: ctx.worktree }).stdout.trim() === ""
 }
 
 // runAudit asks a fresh auditor to dispose of every finding, retrying once

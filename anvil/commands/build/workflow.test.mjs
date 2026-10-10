@@ -168,7 +168,7 @@ test("the DA reads a design-doc snapshot, not the original, and lessons stay out
 test("the rebuild status check counts ignored files", () => {
   const sim = { da: ["wrong-approach", "clean"] }
   mustSucceed(runBuild(sim))
-  const checks = ran(sim, "git status --porcelain")
+  const checks = ran(sim, "git status --porcelain").filter(b => b.inHold)
   assert.equal(checks.length, 1)
   assert.equal(checks[0].cmd, "git status --porcelain --ignored")
 })
@@ -226,4 +226,38 @@ test("a rebuilt approach's DA never gets the rejected approach's note", () => {
   const first = sim.daPrompts[0].match(/NOTE from turn \d+/)[0]
   assert.ok(!sim.daPrompts[1].includes(first), "the second DA saw the first approach's note")
   assert.match(sim.daPrompts[1], /NOTE from turn \d+/)
+})
+
+test("uncommitted work is committed by the builder before review", () => {
+  const sim = {
+    da: ["clean"],
+    bashFn: (cmd, n) => (cmd === "git status --porcelain" && n === 0 ? { stdout: " M a.go\n" } : undefined),
+  }
+  mustSucceed(runBuild(sim))
+  const commitTurn = sim.turns.find(t => /commit/i.test(t.prompt) && t.prompt.includes("a.go"))
+  assert.ok(commitTurn, "the builder must be asked to commit the uncommitted files")
+  assert.equal(sim.reviewPasses, 1)
+  assert.match(lastAsk(sim), /Ready for your review/)
+})
+
+test("work that stays uncommitted stops before review when the user says stop", () => {
+  const sim = {
+    da: ["clean"],
+    bashFn: cmd => (cmd === "git status --porcelain" ? { stdout: " M a.go\n" } : undefined),
+    answer: (q, options) => (options.includes("stop") ? "stop" : options[0]),
+  }
+  const { error } = runBuild(sim)
+  assert.match(error?.message ?? "", /uncommitted/)
+  assert.equal(sim.reviewPasses ?? 0, 0)
+})
+
+test("a change to HEAD during review is reviewed again before hand-over", () => {
+  const sim = {
+    da: ["clean"],
+    heads: 0,
+    bashFn: cmd => (cmd === "git rev-parse HEAD" ? { stdout: (sim.heads++ === 0 ? "abc" : "def") + "\n" } : undefined),
+  }
+  mustSucceed(runBuild(sim))
+  assert.equal(sim.reviewPasses, 2)
+  assert.match(lastAsk(sim), /Ready for your review/)
 })
