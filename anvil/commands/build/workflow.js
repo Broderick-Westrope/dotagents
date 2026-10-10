@@ -129,9 +129,7 @@ function main(input) {
       const reviewedHead = head(ctx)
       // The DA sees only the doc, the note and the base branch: no
       // earlier rounds, no conversation with the builder.
-      verdict = agent("devils-advocate",
-        fill("references/da.md", Object.assign({}, ctx, { note: readFile(ctx.note) })),
-        { schema: DAVerdict })
+      verdict = runDA(ctx)
       const stale = !unchangedSince(ctx, reviewedHead)
       if (!stale && verdict.kind === "wrong-approach") break
       // A clean verdict only counts once a cleanup pass leaves the work
@@ -180,6 +178,20 @@ function main(input) {
   ask("Two rebuilds without a clean devil's advocate review. What each approach taught:\n\n" +
     formatLessons(lessons) + "\n\nThe design doc likely needs revisiting.", { options: ["ok"] })
   throw new Error("no approach passed the devil's advocate after two rebuilds")
+}
+
+// runDA asks a fresh devil's advocate for a verdict, retrying once if the
+// call fails, since one malformed answer shouldn't end the build.
+function runDA(ctx) {
+  const prompt = fill("references/da.md", Object.assign({}, ctx, { note: readFile(ctx.note) }))
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return agent("devils-advocate", prompt, { schema: DAVerdict })
+    } catch (e) {
+      if (e instanceof Cancelled) throw e
+      if (attempt === 2) throw new Error("the devil's advocate failed twice: " + e.message)
+    }
+  }
 }
 
 // rebuildWorktree removes the worktree and recreates it from the base in

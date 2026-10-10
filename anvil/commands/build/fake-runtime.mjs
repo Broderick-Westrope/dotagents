@@ -99,6 +99,7 @@ class Fail {
 // runBuild runs workflow.js against sim and records every primitive call
 // on it. sim may set:
 //   da:        DA verdict kinds to return, in order
+//   daErrors:  per DA call, {name, message} to fail it with, or null
 //   reviews:   reviewer output keyed by "agent model"; {fail: msg} fails it
 //   audit:     the audit agent's output, or n => output for the nth audit
 //   status:    stdout of `git status --porcelain --ignored`
@@ -179,6 +180,8 @@ export function runBuild(sim) {
       if (agent === "devils-advocate") {
         sim.daPrompts.push(prompt)
         sim.daTools.push(tools)
+        const err = sim.daErrors && sim.daErrors.shift()
+        if (err) throw new Fail(err.name, err.message)
         if (sim.da.length === 0) throw new Error("unexpected DA call")
         const kind = sim.da.shift()
         return { kind, findings: [{ summary: "f-" + kind + "-" + sim.daPrompts.length }], lesson: "L" }

@@ -620,3 +620,27 @@ test("cleanups that keep changing the work count toward the DA cap", () => {
   assert.equal(sim.reviewPasses ?? 0, 0)
   assert.match(lastAsk(sim), /cleanup pass after its last of 5 reviews changed the work/)
 })
+
+test("a DA call that fails is retried once", () => {
+  for (const name of ["SchemaError", "Error"]) {
+    const sim = { da: ["clean"], daErrors: [{ name, message: "bad output" }] }
+    mustSucceed(runBuild(sim))
+    assert.equal(sim.daPrompts.length, 2, name)
+    assert.equal(sim.daPrompts[1], sim.daPrompts[0], name)
+  }
+})
+
+test("a DA call that fails twice fails the run", () => {
+  const sim = { da: ["clean"], daErrors: [{ name: "SchemaError", message: "one" }, { name: "SchemaError", message: "two" }] }
+  const { error } = runBuild(sim)
+  assert.equal(error?.message, "the devil's advocate failed twice: two")
+  assert.equal(sim.daPrompts.length, 2)
+  assert.equal(sim.reviewPasses ?? 0, 0)
+})
+
+test("a cancelled DA call is not retried", () => {
+  const sim = { da: ["clean"], daErrors: [{ name: "Cancelled", message: "cancelled" }] }
+  const { error } = runBuild(sim)
+  assert.equal(error?.name, "Cancelled")
+  assert.equal(sim.daPrompts.length, 1)
+})

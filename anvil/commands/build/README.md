@@ -30,6 +30,7 @@ Build first, then challenge the diff. An early version answers open questions fa
 - The DA reads a snapshot of the design doc taken when the run starts, so nothing written to the doc later (including lessons) reaches it.
 - Each approach has its own note file, so a rebuilt approach's DA never reads the rejected one's note.
 - Every round is a fresh agent that sees only the doc, the current note and the base branch: no earlier findings and no round number.
+- A DA call that fails (for example with output that doesn't match its schema) is retried once with the same prompt before the run fails. A retry doesn't count as a round.
 
 ## Committed-state gates
 
