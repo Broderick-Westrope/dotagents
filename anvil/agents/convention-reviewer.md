@@ -85,9 +85,9 @@ You are a convention compliance reviewer. Your job is to ensure code changes fol
 - No comments about other repos, TSDs, plan files, ticket history, legacy versions, or whether code was generated or hand-written. Ticket IDs appear only in TODOs.
 
 **Abstraction**
-- A function with fewer than three non-test call sites is inlined. RPC and HTTP handlers, methods that satisfy an interface, and entry points are exempt.
+- Small steps are inlined. A new function is extracted only for a concept: it protects an invariant, names a domain concept, hides a decision likely to change, is a seam a test needs, or holds the same logic in three or more places. Length alone is not a reason to extract. RPC and HTTP handlers, methods that satisfy an interface, and entry points are exempt. In Go, `go-style` has the full rule.
 - No file holding a single small function, and no variable that only renames another.
-- No interface with one implementation, no opt-in flag or staged rollout where a clean cutover works, and no config for a value that should be a constant with an early error.
+- No interface type with one implementation, unless it sits at a real seam: another service, a vendor client, or out-of-process infrastructure that tests fake because the real one can't run there. No opt-in flag or staged rollout where a clean cutover works, and no config for a value that should be a constant with an early error.
 
 **Prior art**
 - Every new kind of file, pattern, dependency or mechanism has at least two existing instances in the repo or a sibling org repo. Search with muninn. If there are none, flag it and name the closest prior art.
