@@ -128,7 +128,7 @@ When the user is still figuring out what to build, help them converge on a direc
 
 **Design for isolation and clarity:**
 
-- Break the system into smaller units that each have one clear purpose, communicate through well-defined interfaces, and can be understood and tested independently
+- Break the system into smaller units that each have one clear purpose, communicate through well-defined surfaces, and can be understood and tested independently
 - For each unit, answer: what does it do, how do you use it, and what does it depend on?
 - Can someone understand what a unit does without reading its internals? Can the internals change without breaking consumers? If not, the boundaries need work.
 - Smaller, well-bounded units are also easier to work with — reasoning is better about code that fits in context at once, and edits are more reliable when files are focused. When a file grows large, that is often a signal that it is doing too much.

@@ -23,14 +23,14 @@ If you find another conflict, follow the higher rule and always tell the user. A
 
 ## Vocabulary
 
-The design terms (module, interface, interface type, deep, shallow, seam, deletion test) are defined in the **codebase-design** skill. In Go they map to:
+The design terms (module, surface, interface type, deep, shallow, seam, deletion test) are defined in the **codebase-design** skill. In Go they map to:
 
 | Term | In Go |
 |---|---|
 | **Module** | A package. (Not a Go module from `go.mod`.) |
-| **Interface** | A package's exported API: its identifiers plus their behavior, error modes, ordering rules, and invariants. |
+| **Surface** | A package's exported API: its identifiers plus their behavior, error modes, ordering rules, and invariants. |
 | **Interface type** | A Go `interface { ... }` declaration. A separate decision, covered below. |
-| **Seam** | By default, a package's exported API. |
+| **Seam** | By default, a package's surface. |
 
 ## Packages
 

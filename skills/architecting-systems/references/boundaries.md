@@ -6,7 +6,7 @@ Good boundaries are the difference between a system where teams can work indepen
 
 Different parts of your system mean different things by the same words. A "User" in auth is credentials and sessions. A "User" in billing is payment methods and invoices. A "User" in social is profiles and connections.
 
-These should be separate models, not one god object that grows every field any consumer needs. In practice, bounded contexts become separate modules (or services) with their own types, storage, and logic. Communication between contexts happens through explicit interfaces or events, not shared database tables or direct imports.
+These should be separate models, not one god object that grows every field any consumer needs. In practice, bounded contexts become separate modules (or services) with their own types, storage, and logic. Communication between contexts happens through explicit surfaces or events, not shared database tables or direct imports.
 
 **How to identify boundaries:** If two parts of the system change for different business reasons, they belong in different contexts. If a change in one area frequently breaks another, the boundary is missing or leaking.
 

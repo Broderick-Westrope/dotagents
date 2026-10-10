@@ -2,9 +2,9 @@
 
 Coupling is the #1 cause of systems becoming painful at scale. Every unnecessary dependency between modules is a future coordination problem.
 
-## Deep Modules, Small Interfaces
+## Deep Modules, Small Surfaces
 
-Aim for deep modules behind small interfaces, and apply the deletion test to every layer. The terms and the test are defined in the **codebase-design** skill.
+Aim for deep modules behind small surfaces, and apply the deletion test to every layer. The terms and the test are defined in the **codebase-design** skill.
 
 ## When to Declare an Abstraction
 
@@ -14,7 +14,7 @@ Declare an interface type (or protocol, or abstract class) only at a real seam. 
 |---|---|
 | Your own modules calling each other | No. Call them directly. |
 | The database | No. Test against a real one. |
-| Other services, vendor APIs | Yes. A small client interface you can fake. |
+| Other services, vendor APIs | Yes. A small client interface type you can fake. |
 | Infrastructure outside the process (pubsub, clock, flags) | Yes. |
 | "We might swap it later" | No. Add it when the second implementation arrives. |
 
@@ -24,7 +24,7 @@ class OrderService {
   constructor(private payments: PaymentsClient) {}
 }
 
-// Own storage: no repository interface just for mocking
+// Own storage: no repository interface type just for mocking
 class OrderService {
   constructor(private db: Database) {} // real test DB in tests
 }
@@ -32,9 +32,9 @@ class OrderService {
 
 ## Boundaries Through Contracts
 
-Modules communicate through explicit, stable interfaces. Internal implementation details stay internal.
+Modules communicate through explicit, stable surfaces. Internal implementation details stay internal.
 
-- **Public API per module:** Each module exports a clear interface. No deep imports into another module's internals.
+- **Public API per module:** Each module exports a clear surface. No deep imports into another module's internals.
 - **Enforce boundary direction:** Shared packages never import from app code. Feature modules don't import from each other directly.
 - **Anti-corruption layers:** When integrating with external systems or messy legacy code, translate at the boundary. Don't let external data shapes infect your domain.
 
@@ -51,7 +51,7 @@ Choose the loosest coupling level that still makes the code readable and debugga
 
 ## The Dependency Rule
 
-Dependencies point inward. Business logic never imports infrastructure details like HTTP handlers or UI. Where business logic needs an external system (a vendor API, another service), it defines the small interface it needs and infrastructure provides it.
+Dependencies point inward. Business logic never imports infrastructure details like HTTP handlers or UI. Where business logic needs an external system (a vendor API, another service), it defines the small interface type it needs and infrastructure provides it.
 
 ```ts
 // Domain defines what it needs from the vendor

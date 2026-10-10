@@ -6,7 +6,7 @@ unlisted: true
 
 # Surveying Architecture
 
-A survey finds where the structure of existing code is costing the most, and ranks it. It is not a rescue. It proposes no new interfaces and changes no code. The output is a short list of candidates the user can pick from, each backed by evidence they can check.
+A survey finds where the structure of existing code is costing the most, and ranks it. It is not a rescue. It proposes no new surfaces or interface types and changes no code. The output is a short list of candidates the user can pick from, each backed by evidence they can check.
 
 Load the **codebase-design** skill for the checklist, and **go-style** when the code is Go.
 
@@ -96,7 +96,7 @@ Save it where the repo keeps design and analysis docs (check `plans/` and `docs/
 - **Evidence:** <file:line references, counts>
 - **Cost today:** <what is harder because of it>
 - **Deletion test:** <what callers would lose>
-- **Direction:** <the kind of change, e.g. "collapse the forwarding layer", not a new interface>
+- **Direction:** <the kind of change, e.g. "collapse the forwarding layer", not a new surface or interface type>
 
 ## Rules Worth Enforcing
 
@@ -107,7 +107,7 @@ Save it where the repo keeps design and analysis docs (check `plans/` and `docs/
 <Things that looked wrong but are deliberate, with the doc or reason.>
 ```
 
-Name the direction, not the design. Proposing interfaces before the user has picked a candidate anchors everyone to the first idea.
+Name the direction, not the design. Proposing surfaces or interface types before the user has picked a candidate anchors everyone to the first idea.
 
 ### 6. Pick a Candidate
 

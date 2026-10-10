@@ -12,19 +12,19 @@ Sources: Ousterhout's *A Philosophy of Software Design* (depth, information hidi
 
 ## Vocabulary
 
-Use these terms exactly. Mixing them up leads agents to add interface types when the goal was a smaller module API.
+Use these terms exactly. Mixing them up leads agents to add interface types when the goal was a smaller surface. Never write bare "interface": say **surface** for what callers see, or **interface type** for the language construct.
 
 | Term | Meaning |
 |---|---|
 | **Module** | A unit of code with a public surface and hidden internals: a package, a class, a service. The language's style skill says which unit counts. |
-| **Interface** | Everything a caller must know to use a module: its public names plus their behavior, error modes, ordering rules, and invariants. |
+| **Surface** | Everything a caller must know to use a module: its public names plus their behavior, error modes, ordering rules, and invariants. |
 | **Interface type** | A language-level declaration such as a Go `interface`, a TypeScript `interface` or an abstract class. One way to build a seam, and a separate decision. |
-| **Deep** | A lot of behavior behind a small interface. |
-| **Shallow** | The interface is about as complex as what it hides, so the module adds a layer without removing any work. |
-| **Seam** | A place where behavior can change without editing callers. A module's interface is the default seam. An interface type is only worth declaring when a real second implementation exists. |
+| **Deep** | A lot of behavior behind a small surface. |
+| **Shallow** | The surface is about as complex as what it hides, so the module adds a layer without removing any work. |
+| **Seam** | A place where behavior can change without editing callers. A module's surface is the default seam. An interface type is only worth declaring when a real second implementation exists. |
 | **Deletion test** | Imagine deleting the module or layer. If the complexity vanishes, it was a pass-through. If it reappears across several callers, it earns its place. |
 
-The interface is also the test surface. If behavior can't be tested through it, the module is probably hiding a second module.
+The surface is also the test surface. If behavior can't be tested through it, the module is probably hiding a second module.
 
 Spot problems in code with the red flags below. Choose between designs with **Comparing Designs** at the end.
 
@@ -39,10 +39,10 @@ Spot problems in code with the red flags below. Choose between designs with **Co
 
 | Flag | Spot it | Fix |
 |---|---|---|
-| **Shallow module** | The exported surface is about as complex as what it hides. Callers must understand the internals to use it. | Merge it into its caller, or move more of the work behind the interface. |
+| **Shallow module** | The exported surface is about as complex as what it hides. Callers must understand the internals to use it. | Merge it into its caller, or move more of the work behind its surface. |
 | **Pass-through** | A function or type forwards calls to another with the same or nearly the same signature. Deletion test: delete it and the complexity vanishes. | Inline and delete. |
 | **Middle man** | Most methods of a type just delegate to one other type. A pass-through at type scale. | Let callers use the delegate directly. |
-| **Speculative generality** | An interface type with one implementation and no test-only need, a config option nobody sets, a parameter always passed the same value, a hook with no users. | Delete it. Add the interface type when the second implementation arrives; until then the package API is the seam. |
+| **Speculative generality** | An interface type with one implementation and no test-only need, a config option nobody sets, a parameter always passed the same value, a hook with no users. | Delete it. Add the interface type when the second implementation arrives; until then the module's surface is the seam. |
 | **God module** | One file or type owns several unrelated concerns, and unrelated changes keep landing in it. A file passing about 1,000 lines is the usual sign. | Split by reason to change, not by size. Each part should have a small surface to the others. |
 
 ## Knowledge in the Wrong Place
@@ -72,7 +72,7 @@ Spot problems in code with the red flags below. Choose between designs with **Co
 
 | Flag | Spot it | Fix |
 |---|---|---|
-| **Tests reach internals** | Tests call unexported helpers or assert on private state because the behavior can't be observed through the public surface. | The package is probably hiding a second module. Test through the interface, or split the module out. |
+| **Tests reach internals** | Tests call unexported helpers or assert on private state because the behavior can't be observed through the public surface. | The package is probably hiding a second module. Test through its surface, or split the module out. |
 | **Mocking your own code** | Tests fake the repo's own packages or the database. | Test against the real code. Keep fakes for other services, vendor clients and out-of-process infrastructure. |
 
 ## Confirming a Finding
@@ -99,11 +99,11 @@ Also look for **code judo**: a restructuring that would delete whole branches, l
 
 When choosing between design options, compare each on these axes and name the tradeoffs rather than just picking a winner:
 
-- **Depth:** how much behavior sits behind how small an interface. Prefer fewer, deeper modules.
+- **Depth:** how much behavior sits behind how small a surface. Prefer fewer, deeper modules.
 - **Locality:** how many files a typical future change touches. Each decision should have one owner.
 - **Seams:** where the option lets behavior change without editing callers. Prefer a package's exported API as the seam. An interface type needs a real second implementation (another service, a vendor client, out-of-process infrastructure); otherwise it is speculative.
 - **Deletion:** whether the option removes layers or adds them. Prefer the one that leaves less code to read.
-- **Testability:** whether behavior can be tested through the public interface, without mocking the repo's own code.
+- **Testability:** whether behavior can be tested through the module's surface, without mocking the repo's own code.
 - **Reversibility and migration cost:** what it takes to undo, and how callers move over.
 - **Correctness, performance and operational complexity**, where they differ between options.
 
