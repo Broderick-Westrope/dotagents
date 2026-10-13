@@ -91,7 +91,9 @@ gcloud scheduler jobs list --project euc-services-dev --location <region>
   - Onfido is skipped with the admin `verifyUser` mutation, not simulated. Stripe uses `tok_visa_debit`.
   - ES delivery preference: PICKUP reaches `FULFILLED`; HOME_DELIVERY leaves the first dispensement `PENDING`, the in-flight fixture.
 - **`svc.core.testusers`** recipes insert pre-baked patients with vendor state (UK in-flight, delivered, delivery-failed) straight into the databases, with no vendor call.
-- Synthetic customers can also be created through the brand engine GraphQL `signup` and `updateProfile`, with a `+<tag>@eucalyptus.vc` email.
+- Synthetic customers can also be created through the brand engine GraphQL `signup` and `updateProfile`, with a `+<tag>@eucalyptus.vc` email. Dev engine signup rejects non-internal email domains (`pilot-engine` `accountService.ts`, `constants/internalEmailHosts.ts`). Introspection is on in dev, so the schema is discoverable.
+- `moveConsultationPaidToOrderPaid` is a dev-only customer-app mutation that assigns and approves a consultation with a hardcoded doctor per brand (`devProductivityService.ts`). Newer brands (hims-uk, hims-de, hers-uk, juniper-es, juniper-ca, juniper-jp, compound-uk) have no doctor configured, so check the brand before relying on it.
+- Doctor impersonation through Google SSO is available outside prod (`buildCoreServices.ts`), which may avoid needing a prescriber test login for doctors-ui. Unverified.
 - Admins-ui sync-group actions ("Refill now", "Repeat last order") create orders through the real path; prefer a gateway mutation over stitching RPCs together.
 - When a vendor needs distinct identities, derive them from a controlled email rather than inventing random phone numbers or emails (see Notifications in SKILL.md).
 
@@ -101,13 +103,13 @@ From dev config and code in Oct 2026; check `app-deployments/deployments/service
 
 | Vendor | Dev target | Who moves vendor-side state |
 |---|---|---|
-| Stripe | Test mode | We create charges. Card `4000 0000 0000 0341` attaches, then declines on charge |
+| Stripe | Test mode; no dev-specific branches in the engine's payment code | We create charges. Card `4000 0000 0000 0341` attaches, then declines on charge |
 | Delonia (eReceta) | Vendor test API | We sign: in dev, `RequestPrescriberOtp` returns the OTP in the response. Redemption and webhooks come from Delonia |
 | IMA | Vendor sandbox | Only IMA. No simulation endpoint or mock switch; book the vendor for progression |
 | Titan, Evermed, Shipmate | Vendor dev or staging hosts | We can bypass them: `eucli set-consignment-status <consignment-id> -s Fulfilled\|Delivered\|DeliveryFailed\|Canceled` writes the ledgers and publishes the event. This tests our side only, not the vendor |
 | Randox | Separate dev endpoints | Postcodes `LAB_S`, `LAB_F`, `LAB_PF`, `LAB_HH` choose the pathology outcome |
-| Onfido | Per-brand dev tokens | Usually bypassed with `verifyUser`; whether dev tokens are sandbox is unconfirmed |
-| Shopify | Separate dev stores | Set by hand in Shopify admin |
+| Onfido | Per-brand dev tokens; the engine has no sandbox handling, and whether the tokens are sandbox is unconfirmed | Onfido, via the `/report-complete` webhook (only `clear` passes). We can bypass with the admin `verifyUser` mutation, or skip whole brands with LD `cfg-brands-exempt-from-id-verification` (shared config). Neither bypass is dev-only |
+| Shopify | Separate dev stores; juniper-ca, juniper-de and juniper-jp have no Shopify credentials in dev | We can: fulfil the order in the Shopify dev admin and the webhook flows back, or `tryRefreshFulfillmentStatus` pulls it |
 
 Report vendor bypasses as bypasses: a `Delivered` written by `eucli` proves our downstream handling, not the vendor integration.
 

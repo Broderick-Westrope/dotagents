@@ -34,7 +34,7 @@ Dev can message real people, so every test identity must be one we control.
 | Email (SendGrid) | Not gated. Dev sends to any address, using the real brand sender addresses. Use only `first.last+<tag>@eucalyptus.vc` |
 | SMS (Twilio) | Dropped unless the number is on the LD allowlist `cfg_non_production_sms_allowed_recipients`. Dev shares Twilio accounts with prod, so the allowlist is the only barrier. Never add a number you don't control |
 | Push (Expo) | Only reaches devices that registered a token against dev |
-| Customer.io | Separate dev workspaces; whether their campaigns send is unknown, so assume they do |
+| Customer.io | The engine sends events through Segment with Customer.io enabled and no environment check. Whether dev routes to a workspace that sends is unknown, so assume it does |
 
 Never invent random phone numbers or emails: a random value can belong to a real person.
 
