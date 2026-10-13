@@ -26,10 +26,15 @@ Traps that cost past sessions time, grouped by where they bite.
 
 ## Fixtures
 
-- A record created before the deploy doesn't exercise new code. Check `createdAt` against the deploy time.
-- eng-bot fixtures for a brand can share identity fields (phone, DNI), which clash in vendor systems and produce misleading errors.
+- Behaviour that happens at creation time needs a record created after the deploy; check `createdAt` against the rollout. Paths that act on existing records can use older fixtures, but still prove the new version handled them.
+- eng-bot fixtures share identity fields (a fixed phone per brand; ES phone and DNI derived from the email), which clash in vendor systems and produce misleading errors.
 - A flag evaluated at event time doesn't re-run when you change it later; past events need a manual redrive.
 - Dev can't use doctor logins it doesn't have; prescriber flows need a human with a prescriber test account.
+
+## Notifications
+
+- Dev email isn't gated: SendGrid sends to any address with real brand sender addresses. A real email on a test customer gets password resets, MFA codes and signup mail.
+- Dev SMS shares Twilio accounts with prod; only the LD allowlist stops a send. Treat that flag as shared config.
 
 ## Signals
 
@@ -46,4 +51,4 @@ Traps that cost past sessions time, grouped by where they bite.
 - Sandbox keys, service IDs and webhook registrations are scoped per environment and partner. A 401 or 404 usually means the wrong environment.
 - Cloudflare in front of some vendors blocks default Python and Go user agents (error 1010); set one explicitly.
 - Webhooks can arrive before our write commits; the first delivery errors and the retry succeeds.
-- Only the vendor can move their side's state (payment, shipping, delivery). Book them with a ranked scenario list.
+- Some vendors can only be advanced by the vendor (IMA); for others we can bypass them in our own DB (`eucli set-consignment-status`). A bypass doesn't test the vendor integration. See the vendor table in techniques.md.
