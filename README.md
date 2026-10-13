@@ -40,6 +40,7 @@ Reusable development patterns:
 | ------------------------------------------------------------------------------------ | -------------------------------------------------------- |
 | [writing-tests](skills/writing-tests/SKILL.md)                                       | Testing Trophy methodology, behavior-focused tests       |
 | [verification-before-completion](skills/verification-before-completion/SKILL.md)     | Verify before claiming success                           |
+| [euc-dev-testing](skills/euc-dev-testing/SKILL.md)                                   | What's possible, cheap and worth it in Eucalyptus dev    |
 
 **Debugging & Problem Solving:**
 

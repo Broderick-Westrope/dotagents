@@ -55,6 +55,8 @@ For user-facing behavior, tests passing is not enough. Run what you built and us
 
 Never touch deployed environments (production or shared staging), real customer or patient data, or anything that sends messages, emails, or payments. If the only way to check something needs a live system, don't do it. Tell the user what you would check and how, and leave it for them.
 
+The exception is Eucalyptus work: testing in the shared dev environment follows the **euc-dev-testing** skill, which says what the agent may change there. Never touch prod without discussing it with the user first.
+
 ## Red Flags
 
 Stop and verify if you're about to:
