@@ -38,7 +38,7 @@ Before:
 | Tests pass            | `yarn test` output: 0 failures   | Previous run, "looks correct" |
 | Build succeeds        | Build command: exit 0            | Linter clean, "should work"   |
 | Bug fixed             | Test reproducing bug: now passes | Code changed, assumed fix     |
-| Feature works         | Ran it locally the way a user would (see below) | Tests pass                    |
+| Feature works         | Ran it locally the way a user would, or (Eucalyptus) a scoped dev test reported per **euc-dev-testing** (see below) | Tests pass                    |
 | Linter clean          | Linter output: 0 errors          | Partial check, spot test      |
 | Regression test works | Red→Green cycle verified         | Test passes once              |
 | Agent task complete   | VCS diff shows expected changes  | Agent reports "success"       |
@@ -54,6 +54,8 @@ For user-facing behavior, tests passing is not enough. Run what you built and us
 - **Data:** use fixtures or synthetic data shaped like the real thing.
 
 Never touch deployed environments (production or shared staging), real customer or patient data, or anything that sends messages, emails, or payments. If the only way to check something needs a live system, don't do it. Tell the user what you would check and how, and leave it for them.
+
+For Eucalyptus work, the deployed-environment rule has one exception: testing in the shared dev environment follows the **euc-dev-testing** skill, which says what the agent may change there. The exception covers dev only. It doesn't allow real patient data, messages or payments to people we don't control, and prod still needs discussing with the user first.
 
 ## Red Flags
 
