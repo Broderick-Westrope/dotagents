@@ -25,6 +25,7 @@ Quick workflows for everyday development tasks:
 | [/document](anvil/commands/document/COMMAND.md)             | Create or improve documentation                                    |
 | [/grill](anvil/commands/grill/COMMAND.md)                   | Think through a feature and write a design doc                     |
 | [/build](anvil/commands/build/COMMAND.md)                   | Build an early version, then challenge and review the diff         |
+| [/build-prose](anvil/commands/build-prose/COMMAND.md)       | Agent-led /build without the workflow script, as a fallback        |
 | [/audit-context](anvil/commands/audit-context/COMMAND.md)   | Identify knowledge gaps in project context and collect human input |
 | [/post-mortem](anvil/commands/post-mortem/COMMAND.md)       | Review a session to assess execution and extract improvements      |
 | [/wtp-pruning](anvil/commands/wtp-pruning/COMMAND.md)       | Classify wtp worktrees and flag the stale ones                     |
