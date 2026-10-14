@@ -1,0 +1,1 @@
+The change on branch `{{branch}}` passed review. Rewrite the build note at `{{note}}` as a draft pull request description: the why, the reasoning a reviewer couldn't get from the diff, and anything still unsure. Follow the repository's PR conventions if it has any. Overwrite the note with it and reply with the description.

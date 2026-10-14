@@ -178,7 +178,7 @@ Next failing test for the next slice of behavior.
 
 ### Clean Up Later
 
-There is no refactor step inside the loop. Restructuring after every slice designs for code that is only half written, and it mixes "add behavior" with "change structure" in the same diff. Structural cleanup happens when refining in step 5 of `/build`, once the approach has survived the devil's advocate. The tests you wrote are what make that cleanup safe.
+There is no refactor step inside the loop. Restructuring after every slice designs for code that is only half written, and it mixes "add behavior" with "change structure" in the same diff. Structural cleanup happens in step 4 of `/build`, after each devil's advocate review that doesn't reject the approach. The tests you wrote are what make that cleanup safe.
 
 ## Good Tests
 
