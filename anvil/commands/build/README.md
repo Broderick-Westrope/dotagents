@@ -1,58 +1,58 @@
 # /build
 
-`/build <design doc or request>` builds an early version of a change, challenges it with a devil's advocate, then reviews it with audited multi-model findings before handing it to you. It runs as an Anvil workflow: `workflow.js` owns the steps, caps and context boundaries described here, and the prompts it sends live in `references/`.
+`/build <design doc or request>` builds an early version of a change, challenges it with a devil's advocate, then reviews it with audited multi-model findings before handing it to you. It runs as an Anvil workflow: `workflow.js` runs the steps, and the prompts it sends live in `references/`.
 
-Build first, then challenge the diff. An early version answers open questions faster than a plan, and reviewing real code is easier than reviewing prose about code. A diff hides its assumptions, so the builder also writes a short **build note** (assumptions, decisions, rejected options, unsure, verified) that the critic reads alongside it.
+Build first, then challenge the diff. An early version answers open questions faster than a plan, and reviewing real code is easier than reviewing prose about code. A diff hides its assumptions, so the builder also writes a short **build note** (where the work is, assumptions, decisions, rejected options, unsure, verified) that the critic reads alongside it.
+
+## What the script owns, and what it doesn't
+
+`/build` started as a prose command the orchestrator followed, and that worked well. The script only takes over what prose couldn't guarantee:
+
+- **The devil's advocate's context.** The script writes its prompt: a snapshot of the design doc taken when the run starts, and the current build note. It never sees earlier rounds, how they were resolved, or the conversation with the builder.
+- **A fresh builder for each rebuild.** A rejected approach's session never builds the next one, so the new builder isn't anchored to it. It knows only what earlier approaches taught.
+- **Caps.** Five DA reviews per approach, three approaches, three review passes.
+- **Review.** Three reviewers always run in parallel, an auditor disposes of every finding, and the builder only sees confirmed critical and important findings.
+- **The order of phases.** Build, challenge and refine, exercise, review, hand over.
+
+Everything else is the builder's judgement, as it was in the prose command: which repositories the change belongs in, creating worktrees and branches, committing, and how to act on findings (it can disagree with a DA finding and record why in the note). The script never runs git or wtp itself, so it never stops the builder from working the way the change needs. If a guarantee above starts restricting what the builder can do, that's a sign the script has gone too far.
 
 ## Input
 
 - A path to a design doc, or a free-text request. With no argument, it offers the newest `plans/design-*.md`.
 - An argument without spaces that ends in `.md` or contains `/` is treated as a path, and the run fails if the file doesn't exist rather than building it as a request.
-- It branches from the current branch, so it refuses to start on a detached HEAD.
+- It doesn't need to start in a git repository, so you can run it from a notes or topic directory.
 
 ## Steps
 
-1. **Worktree.** Creates `feat/<slug>` from the current branch with `wtp`, skipping names that already exist as a branch or have kept attempts.
-2. **Build.** The invoking session builds the thinnest end-to-end slice first, test-first (`references/test-driven-development.md`), committing as it goes, and writes the build note to the run's temp directory. A builder that never writes the note fails the run.
-3. **Devil's advocate.** A fresh `devils-advocate` agent judges the work: clean, changes, or wrong approach.
-4. **Refine or rebuild.** Changes go back to the builder, who fixes them and does a structural cleanup pass against the red flags in **codebase-design**, then to a new DA round. A clean verdict gets one cleanup pass too, and moves on only if that leaves the work unchanged; otherwise the cleaned-up version goes to another DA round. A wrong approach is rebuilt from scratch (see below).
-5. **Exercise.** The builder verifies the change locally with **verification-before-completion**.
-6. **Review.** Reviewers run in parallel, an auditor disposes of their findings, and the builder fixes confirmed ones.
-7. **Hand over.** The builder rewrites the note as a draft PR description, and the run returns `{outcome: "ready", branch, worktree, note}`.
+1. **Build.** The invoking session picks the repositories, creates worktrees with **using-git-worktrees**, builds the thinnest end-to-end slice first, test-first (`references/test-driven-development.md`), commits as it goes, and writes the build note. The note's **Where** section lists each worktree, branch and base; the DA and reviewers find the change from it.
+2. **Devil's advocate.** A fresh `devils-advocate` agent judges the work: clean, changes, or wrong approach.
+3. **Refine or rebuild.** Changes go back to the builder, who fixes or answers them and does a structural cleanup pass against the red flags in **codebase-design**, then to a new DA round. A clean verdict gets one cleanup pass too, and moves on only if the builder reports that it changed nothing. A wrong approach is rebuilt from scratch in a new session, which starts in a new worktree and leaves the old one for you to remove.
+4. **Exercise.** The builder verifies the change locally with **verification-before-completion**.
+5. **Review.** Reviewers run in parallel, an auditor disposes of their findings, and the builder fixes confirmed ones.
+6. **Hand over.** The builder rewrites the note as a draft PR description and hands over in its session, where you carry on with it. The run returns `{outcome: "ready", note, failedReviewers}`.
 
-## Caps
+## Talking to you
 
-- Five DA reviews per approach (rounds that follow a cleanup count), three approaches (two rebuilds), three review passes.
-- Hitting any cap, or every reviewer failing, tells you why and fails the run. Only a hand-over completes it.
+The run asks you nothing on the happy path, beyond confirming the design doc when you give no argument.
 
-## Devil's advocate isolation
+- **The builder can still stop and ask.** Every working turn ends with a short report. When the builder needs you (an open decision, missing access, an unclear goal), it reports `blocked` with a question. You answer it in a dialog and the answer goes back to the builder.
+- **Stopping hands back through the builder.** When a cap is hit or a step fails for good (the DA or the audit failing twice, every reviewer failing, no build note), the builder tells you in its session where things stand and what you could do next, and the run returns `{outcome: "stopped", reason, note}`. After rebuilds, it also tells you what each approach taught and where its work was left.
 
-- The DA reads a snapshot of the design doc taken when the run starts, so nothing written to the doc later (including lessons) reaches it.
-- Each approach has its own note file, so a rebuilt approach's DA never reads the rejected one's note.
-- Every round is a fresh agent that sees only the doc, the current note and the base branch: no earlier findings and no round number.
-- A DA call that fails (for example with output that doesn't match its schema) is retried once with the same prompt before the run fails. A retry doesn't count as a round.
+## Robustness
 
-## Committed-state gates
-
-The DA and the reviewers read the committed diff. Before each DA round and review pass the worktree must be fully committed: the builder is asked to commit its own files and leave anything else untouched, then you're asked. If HEAD moves or files change while they're looking, their verdict is discarded and the version is reviewed again.
-
-## Rebuild safety
-
-- The old branch tip is kept at `refs/build-attempts/<branch>/<n>`, and the run refuses to overwrite an existing one.
-- Removing and recreating the worktree happens in one exclusive hold, so nothing you queued runs against a missing worktree.
-- You're asked before uncommitted or ignored files are discarded (the default answer stops), and before background jobs that could still write to the worktree are stopped.
-- The next approach starts in a new session, seeded with what each earlier approach taught. Those lessons come back to you at hand-over to record in the design doc.
-
-## Review
-
-- Reviewers mirror `/review`'s model table (Sonnet, Opus and a convention reviewer). A reviewer that requests changes without a critical or important finding counts as failed.
-- A fresh auditor confirms, rejects or deduplicates every finding. The script checks the audit covers each finding exactly once and that duplicate chains end at a real finding, retrying once before failing.
-- The builder only ever sees confirmed critical and important findings.
-- The DA, reviewers and auditor get the tools their agent definitions in `anvil/agents/` give them (read, LSP and sourcegraph tools, `bash` for git, and muninn); the script doesn't narrow them, since their prompts rely on all of these.
+- A builder report that doesn't parse counts as done and changed, so it costs at most an extra review round, never the run. A malformed lesson falls back to the DA's verdict.
+- A DA call that fails is retried once with the same prompt. A retry doesn't count as a round.
+- Reviewer finding ids are assigned by the script, so model output can't collapse two findings. A reviewer that requests changes without a critical or important finding counts as failed.
+- The audit must dispose of each finding exactly once, with duplicate chains ending at a real finding. An invalid audit is retried once with the problem spelled out.
+- A builder that doesn't write the build note is reminded once.
 
 ## Boundaries
 
-Every builder turn carries `references/boundaries.md`: work on the branch only, don't push, merge or open a pull request, don't apply migrations to shared environments or publish contracts, and pass the same limits to subagents.
+Every builder turn carries `references/boundaries.md`: work on the change's feature branches only, don't push, merge or open a pull request, don't apply migrations to shared environments or publish contracts, and pass the same limits to subagents.
+
+## Reviewers
+
+They mirror `/review`'s model table (Sonnet, Opus and a convention reviewer); change both together. The DA, reviewers and auditor keep the tools their agent definitions in `anvil/agents/` give them.
 
 ## Tests
 

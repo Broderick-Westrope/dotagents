@@ -102,13 +102,16 @@ class Fail {
 //   daErrors:  per DA call, {name, message} to fail it with, or null
 //   reviews:   reviewer output keyed by "agent model"; {fail: msg} fails it
 //   audit:     the audit agent's output, or n => output for the nth audit
-//   status:    stdout of `git status --porcelain --ignored`
-//   bashFn:    (cmd, n) => {stdout, stderr, exitCode} | undefined, where n
-//              counts earlier commands with the same first two words
+//   bashFn:    (cmd, n, cwd) => {stdout, stderr, exitCode} | undefined,
+//              where n counts earlier commands with the same first two words
 //   answer:    (question, options) => reply (default: the first option)
 //   holdErr:   {message, jobs}, returned once by the next hold as JobsRunning
 //   skipNote:  (turnNumber, notePath) => true to have that turn not write
 //              the build note it was asked for
+//   report:    (turnNumber, prompt, session) => the builder's report for a
+//              turn that asks for one, or undefined for {status: "done",
+//              changed: false}; {schemaError: msg} fails it with SchemaError
+//   lessonError: a message to fail every lesson turn with as SchemaError
 //   raw:       the /build argument
 //   now:       what the now primitive returns, in Unix milliseconds
 //   random:    what the random primitive returns
@@ -161,7 +164,7 @@ export function runBuild(sim) {
       const n = prefixCounts[prefix] || 0
       prefixCounts[prefix] = n + 1
       sim.bashes.push({ cmd, cwd, inHold: sim.inHold })
-      const res = Object.assign({ stdout: "", stderr: "", exitCode: 0 }, defaultBash(sim, cmd), sim.bashFn && sim.bashFn(cmd, n))
+      const res = Object.assign({ stdout: "", stderr: "", exitCode: 0 }, defaultBash(sim, cmd), sim.bashFn && sim.bashFn(cmd, n, cwd))
       if (res.exitCode !== 0 && check !== false) {
         throw new Fail("BashError", "command failed with exit code " + res.exitCode + ": " + cmd, res)
       }
@@ -172,13 +175,19 @@ export function runBuild(sim) {
       // The run's sessions are held, so the turn could never start.
       if (sim.inHold) throw new Fail("Error", "turn() can't run inside workflow.exclusive")
       sim.turns.push({ session, prompt, schema, skills })
-      if (schema) return { approach: "a", lesson: "l" }
       // A builder told to write a note writes it, unless the test says
       // this turn forgets to.
       const notePath = (prompt.match(/`([^`]*build-note[^`]*\.md)`/) || [])[1]
       if (notePath && !(sim.skipNote && sim.skipNote(sim.turns.length, notePath))) {
         fs.writeFileSync(notePath, "NOTE from turn " + sim.turns.length)
       }
+      if (schema && schema.properties.status) {
+        const report = (sim.report && sim.report(sim.turns.length, prompt, session)) || { status: "done", changed: false }
+        if (report.schemaError) throw new Fail("SchemaError", report.schemaError)
+        return report
+      }
+      if (schema && sim.lessonError) throw new Fail("SchemaError", sim.lessonError)
+      if (schema) return { approach: "a" + sim.turns.length, lesson: "l" + sim.turns.length, where: "/wt/a" + sim.turns.length }
       return "ok"
     },
     agent({ agent, prompt, schema, tools, model }) {
@@ -214,6 +223,7 @@ export function runBuild(sim) {
       return fs.readFileSync(path.join(BUILD_DIR, p), "utf8")
     },
     readFile({ path: p }) {
+      if (!fs.existsSync(p)) throw new Fail("Error", "open " + p + ": no such file or directory")
       return fs.readFileSync(p, "utf8")
     },
     ask({ question, options }) {
@@ -295,18 +305,11 @@ export function runBuild(sim) {
   }
 }
 
+// defaultBash answers the commands workflow.js runs to resolve its input.
+// Anything else succeeds with no output; tests assert the script doesn't
+// run git or wtp beyond that.
 function defaultBash(sim, cmd) {
-  const starts = p => cmd.startsWith(p)
-  if (starts("git rev-parse --show-toplevel")) return { stdout: "/repo\n" }
-  if (starts("git rev-parse --abbrev-ref")) return { stdout: "main\n" }
-  if (starts("git show-ref")) return { exitCode: 1 }
-  if (starts("wtp cd")) return { stdout: "/wt/feat-x\n" }
-  if (starts("test -s")) {
-    const file = cmd.slice("test -s ".length).replace(/^'|'$/g, "")
-    return { exitCode: fs.existsSync(file) && fs.statSync(file).size > 0 ? 0 : 1 }
-  }
-  if (starts("git status --porcelain --untracked-files=all --ignored")) return { stdout: sim.status || "" }
-  if (starts("git status --porcelain")) return { stdout: "" }
-  if (starts("git rev-parse HEAD")) return { stdout: "abc123\n" }
+  if (cmd === "git rev-parse --show-toplevel") return { stdout: "/repo\n" }
+  if (cmd === "pwd") return { stdout: "/repo\n" }
   return {}
 }

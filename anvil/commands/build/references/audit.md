@@ -1,4 +1,10 @@
-Several reviewers reviewed branch `{{branch}}` against `{{base}}` (checked out at `{{worktree}}`; diff with `git -C "{{worktree}}" diff {{base}}...HEAD`). Their findings, each with an id and the reviewer that raised it:
+Several reviewers reviewed a change. The builder's note on it, whose Where section lists each worktree, branch and base branch (diff each with `git -C "<worktree>" diff <base>...HEAD`):
+
+<build_note>
+{{note}}
+</build_note>
+
+Their findings, each with an id and the reviewer that raised it:
 
 <findings>
 {{findings}}
@@ -10,4 +16,4 @@ Audit every finding before anyone acts on it. For each id, read the code and dec
 - `rejected`: the issue isn't real, or doesn't apply. Say why.
 - `duplicate`: the same issue as another finding; set `duplicateOf` to that id.
 
-Return exactly one disposition per id through `submit_result`. Don't edit anything.
+Return exactly one disposition per id. Don't edit anything.
