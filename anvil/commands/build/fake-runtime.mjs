@@ -112,6 +112,8 @@ class Fail {
 //              turn that asks for one, or undefined for {status: "done",
 //              changed: false}; {schemaError: msg} fails it with SchemaError
 //   lessonError: a message to fail every lesson turn with as SchemaError
+//   turnError: turnNumber => a message (or {name, message}) to fail that
+//              turn with, or null
 //   raw:       the /build argument
 //   now:       what the now primitive returns, in Unix milliseconds
 //   random:    what the random primitive returns
@@ -175,6 +177,8 @@ export function runBuild(sim) {
       // The run's sessions are held, so the turn could never start.
       if (sim.inHold) throw new Fail("Error", "turn() can't run inside workflow.exclusive")
       sim.turns.push({ session, prompt, schema, skills })
+      const turnErr = sim.turnError && sim.turnError(sim.turns.length)
+      if (turnErr) throw typeof turnErr === "string" ? new Fail("Error", turnErr) : new Fail(turnErr.name, turnErr.message)
       // A builder told to write a note writes it, unless the test says
       // this turn forgets to.
       const notePath = (prompt.match(/`([^`]*build-note[^`]*\.md)`/) || [])[1]

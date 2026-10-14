@@ -2,7 +2,7 @@ Review an early version of a change and challenge its premise and approach befor
 
 Design doc or request: {{daDoc}}
 
-The builder's note on what it assumed and decided. Its Where section lists each worktree, branch and base branch; review each full diff with `git -C "<worktree>" diff <base>...HEAD`, and check `git -C "<worktree>" status` for uncommitted work, which isn't part of the change yet:
+The builder's note on what it assumed and decided. Its Where section lists each worktree, branch and base branch; review each full diff with `git -C "<worktree>" diff <base>...HEAD`, and check `git -C "<worktree>" status` for uncommitted work, which isn't part of the change yet. If the Where section doesn't lead to the change the note describes, that's a finding:
 
 <build_note>
 {{note}}

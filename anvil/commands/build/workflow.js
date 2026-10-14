@@ -17,6 +17,7 @@ requires({
     "references/fix.md",
     "references/handover.md",
     "references/handback.md",
+    "references/continue.md",
   ],
 })
 
@@ -43,7 +44,7 @@ const REVIEWERS = [
 const Report = {
   type: "object",
   properties: {
-    status: { type: "string", enum: ["done", "blocked"] },
+    status: { type: "string", enum: ["done", "slice", "blocked"] },
     question: { type: "string" },
     changed: { type: "boolean" },
   },
@@ -71,7 +72,6 @@ const Lesson = {
   properties: {
     approach: { type: "string" },
     lesson: { type: "string" },
-    where: { type: "string" },
   },
   required: ["approach", "lesson"],
 }
@@ -141,10 +141,19 @@ function main(input) {
       // never be handed the rejected approach's note.
       ctx.note = workflow.tmpdir() + "/build-note-approach-" + approach + ".md"
       status("build", "approach " + approach + "/" + MAX_APPROACHES)
-      work(builder, fill("references/build.md", ctx))
+      let built = work(builder, ctx, fill("references/build.md", ctx))
       ensureNote(builder, ctx)
 
-      const verdict = challenge(builder, ctx, approach)
+      // A builder working slice by slice reports each slice that later ones
+      // depend on, so the DA can challenge it before more is built on it.
+      let verdict
+      for (let slice = 1; ; slice++) {
+        verdict = challenge(builder, ctx, approach)
+        if (verdict.kind !== "clean" || built.status !== "slice") break
+        status("build", "approach " + approach + ", slice " + (slice + 1))
+        built = work(builder, ctx, fill("references/continue.md", ctx))
+        ensureNote(builder, ctx)
+      }
       if (verdict.kind === "clean") return finish(builder, ctx)
 
       status("rebuild", "approach " + approach + " was judged wrong")
@@ -161,8 +170,17 @@ function main(input) {
       workflow.focus(builder)
     }
   } catch (e) {
-    if (!(e instanceof Stop)) throw e
-    return handBack(builder, ctx, e.message)
+    if (e instanceof Cancelled) throw e
+    if (e instanceof Stop) return handBack(builder, ctx, e.message)
+    // Anything else (a provider error, a failed read) still hands back, so
+    // the user hears where things stand from the builder; if even that
+    // fails, the original error ends the run.
+    try {
+      return handBack(builder, ctx, "The workflow hit an error it couldn't recover from: " + e.message)
+    } catch (handBackError) {
+      if (handBackError instanceof Cancelled) throw handBackError
+      throw e
+    }
   }
 }
 
@@ -188,7 +206,7 @@ function challenge(builder, ctx, approach) {
     if (verdict.kind === "wrong-approach") return verdict
     if (verdict.kind === "clean") {
       status("cleanup", "approach " + approach + ", round " + round)
-      if (!work(builder, fill("references/cleanup.md", ctx)).changed) return verdict
+      if (work(builder, ctx, fill("references/cleanup.md", ctx)).changed === false) return verdict
       if (round === MAX_DA_ROUNDS) {
         throw new Stop("The devil's advocate found nothing to change, but the cleanup pass after its last of " +
           MAX_DA_ROUNDS + " reviews changed the work, so that version wasn't reviewed.")
@@ -200,7 +218,7 @@ function challenge(builder, ctx, approach) {
         " reviews of this approach. Its latest:\n\n" + formatFindings(verdict.findings))
     }
     status("refine", "approach " + approach + ", round " + round)
-    work(builder, fill("references/refine.md", Object.assign({}, ctx, { findings: formatFindings(verdict.findings) })) +
+    work(builder, ctx, fill("references/refine.md", Object.assign({}, ctx, { findings: formatFindings(verdict.findings) })) +
       "\n\n" + fill("references/cleanup.md", ctx))
     ensureNote(builder, ctx)
   }
@@ -224,7 +242,7 @@ function runDA(ctx) {
 
 function finish(builder, ctx) {
   status("exercise", "verifying locally")
-  work(builder, fill("references/exercise.md", ctx), { skills: ["verification-before-completion"] })
+  work(builder, ctx, fill("references/exercise.md", ctx), { skills: ["verification-before-completion"] })
   const failed = review(builder, ctx)
   status("hand over")
   tell(builder, fill("references/handover.md", Object.assign({}, ctx, {
@@ -276,7 +294,7 @@ function review(builder, ctx) {
 
     status("fix", blocking.length + " confirmed findings")
     // The builder only ever sees audited findings.
-    work(builder, fill("references/fix.md", Object.assign({}, ctx, { findings: JSON.stringify(blocking, null, 2) })))
+    work(builder, ctx, fill("references/fix.md", Object.assign({}, ctx, { findings: JSON.stringify(blocking, null, 2) })))
   }
   throw new Stop("Review still had confirmed findings after " + MAX_REVIEW_PASSES +
     " passes. The last pass's, which you fixed but nobody has reviewed since:\n\n" +
@@ -349,12 +367,13 @@ function handBack(builder, ctx, why) {
   return { outcome: "stopped", reason: why, note: ctx.note }
 }
 
-// resolveInputs finds the design doc or request. It doesn't need a git
-// repository: the builder decides which repositories the change belongs
-// in, so /build can start from a notes or topic directory.
+// resolveInputs finds the design doc or request, relative to where /build
+// was run. It doesn't need a git repository: the builder decides which
+// repositories the change belongs in, so /build can start from a notes or
+// topic directory. Anything that isn't an existing file is a request, for
+// the builder to interpret (it can ask if it looks like a mistyped path).
 function resolveInputs(raw) {
-  const top = bash("git rev-parse --show-toplevel", { check: false })
-  const root = top.exitCode === 0 ? top.stdout.trim() : bash("pwd").stdout.trim()
+  const root = bash("pwd").stdout.trim()
   let docPath = null
   if (raw === "") {
     const newest = bash("ls -t plans/design-*.md 2>/dev/null | head -n 1", { cwd: root, check: false }).stdout.trim()
@@ -363,8 +382,6 @@ function resolveInputs(raw) {
     docPath = root + "/" + newest
   } else if (bash("test -f " + q(raw), { cwd: root, check: false }).exitCode === 0) {
     docPath = isAbsolute(raw) ? raw : root + "/" + raw
-  } else if (!/\s/.test(raw) && (raw.endsWith(".md") || raw.includes("/"))) {
-    throw new Error("design doc " + raw + " not found")
   }
   return {
     root,
@@ -396,10 +413,13 @@ function noteWritten(ctx) {
 // work sends the builder a turn that ends with a short report. A builder
 // that needs the user says so, as it would have by stopping to ask when
 // /build was a prose command: the question goes to the user and the
-// answer comes back. A malformed report isn't worth ending the run over,
-// so it counts as done and changed.
-function work(builder, prompt, opts) {
+// answer comes back. The report's changed covers the whole exchange, and
+// is true whenever it's unknown, so an unreadable report can cost an
+// extra review but never skip one. A report that doesn't parse at all
+// counts as done; the next phase's reviewers still see the work.
+function work(builder, ctx, prompt, opts) {
   let text = prompt
+  let changed = false
   for (;;) {
     let report
     try {
@@ -408,9 +428,11 @@ function work(builder, prompt, opts) {
       if (!(e instanceof SchemaError)) throw e
       return { status: "done", changed: true }
     }
-    if (report.status !== "blocked") return report
+    changed = changed || report.changed !== false
+    if (report.status !== "blocked") return Object.assign({}, report, { changed })
     const answer = ask((report.question || "").trim() || "The builder needs your input to carry on.")
-    text = "The user answered:\n\n<answer>\n" + answer + "\n</answer>\n\nCarry on with what you were doing."
+    text = "The user answered:\n\n<answer>\n" + answer + "\n</answer>\n\n" +
+      "Record any decision it makes under **Decisions** in the build note at `" + ctx.note + "`, so reviewers judge the change against it, then carry on with what you were doing."
   }
 }
 
@@ -434,12 +456,9 @@ function formatLessons(lessons) {
   return lessons.map((l, i) => "Approach " + (i + 1) + ": " + l.approach + "\nLesson: " + l.lesson).join("\n\n")
 }
 
-// earlierApproaches tells the user what rejected approaches taught and
-// where their work was left.
+// earlierApproaches tells the user what rejected approaches taught.
 function earlierApproaches(ctx) {
-  return "Earlier approaches were judged wrong. Tell the user what each taught (suggest recording it in the design doc) and where its work was left, so they can remove it:\n\n" +
-    ctx.lessons.map((l, i) => "Approach " + (i + 1) + ": " + l.approach + "\nLesson: " + l.lesson +
-      (l.where ? "\nWhere: " + l.where : "")).join("\n\n")
+  return "Earlier approaches were judged wrong. Tell the user what each taught:\n\n" + formatLessons(ctx.lessons)
 }
 
 // q single-quotes a value for the shell.

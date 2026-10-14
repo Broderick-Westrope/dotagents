@@ -1,4 +1,4 @@
-Several reviewers reviewed a change. The builder's note on it, whose Where section lists each worktree, branch and base branch (diff each with `git -C "<worktree>" diff <base>...HEAD`):
+Several reviewers reviewed a change. The builder's note on it, whose Where section lists each worktree, branch and base branch (diff each with `git -C "<worktree>" diff <base>...HEAD`, and check `git -C "<worktree>" status` for uncommitted work):
 
 <build_note>
 {{note}}

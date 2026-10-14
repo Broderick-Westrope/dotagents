@@ -39,7 +39,7 @@ test("the script leaves repositories, worktrees and branches to the builder", ()
   const sim = { da: ["changes", "wrong-approach", "clean"] }
   mustSucceed(runBuild(sim))
   for (const b of sim.bashes) {
-    assert.ok(["git rev-parse --show-toplevel", "test -f ", "cp "].some(p => b.cmd.startsWith(p)), "unexpected command: " + b.cmd)
+    assert.ok(["pwd", "test -f ", "cp "].some(p => b.cmd.startsWith(p)), "unexpected command: " + b.cmd)
   }
   assert.equal(sim.holds.length, 0)
   const build = sim.turns[0].prompt
@@ -53,7 +53,6 @@ test("runs from a directory that isn't a git repository", () => {
     da: ["clean"],
     raw: "track HIP downloads",
     bashFn: cmd => {
-      if (cmd === "git rev-parse --show-toplevel") return { exitCode: 128, stderr: "not a git repository" }
       if (cmd === "pwd") return { stdout: "/notes\n" }
       if (cmd.startsWith("test -f")) return { exitCode: 1 }
       return undefined
@@ -162,7 +161,6 @@ test("three wrong approaches hand back with what each taught and where its work 
   assert.equal(back.length, 1)
   assert.equal(back[0].session, "new-2")
   assert.equal((back[0].prompt.match(/Lesson: /g) || []).length, 3)
-  assert.equal((back[0].prompt.match(/Where: \/wt\/a\d+/g) || []).length, 3)
 })
 
 test("a blocked builder's question goes to the user as free text, and the answer comes back", () => {
@@ -367,17 +365,8 @@ test("with no argument it offers the newest design doc", () => {
   assert.match(sim.turns[0].prompt, /design doc at `\/repo\/plans\/design-2026-10-12-y\.md`/)
 })
 
-test("a design doc path that doesn't exist fails instead of becoming a request", () => {
-  for (const raw of ["plans/design-typo.md", "design-typo.md", "plans/design-typo"]) {
-    const sim = { raw, da: ["clean"], bashFn: cmd => (cmd.startsWith("test -f") ? { exitCode: 1 } : undefined) }
-    const { error } = runBuild(sim)
-    assert.equal(error?.message, "design doc " + raw + " not found", raw)
-    assert.equal(sim.turns.length, 0, raw)
-  }
-})
-
-test("a request that merely mentions a path is still built as a request", () => {
-  for (const raw of ["add retries to internal/net/retry.go", "refactor"]) {
+test("anything that isn't an existing file is a request for the builder to interpret", () => {
+  for (const raw of ["add retries to internal/net/retry.go", "refactor", "auth/login", "plans/design-typo.md"]) {
     const sim = { raw, da: ["clean"], bashFn: cmd => (cmd.startsWith("test -f") ? { exitCode: 1 } : undefined) }
     mustSucceed(runBuild(sim))
     assert.ok(sim.turns[0].prompt.includes("this request:\n\n" + raw), raw)
@@ -440,4 +429,92 @@ test("a malformed lesson falls back to the DA's verdict instead of ending the ru
   const sim = { da: ["wrong-approach", "clean"], lessonError: "no json block" }
   mustSucceed(runBuild(sim))
   assert.match(sim.newSessions[0].seed, /Lesson: L/)
+})
+
+test("a builder working slice by slice gets each slice challenged before building on it", () => {
+  const sim = {
+    da: ["clean", "changes", "clean", "clean"],
+    report: (n, prompt) => {
+      if (prompt.startsWith("Build an early version")) return { status: "slice", changed: true }
+      if (prompt.startsWith("The devil's advocate is satisfied") && !sim.second) return (sim.second = true), { status: "slice", changed: true }
+      if (prompt.startsWith("The devil's advocate is satisfied")) return { status: "done", changed: true }
+      return undefined
+    },
+  }
+  mustSucceed(runBuild(sim))
+  const continues = turnsWith(sim, "Build the next slice")
+  assert.equal(continues.length, 2)
+  assert.equal(sim.daPrompts.length, 4)
+  assert.deepEqual(steps(sim).filter(x => x === "build"), ["build", "build", "build"])
+  assert.match(lastTurn(sim).prompt, /passed review/)
+})
+
+test("a wrong verdict on a slice rebuilds the approach", () => {
+  const sim = {
+    da: ["wrong-approach", "clean"],
+    report: (n, prompt, session) => (prompt.startsWith("Build an early version") && session === "invoker" ? { status: "slice", changed: true } : undefined),
+  }
+  mustSucceed(runBuild(sim))
+  assert.equal(sim.newSessions.length, 1)
+  assert.equal(turnsWith(sim, "Build the next slice").length, 0)
+})
+
+test("a cleanup that changed the work before asking the user still gets another review", () => {
+  const sim = {
+    da: ["clean", "clean"],
+    report: (n, prompt) => {
+      if (prompt.startsWith("Re-read the whole change") && !sim.asked) return (sim.asked = true), { status: "blocked", question: "keep the old name?", changed: true }
+      if (prompt.startsWith("The user answered")) return { status: "done", changed: false }
+      return undefined
+    },
+  }
+  mustSucceed(runBuild(sim))
+  assert.equal(sim.daPrompts.length, 2)
+})
+
+test("a cleanup report without changed counts as changed", () => {
+  const sim = {
+    da: ["clean", "clean"],
+    report: (n, prompt) => (prompt.startsWith("Re-read the whole change") && !sim.once ? ((sim.once = true), { status: "done" }) : undefined),
+  }
+  mustSucceed(runBuild(sim))
+  assert.equal(sim.daPrompts.length, 2)
+})
+
+test("the user's answer to a blocked question is recorded where reviewers see it", () => {
+  const sim = {
+    da: ["clean"],
+    report: n => (n === 1 ? { status: "blocked", question: "Which event name?" } : undefined),
+    answer: () => "hip_download_clicked",
+  }
+  mustSucceed(runBuild(sim))
+  assert.match(sim.turns[1].prompt, /under \*\*Decisions\*\* in the build note at `[^`]*build-note-approach-1\.md`/)
+})
+
+test("a rejected approach records its lesson in the design doc and removes its own worktrees", () => {
+  const sim = { da: ["wrong-approach", "clean"] }
+  mustSucceed(runBuild(sim))
+  const lesson = turnsWith(sim, "judged this approach wrong")[0].prompt
+  assert.match(lesson, /record what this approach taught in it/)
+  assert.match(lesson, /Remove this approach's worktrees/)
+  assert.match(lesson, /Leave anything you didn't create/)
+})
+
+test("an error from a builder turn hands back, and an error handing back ends the run with the original", () => {
+  const failing = { da: ["clean"], turnError: n => (n === 2 ? "provider overloaded" : null) }
+  const result = mustSucceed(runBuild(failing))
+  assert.equal(result.outcome, "stopped")
+  assert.match(result.reason, /couldn't recover from: provider overloaded/)
+  assert.equal(handBack(failing).length, 1)
+
+  const worse = { da: ["clean"], turnError: n => (n >= 2 ? "provider overloaded " + n : null) }
+  const { error } = runBuild(worse)
+  assert.equal(error?.message, "provider overloaded 2")
+})
+
+test("a cancelled builder turn ends the run without handing back", () => {
+  const sim = { da: ["clean"], turnError: n => (n === 2 ? { name: "Cancelled", message: "cancelled" } : null) }
+  const { error } = runBuild(sim)
+  assert.equal(error?.name, "Cancelled")
+  assert.equal(handBack(sim).length, 0)
 })
