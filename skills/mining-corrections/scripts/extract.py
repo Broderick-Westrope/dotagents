@@ -62,7 +62,24 @@ def main():
     ap.add_argument("--out", default="/tmp/corrections")
     ap.add_argument("--chunks", type=int, default=0, help="0 = auto, ~150KB per chunk")
     ap.add_argument("--all-turns", action="store_true", help="skip the keyword filter")
+    ap.add_argument(
+        "--mined",
+        action="append",
+        default=[],
+        metavar="SESSION=ISO",
+        help="skip this session's turns up to the time it was last mined; repeatable",
+    )
     args = ap.parse_args()
+    mined = {}
+    for item in args.mined:
+        sid, sep, when = item.partition("=")
+        try:
+            stamp = datetime.datetime.fromisoformat(when) if sep else None
+        except ValueError:
+            stamp = None
+        if stamp is None or stamp.tzinfo is None:
+            ap.error(f"--mined needs SESSION=ISO with a UTC offset, e.g. abc=2026-10-04T18:02:11+01:00; got {item!r}")
+        mined[sid] = int(stamp.timestamp())
     if args.current:
         args.session = os.environ.get("ANVIL_ROOT_SESSION_ID")
         if not args.session:
@@ -82,7 +99,7 @@ def main():
     for sid, title, wd in sessions:
         rows = db.execute(
             "select role, parts, created_at from messages where session_id = ? and created_at >= ? order by created_at",
-            (sid, since),
+            (sid, max(since, mined.get(sid, 0))),
         ).fetchall()
         last_reply, markers = "", []
         for role, raw, created in rows:
