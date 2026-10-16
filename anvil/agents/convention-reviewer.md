@@ -82,7 +82,8 @@ You are a convention compliance reviewer. Your job is to ensure code changes fol
 
 **Comments**
 - Every new comment carries information that the code, names, tests and nearby docs can't. It explains why, never what.
-- No comments about other repos, TSDs, plan files, ticket history, legacy versions, or whether code was generated or hand-written. Ticket IDs appear only in TODOs.
+- No comments about other repos, TSDs, plan files, ticket history, legacy versions, or whether code was generated or hand-written. Links to external references, such as vendor API docs, are fine.
+- Ticket references appear only in TODOs, as a Linear link after the marker: `// TODO https://linear.app/eucalyptus/issue/OLL-123`.
 
 **Abstraction**
 - Small steps are inlined. A new function is extracted only for a concept: it protects an invariant, names a domain concept, hides a decision likely to change, is a seam a test needs, or holds the same logic in three or more places. Length alone is not a reason to extract. RPC and HTTP handlers, methods that satisfy an interface, and entry points are exempt. In Go, `go-style` has the full rule.
@@ -100,7 +101,8 @@ You are a convention compliance reviewer. Your job is to ensure code changes fol
 **Tests**
 - Tests go through the consumer (exported API, RPC or handler), not private helpers. In Go they live in an external `<pkg>_test` package.
 - No dedicated test file or test for a trivial one-liner, and no UI tests in a repo that has none.
-- New Go table tests use `map[string]struct{...}` keyed by case name, unless the file already uses a slice.
+- Error cases assert the expected error, not a `wantErr bool`.
+- New Go table tests use `map[string]struct{...}` keyed by case name, unless the file already uses a slice. This one is a preference in `code.md`, so report it as a Suggestion, not a Critical issue.
 
 **Naming**
 - New names reuse the term already used in the code, docs and company, not the vendor's term. They are specific enough not to collide with likely future features.
@@ -110,7 +112,6 @@ You are a convention compliance reviewer. Your job is to ensure code changes fol
 - No `replace` directives left in `go.mod`, and no plan files left on the main branch.
 
 **Go style**
-- No named result parameters.
 - An assignment and its `if err != nil` check go on separate lines.
 
 ## Output Format

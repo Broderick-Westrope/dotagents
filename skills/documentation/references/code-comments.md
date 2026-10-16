@@ -56,10 +56,14 @@ const userMap = new Map(users.map(u => [u.id, u]));
 
 ## TODO Format
 
+Follow the repo's format. In Eucalyptus repos, put a Linear link after the marker:
+
 ```typescript
-// TODO(JIRA-567): Replace with batch API when available Q1 2025
-// TODO: fix this later  <-- avoid: no ticket, no timeline
+// TODO https://linear.app/eucalyptus/issue/OLL-567 replace with the batch API
+// TODO: fix this later  <-- avoid: no ticket
 ```
+
+Ticket references belong only in TODOs. Elsewhere they go in commit messages and PR descriptions.
 
 ## Audit Checklist
 

@@ -104,7 +104,7 @@ Either way, never put patient data, PII, or secrets in errors or span tags.
 ## Tests
 
 - **Use external test packages** (`package foo_test`). Test unexported behavior through the exported API. If you need to call an unexported function directly, it is usually a deep module hiding inside the package. Consider moving it into its own package. Internal tests are a rare, justified exception, such as state with no exported way to observe it.
-- **Use map tables** keyed by case name:
+- **Prefer map tables** keyed by case name for new tests. Leave existing slice tables as they are:
 
   ```go
   tests := map[string]struct {
@@ -119,6 +119,7 @@ Either way, never put patient data, PII, or secrets in errors or span tags.
   ```
 
   Random iteration order exposes tests that depend on each other, and duplicate names fail to compile.
+- **Assert the expected error**, not a `wantErr bool`. A bool passes even when the code fails at the wrong point. Use `require.ErrorIs` for sentinels, or match the message.
 - **Mock other services, vendor clients, and infrastructure** (pubsub, clock, flags). Use a real database. Never mock the repo's own packages.
 - Follow the repo's assertion library. Most use testify `require`.
 - Don't copy loop variables (`tc := tc`). Go 1.22 made it unnecessary.
