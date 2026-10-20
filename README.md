@@ -108,6 +108,7 @@ These are intended to be complementary to the Anvil builtin skills.
 | [visualizing-topics](skills/visualizing-topics/SKILL.md)           | Build interactive HTML visualizations with animation |
 | [post-mortem](skills/post-mortem/SKILL.md)                         | Review sessions to extract actionable improvements   |
 | [mining-corrections](skills/mining-corrections/SKILL.md)           | Mine past sessions for repeated corrections into a ledger |
+| [writing-for-agents](skills/writing-for-agents/SKILL.md)           | Write skills, commands, agents and memory files (adapted from [mattpocock/skills](https://github.com/mattpocock/skills), MIT) |
 
 ### Agents
 
