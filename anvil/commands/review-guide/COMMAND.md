@@ -7,7 +7,7 @@ Write a `REVIEW_GUIDE.md` for an existing change. The reader is the user: they w
 
 Target: $ARGUMENTS
 
-With `--no-file`, give the same guide in chat instead of writing it, and skip step 2.
+With `--no-file`, give the same guide in chat instead of writing it.
 
 ## 1. Find the change
 
@@ -16,7 +16,14 @@ Resolve the target in this order: the argument (a PR link, branch or worktree), 
 ## 2. Pick the scope and location
 
 - **Local change**: write the guide at the root of the worktree the change lives in.
-- **PR**: write it at the root of the worktree for the PR's branch. If none exists, create one with `wtp add <branch> --stay` (load the **using-git-worktrees** skill first).
+- **PR**: write it at the root of the worktree for the PR's branch, set up the way the user's `revwt` shell function does. Run these from the PR repo's local clone: the `~/dev/*/<repo>` whose `origin` matches the PR (ask if none does).
+
+  ```bash
+  branch=$(gh pr view <pr> --json headRefName -q .headRefName)
+  git fetch origin "$branch"
+  wtp add "$branch" --stay   # skip when `wtp list` already shows the branch
+  wtp exec "$branch" -- code .
+  ```
 - **Spread across worktrees**: decide whether one worktree is the **primary** and the rest are **satellites** (small accompanying changes such as infra, deployment config or monitors).
   - Primary plus satellites: one guide in the primary worktree, with the satellites as their own review group.
   - Several substantial worktrees: one guide per worktree, and only for the worktree the user asked about. Name the others and offer to do them next.
