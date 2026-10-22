@@ -31,6 +31,8 @@ Sections, in order:
 4. **Skim or skip**: generated code, lockfiles, snapshots, mechanical renames.
 5. **Worth asking the author**: open questions, risks, or surprising choices, framed as questions. Omit when there are none.
 
+Size the guide to the change: a small change gets a short guide. Write plain, direct sentences in everyday words, one point each. The user can ask follow-up questions, so cover what they need to start reviewing and leave the rest for those.
+
 Diagrams and code references are tools. Add a Mermaid diagram where it shows a flow, sequence, state change or structure faster than prose does; one or two carry most guides. Cite `path:line` where a claim needs grounding or the reader will want to jump straight to the spot.
 
 Done when every changed file appears in exactly one review group or the skim list. Reply with the guide's path and a two-line summary of the review order.
