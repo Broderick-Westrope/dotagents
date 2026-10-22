@@ -2,6 +2,8 @@
 
 For: Architecture decision records (ADRs), technical design docs, system documentation, tradeoff analyses, PRDs with technical depth
 
+For a design doc that `/build` reads (`plans/design-*.md`), the **writing-design-docs** skill owns the structure and review. Bring this persona's voice, decision records and tradeoff tables to it, and use its template in place of the Structure and Checklist below.
+
 Load the **architecting-systems** skill for architecture principles (boundaries, coupling, separation of concerns) to inform the content you're writing.
 
 ## Voice

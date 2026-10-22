@@ -70,6 +70,7 @@ Reusable development patterns:
 | Skill                                                                | Description                                                      |
 | -------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | [grilling](skills/grilling/SKILL.md)                                 | Interview and design exploration, adapts to the user's clarity   |
+| [writing-design-docs](skills/writing-design-docs/SKILL.md)           | Design doc template and review loop for `/build`                 |
 | [planning-products](skills/planning-products/SKILL.md)               | Product feature definition from a PM perspective                 |
 | [architecting-systems](skills/architecting-systems/SKILL.md)         | Clean, scalable system architecture for the build phase          |
 | [domain-modeling](skills/domain-modeling/SKILL.md)                   | Keep a GLOSSARY.md and ADRs so names and decisions stay consistent |

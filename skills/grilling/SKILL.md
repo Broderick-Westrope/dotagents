@@ -10,12 +10,12 @@ Build deep shared understanding of a feature through targeted questioning, then 
 A single entry point for pre-build work. After exploring the codebase and asking a few initial questions, the process adapts: if the user has a clear direction, it focuses on closing the communication gap through targeted grilling; if the direction is unclear, it shifts into approach exploration before converging on a design.
 
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until a spec has been written and approved. This applies regardless of how clear the feature seems.
+Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until a design doc has been written and approved. This applies regardless of how clear the feature seems.
 </HARD-GATE>
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The spec should be proportional to the project's complexity — a simple project still gets all fields, but each field can be a single sentence. But the design MUST be presented and approved.
+Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design doc is sized to the project, but it MUST be written and approved.
 
 ## Checklist
 
@@ -25,10 +25,7 @@ Complete these steps in order:
 2. **Assess clarity** — ask initial questions to determine if the user has a clear direction or needs exploration
 3. **Grill or explore** — targeted questioning if direction is clear; propose approaches if not
 4. **Present design** — if approaches were explored, present design sections scaled to complexity and get approval
-5. **Write spec to disk** — format the understanding as a structured spec, save and commit
-6. **Design review** — dispatch the **devils-advocate** agent to review the spec; fix issues and re-dispatch until approved (max 3 iterations, then surface to the user)
-7. **User reviews spec** — ask the user to review the spec file before proceeding
-8. **Build or park** — tell the user to run `/build <spec path>` when they want to build it
+5. **Write the design doc** — load the **writing-design-docs** skill and follow its steps, from writing the doc through the devil's advocate review to the user's approval
 
 ## Process Flow
 
@@ -44,19 +41,14 @@ flowchart TD
     E --> G[Present design sections]
     G --> H{User approves design?}
     H -->|no, revise| G
-    H -->|yes| I[Write spec to disk]
+    H -->|yes| I[Write, review and get the design doc approved with writing-design-docs]
     F -->|yes| I
-    I --> J[Design review]
-    J --> K{Review passed?}
-    K -->|issues found, fix and re-dispatch| J
-    K -->|approved| L{User reviews spec?}
-    L -->|changes requested| I
-    L -->|approved| M{Build now?}
-    M -->|yes| N([Tell user to run /build with spec path])
-    M -->|no| O([Park the spec])
+    I --> M{Build now?}
+    M -->|yes| N([User runs /build with the doc path])
+    M -->|no| O([Park the doc])
 ```
 
-The terminal state is handing the spec path to the user to run `/build`, or parking the committed spec for later. Do NOT start implementing or invoke any implementation skill.
+The terminal state is the approved design doc, which the user builds with `/build` or parks for later. Do NOT start implementing or invoke any implementation skill.
 
 ## Phase 1: Explore Context
 
@@ -68,7 +60,7 @@ Before asking any questions, explore the project context. Read files, docs, and 
 
 Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Do not spend questions refining details of a project that needs to be decomposed first.
 
-If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then grill on the first sub-project through the normal flow. Each sub-project gets its own spec and build cycle.
+If the project is too large for a single design doc, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then grill on the first sub-project through the normal flow. Each sub-project gets its own design doc and build cycle.
 
 ## Phase 2: The Questioning Process
 
@@ -141,47 +133,9 @@ When the user is still figuring out what to build, help them converge on a direc
 
 ## After the Questioning
 
-**Write the spec to disk:**
+Load the **writing-design-docs** skill and follow it. It holds the template, the devil's advocate review and the user review. Fill the template from the shared understanding: Problem from the user's intent, Scope from the boundaries, Constraints and Success Criteria from those discussions, Decisions from the choices made and the alternatives the user declined, and Context Files from the code you explored.
 
-Format the shared understanding into this structure and save to `plans/design-YYYY-MM-DD-<topic>.md` (user preferences for spec location override this default). Commit the spec file to git.
-
-```markdown
-# [Topic] Design Spec
-
-**Problem:** [What's broken, missing, or needed — from the user's stated intent]
-
-**Goal:** [What the end state looks like — from the success criteria discussion]
-
-**Scope:** [What's in and out — from the boundaries discussion]
-
-**Constraints:** [Non-functional requirements — from the constraints discussion]
-
-**Success Criteria:**
-- [ ] [Each measurable criterion established during the process]
-
-**Design Decisions:**
-- [Key decisions surfaced during the process and why]
-- [Alternatives considered and why they were declined]
-
-**Context Files:**
-- [Files explored that are relevant to implementation]
-```
-
-**Design review:**
-
-After writing the spec:
-
-1. Dispatch the **devils-advocate** agent to review the spec file
-2. If issues found: fix, re-dispatch, repeat until approved
-3. If the loop exceeds 3 iterations, surface to the user for guidance
-
-**User review gate:**
-
-After the design review passes, ask the user to review the written spec:
-
-> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes. When you're ready to build it, run `/build <path>`."
-
-Wait for the user's response. If they request changes, make them and re-run the design review. Only proceed once the user approves. Do NOT start implementing or invoke any other skill.
+Stop at the approved design doc. Building starts when the user runs `/build`.
 
 ## Key Principles
 
