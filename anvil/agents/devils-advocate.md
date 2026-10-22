@@ -1,5 +1,5 @@
 ---
-model: openai/gpt-6-astra
+model: anthropic/claude-opus-5-5
 delegates_to: []
 role: Rigorous critic for design docs, early-version diffs, and design decisions
 delegate_when: >
