@@ -16,7 +16,7 @@ Resolve the target in this order: the argument (a PR link, branch or worktree), 
 ## 2. Pick the scope and location
 
 - **Local change**: write the guide at the root of the worktree the change lives in.
-- **PR**: write it at the root of the worktree for the PR's branch, set up the way the user's `revwt` shell function does. Run these from the PR repo's local clone: the `~/dev/*/<repo>` whose `origin` matches the PR (ask if none does).
+- **PR**: write it at the root of the worktree for the PR's branch. Set that up and open the editor by running these from the PR repo's local clone: the `~/dev/*/<repo>` whose `origin` matches the PR (ask if none does).
 
   ```bash
   branch=$(gh pr view <pr> --json headRefName -q .headRefName)
