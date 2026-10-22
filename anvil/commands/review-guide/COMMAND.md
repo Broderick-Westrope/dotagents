@@ -1,15 +1,17 @@
 ---
 description: Write a REVIEW_GUIDE.md that explains an existing change and orders its files for review
-argument_hint: "[pr-url | branch | worktree]"
+argument_hint: "[pr-url | branch | worktree] [--no-file]"
 ---
 
 Write a `REVIEW_GUIDE.md` for an existing change. The reader is the user: they want to understand the change, then review its files in a sensible order.
 
 Target: $ARGUMENTS
 
+With `--no-file`, give the same guide in chat instead of writing it, and skip step 2.
+
 ## 1. Find the change
 
-Resolve the target in this order: the argument (a PR link, branch or worktree), else the PR or change already under discussion, else the current worktree's branch against its base. Read the full diff, the PR description and linked ticket when there is one, and enough surrounding code to explain the change rather than just describe the diff. Done when you can state why the change exists and how its parts connect.
+Resolve the target in this order: the argument (a PR link, branch or worktree), else the PR or change already under discussion, else the current worktree's branch against its base. Read the full diff, the PR description and linked ticket when there is one, and enough surrounding code to explain the change rather than just describe the diff. If `/review` already ran this session, build on its findings. Done when you can state why the change exists and how its parts connect.
 
 ## 2. Pick the scope and location
 
@@ -36,3 +38,10 @@ Size the guide to the change: a small change gets a short guide. Write plain, di
 Diagrams and code references are tools. Add a Mermaid diagram where it shows a flow, sequence, state change or structure faster than prose does; one or two carry most guides. Cite `path:line` where a claim needs grounding or the reader will want to jump straight to the spot.
 
 Done when every changed file appears in exactly one review group or the skim list. Reply with the guide's path and a two-line summary of the review order.
+
+## 4. After the guide
+
+The user reviews; you answer their questions. They make every judgement, so stay read-only: explain the code, and leave fixes, approval and rejection to them.
+
+- Ground each answer: "found at `path:line`" for what you saw, "inferring from ..." for what you didn't.
+- When answering turns up something new and noteworthy, flag it once at the end of the reply, framed as worth asking the author.
