@@ -21,6 +21,7 @@ Quick workflows for everyday development tasks:
 | [/refactor](anvil/commands/refactor/COMMAND.md)             | Refactor code following best practices                             |
 | [/review](anvil/commands/review/COMMAND.md)                 | Multi-model code review with deduplicated findings                 |
 | [/review-with-me](anvil/commands/review-with-me/COMMAND.md) | Interactive review where the human drives and AI provides context  |
+| [/review-guide](anvil/commands/review-guide/COMMAND.md)     | Write a REVIEW_GUIDE.md that explains a change and orders its files |
 | [/fix-issue](anvil/commands/fix-issue/COMMAND.md)           | Fix a GitHub issue by number                                       |
 | [/document](anvil/commands/document/COMMAND.md)             | Create or improve documentation                                    |
 | [/grill](anvil/commands/grill/COMMAND.md)                   | Think through a feature and write a design doc                     |
