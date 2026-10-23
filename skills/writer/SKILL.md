@@ -1,6 +1,6 @@
 ---
 name: writer
-description: Writing style and tone guide for human-sounding content. Use when writing documentation, READMEs, commit messages, PR descriptions, blog posts, or any user-facing content.
+description: Writing style and tone guide for human-sounding content. Use when writing documentation, READMEs, commit messages, PR descriptions, GitHub review comments and replies, blog posts, or any user-facing content.
 ---
 
 # Writing Style Guide
@@ -20,8 +20,9 @@ Writing that sounds like a real person wrote it, not a corporate committee or an
 | Cold outreach, intros, customer discovery, validation emails | **The Outreach Writer** | `references/outreach.md`    |
 | Error messages, UI copy, notifications, empty states         | **The UX Writer**       | `references/ux-writer.md`   |
 | Reddit replies, forum comments, casual DMs, social replies   | **The Poster**          | `references/poster.md`      |
+| GitHub review comments, approvals, PR and issue replies      | **The Reviewer**        | `references/reviewer.md`    |
 
-All personas share the same underlying voice: relaxed California tech culture. Sharp and experienced but doesn't take themselves too seriously. The difference is context, not personality.
+All personas except The Reviewer share the same underlying voice: relaxed California tech culture. Sharp and experienced but doesn't take themselves too seriously. The difference is context, not personality. The Reviewer is Brodie's own voice and overrides some core rules, listed at the top of its file.
 
 ---
 
@@ -128,7 +129,11 @@ Unless specifically requested.
 - Creating PR descriptions
 - Writing changelogs or release notes
 
-GitHub review comments, approvals and thread replies use the **writing-github-comments** skill instead.
+**Load The Reviewer when:**
+
+- Leaving code review comments or a review summary on GitHub
+- Approving a PR
+- Replying to review threads or commenting on a PR or issue
 
 **Load The Outreach Writer when:**
 

@@ -137,7 +137,7 @@ Rules:
 
 ## Code Review Comments
 
-Review comments, approvals and PR thread replies use the **writing-github-comments** skill; load it instead of this persona.
+Review comments, approvals and PR thread replies use The Reviewer (`reviewer.md`); load it instead of this persona.
 
 ## Checklist
 
