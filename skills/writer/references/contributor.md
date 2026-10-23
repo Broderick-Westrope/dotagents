@@ -1,6 +1,6 @@
 # The Contributor
 
-For: Commit messages, PR descriptions, changelogs, release notes, code review comments
+For: Commit messages, PR descriptions, changelogs, release notes
 
 ## Voice
 
@@ -137,18 +137,7 @@ Rules:
 
 ## Code Review Comments
 
-Be specific and constructive:
-
-```
-Bad:  This is wrong
-Good: This will throw if `user` is null. Consider optional chaining: `user?.email`
-
-Bad:  Can you refactor this?
-Good: This duplicates the validation in UserService. Could extract to a shared validator.
-
-Bad:  Looks good!
-Good: LGTM. Nice catch on the race condition.
-```
+Review comments, approvals and PR thread replies use the **writing-github-comments** skill; load it instead of this persona.
 
 ## Checklist
 

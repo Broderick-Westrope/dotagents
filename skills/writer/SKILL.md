@@ -127,7 +127,8 @@ Unless specifically requested.
 - Writing commit messages
 - Creating PR descriptions
 - Writing changelogs or release notes
-- Leaving code review comments
+
+GitHub review comments, approvals and thread replies use the **writing-github-comments** skill instead.
 
 **Load The Outreach Writer when:**
 
