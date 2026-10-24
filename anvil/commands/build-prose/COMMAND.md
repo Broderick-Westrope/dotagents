@@ -30,7 +30,7 @@ Build progress:
 
 ### 1. Set up a worktree
 
-Use a worktree on a feature branch (see **using-git-worktrees**). An early version must be cheap to throw away.
+Use a worktree on a feature branch (see **using-git-worktrees**). When the design doc sits in a linked worktree whose branch holds only docs for this change (the design doc, perhaps a spike), build in that worktree: the docs and the change ship together. An early version must be cheap to throw away.
 
 ### 2. Build an early version
 
@@ -64,7 +64,7 @@ Don't tell it which round this is, and don't pass earlier findings or how you re
 
 ### 5. Refine or rebuild
 
-- **Premise or approach is wrong:** don't patch it. Record what you learned in the design doc, delete the branch, and rebuild from step 1. An early version is cheap; a patched wrong approach is not. Delete the old build note file.
+- **Premise or approach is wrong:** don't patch it. If you built on the design doc's own branch, reset it to the commit before your first build commit, keeping its docs; otherwise delete the branch. Record what you learned in the design doc, then rebuild from step 1. An early version is cheap; a patched wrong approach is not. Delete the old build note file.
 - **Otherwise, refine:** fix the findings (hand bounded ones to **fixer** when that's faster), then re-read the whole diff as one change and clean up its structure against the red flags in **codebase-design**: pass-through layers, shallow modules, duplicated concepts, growing switches, unclear names, and code in the wrong place. Use the matching style skill (e.g. **go-style**) and **refactoring-code**. Keep tests green and commit cleanup separately from behavior changes. Update the build note and re-run step 4.
 - Move on once the devil's advocate finds nothing worth changing and the cleanup pass leaves the diff unchanged.
 - Count devil's advocate reviews per approach. After five reviews of the same approach without moving on, stop and bring the user the latest findings and any concern that kept coming back. A rebuild starts a new count; after two rebuilds, stop and bring the user what each approach taught you, since the design doc likely needs revisiting.

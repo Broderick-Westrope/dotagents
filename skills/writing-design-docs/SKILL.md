@@ -11,7 +11,7 @@ Write the prose in the voice of the **writer** skill's Architect persona. This s
 
 ## Steps
 
-1. **Write** the doc to `plans/design-YYYY-MM-DD-<topic>.md` with the template below. A location the user or repository prefers overrides this path. Done when every section is filled, or says "None" and why.
+1. **Write** the doc to `plans/design-YYYY-MM-DD-<topic>.md` with the template below. A location the user or repository prefers overrides this path. Work on the branch the change itself will land on, named for the change (`feat/retry-webhooks`, not `docs/retry-webhooks`), since `/build` builds on that same branch. When revising, work where the doc already lives. Done when every section is filled, or says "None" and why.
 2. **Commit** the doc on its own.
 3. **Review.** Dispatch a fresh **devils-advocate** agent with the doc's path. Fix the findings that hold. For a finding you reject, record why under Decisions so the next round sees your reasoning. Commit and re-dispatch. Done when a round brings no finding you accept. After 3 rounds, bring the remaining findings to the user.
 4. **Hand over.** Ask the user to review it:

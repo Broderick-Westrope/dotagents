@@ -491,12 +491,13 @@ test("the user's answer to a blocked question is recorded where reviewers see it
   assert.match(sim.turns[1].prompt, /under \*\*Decisions\*\* in the build note at `[^`]*build-note-approach-1\.md`/)
 })
 
-test("a rejected approach records its lesson in the design doc and removes its own worktrees", () => {
+test("a rejected approach records its lesson in the design doc and removes its own worktrees, keeping the doc's", () => {
   const sim = { da: ["wrong-approach", "clean"] }
   mustSucceed(runBuild(sim))
   const lesson = turnsWith(sim, "judged this approach wrong")[0].prompt
   assert.match(lesson, /record what this approach taught in it/)
-  assert.match(lesson, /Remove this approach's worktrees/)
+  assert.match(lesson, /Remove the other worktrees this approach created/)
+  assert.match(lesson, /reset that branch/)
   assert.match(lesson, /Leave anything you didn't create/)
 })
 

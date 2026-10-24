@@ -2,7 +2,7 @@ Build an early version of the change described in {{doc}}.
 
 If the goal or the success criteria aren't clear enough to build from, don't guess: report `blocked` with your question. If it needs more than a question or two, say the user should run **grilling** first.
 
-1. **Worktrees.** Decide which repositories the change belongs in. The run started in `{{root}}`, which may not be one of them (for example, a notes directory). Load **using-git-worktrees** and work in a linked worktree on a feature branch in each. An early version must be cheap to throw away.
+1. **Worktrees.** Decide which repositories the change belongs in. The run started in `{{root}}`, which may not be one of them (for example, a notes directory). Load **using-git-worktrees** and work in a linked worktree on a feature branch in each. When the design doc sits in a linked worktree whose branch holds only docs for this change (the design doc, perhaps a spike), build in that worktree: the docs and the change ship together. An early version must be cheap to throw away.
 2. **Build.** Read the code you will touch and follow its existing patterns. Load the matching style skills (for example **go-style**).
    - Build the thinnest complete path first: one slice through every layer that works end to end. Then widen it.
    - Follow the test-driven development reference at `{{tdd}}` for each slice. Stop at green; structural cleanup comes later.
