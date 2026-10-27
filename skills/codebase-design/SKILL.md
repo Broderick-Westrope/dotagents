@@ -66,7 +66,7 @@ Spot problems in code with the red flags below. Choose between designs with **Co
 | **Growing switch** | A `switch` or `if/else` chain gains a branch per feature, often repeated in several places. | Change the shape: a lookup table, a state machine, or a typed model whose methods own the rules. |
 | **Hand-synced state** | Two booleans, two lists, or two maps that must be updated together, or a registry that must be edited whenever a type is added. | Derive one from the other, or make the invalid combination unrepresentable. |
 | **Two ways to do one task** | An old and a new API for the same job both still have callers. | Migrate every caller and delete the old path in the same change. |
-| **Duplicated concept** | The same logic with the same meaning in three or more places, or two copies that have already drifted. | Extract one owner. Two blocks that look alike but change for different reasons are not duplicates. |
+| **Duplicated concept** | The same logic with the same meaning in three or more places, or two copies that have already drifted. Count copies outside the diff too: search the repo for siblings of what the change adds. | Extract one owner. Two blocks that look alike but change for different reasons are not duplicates. |
 
 ## Tests
 
@@ -92,6 +92,7 @@ When reviewing a diff, treat these as Important at least, because agents copy th
 - A new pass-through, middle man, or interface type with one implementation.
 - Shotgun surgery: one logical change spread across many files because a decision has no single owner.
 - A new branch in a growing switch, or a second way to do a task that already has one.
+- A new copy of a duplicated concept, whether the other copies are in the diff or outside it.
 
 Also look for **code judo**: a restructuring that would delete whole branches, layers or files rather than tidy them. Suggest it even when the diff is locally fine. Don't ask for helpers extracted only to shorten a function.
 
