@@ -257,15 +257,44 @@ test("only audited, confirmed findings reach the builder, and the review cap han
   assert.match(handBack(sim)[0].prompt, /\[important\] real bug \(a\.go:1\)/)
 })
 
-test("a pass whose findings are all rejected or minor moves on to hand over", () => {
+test("a confirmed minor finding goes to the builder, and a pass it leaves unchanged hands over", () => {
   const sim = {
     da: ["clean"],
     reviews: { [SONNET]: { verdict: "request-changes", findings: [{ severity: "important", title: "nit" }] } },
     audit: { dispositions: [{ id: "sonnet-1", verdict: "confirmed", severity: "minor", reason: "style only" }] },
   }
   mustSucceed(runBuild(sim))
+  const fixes = turnsWith(sim, "have been audited")
+  assert.equal(fixes.length, 1)
+  assert.match(fixes[0].prompt, /"severity": "minor"/)
+  assert.match(fixes[0].prompt, /a minor finding gets fixed like any other/)
+  assert.match(fixes[0].prompt, /\*\*Decisions\*\*/)
+  assert.equal(sim.reviewPasses, 1)
+  assert.match(lastTurn(sim).prompt, /passed review/)
+})
+
+test("a pass whose findings are all rejected moves on to hand over without a fix turn", () => {
+  const sim = {
+    da: ["clean"],
+    reviews: { [SONNET]: { verdict: "request-changes", findings: [{ severity: "important", title: "bogus" }] } },
+    audit: { dispositions: [{ id: "sonnet-1", verdict: "rejected", reason: "no" }] },
+  }
+  mustSucceed(runBuild(sim))
   assert.equal(turnsWith(sim, "have been audited").length, 0)
   assert.equal(sim.reviewPasses, 1)
+})
+
+test("fixing minor findings gets another review, and minor findings alone never stop the run at the cap", () => {
+  const sim = {
+    da: ["clean"],
+    reviews: { [SONNET]: { verdict: "approve", findings: [{ severity: "minor", title: "copy" }] } },
+    audit: { dispositions: [{ id: "sonnet-1", verdict: "confirmed", severity: "minor", reason: "yes" }] },
+    report: (n, prompt) => (prompt.includes("have been audited") ? { status: "done", changed: true } : undefined),
+  }
+  const result = mustSucceed(runBuild(sim))
+  assert.equal(result.outcome, "ready")
+  assert.equal(sim.reviewPasses, 3)
+  assert.equal(turnsWith(sim, "have been audited").length, 3)
   assert.match(lastTurn(sim).prompt, /passed review/)
 })
 

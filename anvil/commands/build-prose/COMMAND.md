@@ -75,7 +75,7 @@ Load **verification-before-completion** and exercise the change locally as it de
 
 ### 7. Agent code review
 
-Read `../review/COMMAND.md` relative to this command's location and follow it. Treat its `$ARGUMENTS` as "the full branch diff against `<base>`", so skip its scope questions. On REQUEST CHANGES, fix every Critical and Important finding without asking (yourself or via **fixer**), committing each fix separately (don't amend earlier commits), then re-run the review as that command says. Reviewers check structure again with fresh eyes, since authors miss their own mistakes.
+Read `../review/COMMAND.md` relative to this command's location and follow it. Treat its `$ARGUMENTS` as "the full branch diff against `<base>`", so skip its scope questions. Treat every finding as a candidate for change, Suggestions included: severity orders the work, and a suggestion gets fixed like any other. Fix each one without asking (yourself or via **fixer**), making the smallest fix that resolves it and preferring one that deletes code, and commit each fix separately (don't amend earlier commits). When a fix would make the change worse, record the concrete reason under **Decisions** in the build note instead. Then re-run the review as that command says whenever it requested changes or your fixes changed the work. After three review passes, move on to step 8 and list the findings the last pass raised, since nobody has reviewed their fixes. Reviewers check structure again with fresh eyes, since authors miss their own mistakes.
 
 ### 8. Human code review
 

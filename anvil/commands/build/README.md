@@ -11,10 +11,10 @@ Build first, then challenge the diff. An early version answers open questions fa
 - **The devil's advocate's context.** The script writes its prompt: a snapshot of the design doc taken when the run starts, and the current build note. It never sees earlier rounds or the conversation with the builder. The note does carry the builder's current reasoning, including why it didn't act on a finding and decisions you made when it asked you, so the DA judges the change against them.
 - **A fresh builder for each rebuild.** A rejected approach's session never builds the next one, so the new builder isn't anchored to it. It knows only what earlier approaches taught.
 - **Caps.** Five DA reviews per approach, three approaches, three review passes.
-- **Review.** Three reviewers always run in parallel, an auditor disposes of every finding, and the builder only sees confirmed critical and important findings.
+- **Review.** Three reviewers always run in parallel, an auditor disposes of every finding, and the builder only sees confirmed findings. It gets every one, minor included, and fixes each or records in the note why not. A pass that changed the work, or confirmed a critical or important finding, gets another; only critical and important findings stop the run at the cap.
 - **The order of phases.** Build, challenge and refine, exercise, review, hand over.
 
-Everything else is the builder's judgement, as it was in the prose command: which repositories the change belongs in, creating worktrees and branches, committing, and how to act on findings (it can disagree with a DA finding and record why in the note). The script never runs git or wtp itself, so it never stops the builder from working the way the change needs. If a guarantee above starts restricting what the builder can do, that's a sign the script has gone too far.
+Everything else is the builder's judgement, as it was in the prose command: which repositories the change belongs in, creating worktrees and branches, committing, and how to act on findings (it can disagree with a DA or review finding and record why in the note). The script never runs git or wtp itself, so it never stops the builder from working the way the change needs. If a guarantee above starts restricting what the builder can do, that's a sign the script has gone too far.
 
 ## Input
 
@@ -29,7 +29,7 @@ Everything else is the builder's judgement, as it was in the prose command: whic
 3. **Refine or rebuild.** Changes go back to the builder, who fixes or answers them and does a structural cleanup pass against the red flags in **codebase-design**, then to a new DA round. A clean verdict gets one cleanup pass too, and moves on only if the builder reports that it changed nothing. A wrong approach is rebuilt from scratch: its builder records the lesson in the design doc and removes its own worktrees and branches (on the design doc's own branch it resets to the docs instead), and a new session starts over.
    - For a large change the builder can work slice by slice, as in the prose command: it reports `slice` after a slice later ones depend on, the DA challenges it (with its own round count), and the builder carries on once it's clean.
 4. **Exercise.** The builder verifies the change locally with **verification-before-completion**.
-5. **Review.** Reviewers run in parallel, an auditor disposes of their findings, and the builder fixes confirmed ones.
+5. **Review.** Reviewers run in parallel, an auditor disposes of their findings, and the builder fixes or answers every confirmed one.
 6. **Hand over.** The builder rewrites the note as a draft PR description and hands over in its session, where you carry on with it. The run returns `{outcome: "ready", note, failedReviewers}`.
 
 ## Talking to you

@@ -252,9 +252,12 @@ function finish(builder, ctx) {
   return { outcome: "ready", note: ctx.note, failedReviewers: failed }
 }
 
-// review runs the reviewers in parallel, audits their findings, and has
-// the builder fix only audited, confirmed ones. It returns the labels of
-// reviewers that failed in the last pass.
+// review runs the reviewers in parallel, audits their findings, and hands
+// the builder every confirmed one, minor included, to fix or answer in the
+// note. Another pass follows when the builder changed the work or a
+// critical or important finding was confirmed, and only those findings can
+// stop the run at the pass cap. It returns the labels of reviewers that
+// failed in the last pass.
 function review(builder, ctx) {
   let blocking = []
   for (let pass = 1; pass <= MAX_REVIEW_PASSES; pass++) {
@@ -287,14 +290,16 @@ function review(builder, ctx) {
     status("audit", raw.length + " findings")
     const audit = runAudit(ctx, raw)
     const byId = Object.fromEntries(raw.map(f => [f.id, f]))
-    blocking = audit.dispositions
-      .filter(d => d.verdict === "confirmed" && d.severity !== "minor")
+    const confirmed = audit.dispositions
+      .filter(d => d.verdict === "confirmed")
       .map(d => Object.assign({}, byId[d.id], { severity: d.severity, audit: d.reason }))
-    if (blocking.length === 0) return failed
+    if (confirmed.length === 0) return failed
+    blocking = confirmed.filter(f => f.severity !== "minor")
 
-    status("fix", blocking.length + " confirmed findings")
+    status("fix", confirmed.length + " confirmed findings")
     // The builder only ever sees audited findings.
-    work(builder, ctx, fill("references/fix.md", Object.assign({}, ctx, { findings: JSON.stringify(blocking, null, 2) })))
+    const report = work(builder, ctx, fill("references/fix.md", Object.assign({}, ctx, { findings: JSON.stringify(confirmed, null, 2) })))
+    if (blocking.length === 0 && (report.changed === false || pass === MAX_REVIEW_PASSES)) return failed
   }
   throw new Stop("Review still had confirmed findings after " + MAX_REVIEW_PASSES +
     " passes. The last pass's, which you fixed but nobody has reviewed since:\n\n" +
