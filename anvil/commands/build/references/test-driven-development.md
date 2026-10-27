@@ -119,7 +119,14 @@ Confirm:
 
 ### GREEN - Minimal Code
 
-Write simplest code to pass the test.
+Write the simplest code that passes the test. Take the first rung that holds:
+
+1. **Does it need to exist?** Leave out features, options and flexibility nobody asked for, and name what you left out when you report.
+2. **Does the codebase already have it?** Use the helper, component or pattern the way the surrounding code does.
+3. **Does the standard library, the platform or an installed dependency do it?** Use that. The codebase's own component beats a native one.
+4. **Only then** write the minimum new code.
+
+Simple still covers everything the task needs: validation at trust boundaries, error handling that prevents data loss, security and accessibility.
 
 <Good>
 ```typescript
