@@ -55,6 +55,15 @@ Load the **grilling** skill before this phase if available.
 
 If the user's direction is unclear, generate 2-3 distinct approaches before committing to one. For each approach, note: implementation effort, tradeoffs, risks. Pick one and justify the choice.
 
+Shape every approach, including one the user already chose, by taking the first rung that holds:
+
+1. **Does it need to exist?** Leave out manual overrides, allow-lists, flags, runbooks, staged releases, tracking and guards nobody asked for, and name what you left out. Ask whether one fix upstream removes the need for changes downstream.
+2. **Does the codebase already have it?** Reuse the mechanism the surrounding services use.
+3. **Does the platform or an installed dependency do it?** Use that.
+4. **Only then** design the smallest new mechanism that covers most cases, and leave the rest as follow-ups.
+
+Simple still covers everything the goal needs: validation at trust boundaries, preventing data loss, security and accessibility.
+
 The **grilling** skill handles both targeted refinement and approach exploration — no separate skill needed.
 
 ### Phase 3: Writing and Reviewing the Design Doc

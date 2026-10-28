@@ -63,6 +63,13 @@ If the proposal is genuinely solid, say so clearly. Forced criticism of a good p
 - Is there a rollback path?
 - How would you detect that it has failed?
 
+**Overbuilding:** what could be removed with nothing lost?
+- Manual overrides, allow-lists, flags, runbooks, staged releases or tracking that no requirement or evidence asks for
+- Guards and downstream changes that one upstream fix would make unnecessary
+- A new mechanism where the codebase, platform or an installed dependency already has one
+
+An overbuilding concern names what to cut. Don't resolve a concern above by adding a mechanism when a smaller design removes the risk.
+
 ## Process
 
 1. **Understand the proposal:** read it carefully before generating concerns. Misunderstanding the proposal and criticizing a strawman is a waste of everyone's time.
