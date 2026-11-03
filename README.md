@@ -29,6 +29,7 @@ Quick workflows for everyday development tasks:
 | [/audit-context](anvil/commands/audit-context/COMMAND.md)   | Identify knowledge gaps in project context and collect human input |
 | [/post-mortem](anvil/commands/post-mortem/COMMAND.md)       | Review a session to assess execution and extract improvements      |
 | [/wtp-pruning](anvil/commands/wtp-pruning/COMMAND.md)       | Classify wtp worktrees and flag the stale ones                     |
+| [/pr-triage](anvil/commands/pr-triage/COMMAND.md)           | Sort your open PRs into merge, chase, refine, open, rework and close |
 | [/survey-architecture](anvil/commands/survey-architecture/COMMAND.md) | Rank structural problems in existing code with evidence  |
 
 ### Skills
