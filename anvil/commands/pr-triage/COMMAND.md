@@ -3,7 +3,7 @@ description: Sort your open PRs into merge, chase, refine, open, rework and clos
 argument_hint: "[repo filter]"
 ---
 
-Triage every open PR the user authored and recommend one next move for each. Each run is a fresh **snapshot**: gather the data again, classify every PR from that data alone, and write the full report. When the user runs this again in the same session, the new report replaces the old one, so it reads complete and standalone: every PR, every bucket, current facts. Leave comparisons with earlier runs out of it ("still", "now", "no longer", "since last time").
+Triage every open PR the user **owns** and recommend one next move for each. The user owns a PR they authored or are assigned to; agents that implement work for the user open PRs under their own account and assign the user, and those count the same as the user's own. Each run is a fresh **snapshot**: gather the data again, classify every PR from that data alone, and write the full report. When the user runs this again in the same session, the new report replaces the old one, so it reads complete and standalone: every PR, every bucket, current facts. Leave comparisons with earlier runs out of it ("still", "now", "no longer", "since last time").
 
 This command is **read-only**. Gather, read and report. Merging, marking ready, rebasing, commenting, requesting reviewers and closing happen only after the user picks them from the report.
 
@@ -18,9 +18,9 @@ Run `scripts/gather.sh` from this command's directory (the directory of the `COM
 gh api user --jq .login
 ```
 
-It prints one JSON object per open PR authored by the active `gh` account: draft state, review decision, mergeability, failing and pending checks, size, last commit time, reviews, human comments, **unresolved review threads** with their comments, the state of every PR the body links to (`dependencies`), and the first 1,500 characters of the body. It retries flaky `gh` calls and re-asks GitHub once when mergeability is still `UNKNOWN`. It takes a minute or two for twenty PRs. Run it with `auto_background_after` of at least 300.
+It prints one JSON object per open PR the active `gh` account authored or is assigned to: `author`, `assignees`, `relation` (`author`, `assignee` or both), draft state, review decision, mergeability, failing and pending checks, size, last commit time, reviews, human comments, **unresolved review threads** with their comments, the state of every PR the body links to (`dependencies`), and the first 1,500 characters of the body. It retries flaky `gh` calls and re-asks GitHub once when mergeability is still `UNKNOWN`. It takes a minute or two for twenty PRs. Run it with `auto_background_after` of at least 300.
 
-`@me` is whichever account `gh` is logged in as in the current directory. Name that account at the top of the report. A line with an `error` field means that PR couldn't be fetched. Re-run the script for just that repo, and if it fails again, list the PR under **Couldn't check**.
+`@me` is whichever account `gh` is logged in as in the current directory. Name that account at the top of the report. A warning on stderr means a search failed and the list is incomplete; re-run the script, and say so in the report header if it fails again. A line with an `error` field means that PR couldn't be fetched. Re-run the script for just that repo, and if it fails again, list the PR under **Couldn't check**.
 
 Done when every PR from the search has a JSON line or is listed under Couldn't check.
 
@@ -28,7 +28,7 @@ Done when every PR from the search has a JSON line or is listed under Couldn't c
 
 The JSON gives you facts. You decide what they mean. For each PR, work out:
 
-- **Feedback state.** Read every unresolved thread and every review or comment with a body. Feedback is **addressed** when the author replied in the thread agreeing to a change and a commit landed after that reply, or when the author's reply settles the question. It is **open** when the reviewer spoke last and no commit came after, or when reviewers disagree with each other. Bot reviews (`lgtm-buddy`, risk and security scanners, Atlantis, Linear) count only when they flag a real finding.
+- **Feedback state.** Read every unresolved thread and every review or comment with a body. Here "the author" is the PR's author, which is an agent on assigned PRs; a reply or commit from the user counts too. Feedback is **addressed** when the author replied in the thread agreeing to a change and a commit landed after that reply, or when the author's reply settles the question. It is **open** when the reviewer spoke last and no commit came after, or when reviewers disagree with each other. Bot reviews (`lgtm-buddy`, risk and security scanners, Atlantis, Linear) count only when they flag a real finding.
 - **Dependencies.** Read the body for ordering: "stacked on", "merge after", "deploy after", "don't merge before", "companion to". `dependencies` gives each linked PR's state. A PR is **gated** while a PR it must follow is still open. A linked PR that closed without merging means the plan changed; check whether a replacement exists.
 - **Health.** Failing checks: tell flaky or unrelated failures from real ones by name, and treat a failing security or secrets scan as worth investigating on any PR. Merge conflicts (`DIRTY`) and branches behind base (`BEHIND`) need a rebase.
 - **Staleness.** Measure age from the later of the last commit and the last human comment. More than 14 days quiet is stale. For stale PRs that depend on outside state (data mutations pinned to reviewed values, vendor API behaviour, config), say what to re-check before moving them.
@@ -54,7 +54,7 @@ Done when every PR from step 1 appears in exactly one bucket or under Couldn't c
 
 Header: the `gh` account, the filter if any, the snapshot time, and the PR count per bucket.
 
-Then one section per bucket in the table order above, skipping empty buckets. For each PR give its full URL and one or two lines: the facts that put it there and the concrete next move. Name reviewers, threads and gates specifically (who disagrees about what, which PR must merge first). Where PRs belong together (companion PRs, a shared workflow and its callers, stacked PRs), group them in the same bucket and give their order.
+Then one section per bucket in the table order above, skipping empty buckets. For each PR give its full URL, the authoring agent when the user is only the assignee (e.g. "by gertrude-bot"), and one or two lines: the facts that put it there and the concrete next move. Name reviewers, threads and gates specifically (who disagrees about what, which PR must merge first). Where PRs belong together (companion PRs, a shared workflow and its callers, stacked PRs), group them in the same bucket and give their order.
 
 When two or more PRs are ordered by gates, add a Mermaid `flowchart LR` of the merge order.
 

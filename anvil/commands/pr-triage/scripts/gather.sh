@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prints one JSON object per open PR authored by the current gh user.
+# Prints one JSON object per open PR the current gh user authored or is assigned to.
 # Usage: gather.sh [filter]   (filter is a substring of owner/repo)
 set -uo pipefail
 
@@ -9,7 +9,7 @@ retry() {
   local attempt out
   for attempt in 1 2 3; do
     if out="$("$@" 2>/dev/null)"; then
-      printf '%s' "$out"
+      printf '%s\n' "$out"
       return 0
     fi
     sleep $((attempt * 2))
@@ -25,12 +25,12 @@ pr_state() {
 }
 
 one() {
-  local repo="$1" num="$2" owner name view threads deps body mergeable
+  local repo="$1" num="$2" me="$3" owner name view threads deps body mergeable
   owner="${repo%%/*}"
   name="${repo#*/}"
 
   view="$(retry gh pr view "$num" --repo "$repo" --json \
-    url,title,body,isDraft,createdAt,updatedAt,baseRefName,headRefName,additions,deletions,changedFiles,reviewDecision,mergeable,mergeStateStatus,statusCheckRollup,reviews,comments,commits)" \
+    url,title,body,author,assignees,isDraft,createdAt,updatedAt,baseRefName,headRefName,additions,deletions,changedFiles,reviewDecision,mergeable,mergeStateStatus,statusCheckRollup,reviews,comments,commits)" \
     || { jq -nc --arg ref "$repo#$num" '{ref: $ref, error: "gh pr view failed after 3 attempts"}'; return; }
 
   mergeable="$(jq -r .mergeable <<<"$view")"
@@ -56,11 +56,15 @@ one() {
     } | sort -u | grep -v "^$repo $num\$" | while read -r drepo dnum; do pr_state "$drepo" "$dnum"; done | jq -sc .
   )"
 
-  jq -c --arg repo "$repo" --argjson threads "$threads" --argjson deps "${deps:-[]}" '
+  jq -c --arg repo "$repo" --arg me "$me" --argjson threads "$threads" --argjson deps "${deps:-[]}" '
     def checkstate: (.conclusion // .state // .status // "UNKNOWN");
     {
       ref: "\($repo)#\(.url | split("/") | last)",
-      url, title, isDraft, createdAt, updatedAt, baseRefName, headRefName,
+      url, title,
+      author: .author.login,
+      assignees: [.assignees[].login],
+      relation: ([if .author.login == $me then "author" else empty end, if any(.assignees[]; .login == $me) then "assignee" else empty end]),
+      isDraft, createdAt, updatedAt, baseRefName, headRefName,
       size: {additions, deletions, changedFiles},
       reviewDecision, mergeable, mergeStateStatus,
       checks: {
@@ -80,7 +84,14 @@ one() {
 
 export -f one retry pr_state
 
-retry gh search prs --author @me --state open --limit 200 --json repository,number \
-  --jq '.[] | "\(.repository.nameWithOwner) \(.number)"' \
+ME="$(retry gh api user --jq .login)" || { echo 'gather.sh: gh api user failed; is gh logged in?' >&2; exit 1; }
+export ME
+
+for role in author assignee; do
+  retry gh search prs "--$role" @me --state open --limit 200 --json repository,number \
+    --jq '.[] | "\(.repository.nameWithOwner) \(.number)"' \
+    || echo "gather.sh: gh search prs --$role failed after 3 attempts; results are incomplete" >&2
+done \
+  | sed '/^$/d' | sort -u \
   | { if [ -n "$filter" ]; then grep -F -- "$filter" || true; else cat; fi; } \
-  | xargs -P 6 -L 1 bash -c 'one "$0" "$1"'
+  | xargs -P 6 -L 1 bash -c 'one "$0" "$1" "$ME"'
