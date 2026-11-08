@@ -38,7 +38,7 @@ const MAX_REVIEW_PASSES = 3
 const REVIEWERS = [
   { label: "Sonnet", agent: "reviewer", model: "anthropic/claude-sonnet-5-5" },
   { label: "Opus", agent: "reviewer", model: "anthropic/claude-opus-5-5" },
-  { label: "Convention", agent: "convention-reviewer", model: "anthropic/claude-opus-5-5" },
+  { label: "Convention", agent: "convention-reviewer", model: "anthropic/claude-sonnet-5-5" },
 ]
 
 const Report = {

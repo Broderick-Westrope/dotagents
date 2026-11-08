@@ -1,5 +1,5 @@
 ---
-model: anthropic/claude-opus-5-5
+model: anthropic/claude-sonnet-5-5
 role: Convention compliance reviewer for code changes
 delegate_when: >
   Convention-focused code review, checking changes against project standards,

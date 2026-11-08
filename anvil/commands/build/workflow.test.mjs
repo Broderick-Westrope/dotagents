@@ -8,7 +8,7 @@ import { BUILD_DIR, runBuild } from "./fake-runtime.mjs"
 
 const SONNET = "reviewer anthropic/claude-sonnet-5-5"
 const OPUS = "reviewer anthropic/claude-opus-5-5"
-const CONVENTION = "convention-reviewer anthropic/claude-opus-5-5"
+const CONVENTION = "convention-reviewer anthropic/claude-sonnet-5-5"
 
 const ran = (sim, prefix) => sim.bashes.filter(b => b.cmd.startsWith(prefix))
 const lastTurn = sim => sim.turns[sim.turns.length - 1]
