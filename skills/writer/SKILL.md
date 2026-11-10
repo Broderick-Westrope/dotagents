@@ -83,6 +83,7 @@ Unless specifically requested.
 - **Short paragraphs** - 3-4 sentences max
 - **Tables for comparisons** - Not prose
 - **Whitespace** - Let it breathe
+- **One line per paragraph** - In Markdown (docs, READMEs, prompts, skills), write each paragraph and each list item as a single line and let the editor wrap it, the way a person types. Fixed-width wraps render the same, but every edit reflows the lines after it into a noisy diff, and the raw file is harder to read. Commit message bodies keep git's 72-column wrap.
 
 ---
 

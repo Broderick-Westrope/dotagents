@@ -7,7 +7,7 @@ description: "Writing documents an agent consumes. Use when creating or editing 
 
 Reference for writing any document an agent consumes: a skill, a command, an agent's system prompt, a memory file (`AGENTS.md`, `CLAUDE.md`, `ANVIL.md`), a doc reached by a pointer. The packaging differs; the writing does not: the same levers make each one predictable, since the agent takes the same _process_ every run rather than producing the same output.
 
-When the document is a skill, command or agent file, read `references/skill-mechanics.md` for frontmatter, the invocation choice, and router skills.
+When the document is a skill, command or agent file, read `references/skill-mechanics.md` for frontmatter, the invocation choice, and router skills. Line breaks and paragraph layout follow the `writer` skill's Formatting section: one line per paragraph.
 
 ## Context pointers
 
