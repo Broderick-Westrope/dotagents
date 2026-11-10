@@ -7,11 +7,12 @@ If the goal or the success criteria aren't clear enough to build from, don't gue
    - Build the thinnest complete path first: one slice through every layer that works end to end. Then widen it.
    - Follow the test-driven development reference at `{{tdd}}` for each slice. Stop at green; structural cleanup comes later.
    - Commit as you go, one commit per logical step. Reviewers read committed work.
+   - When the change ships as several dependent PRs (the design doc says so, for example one per phase, or the user asked for it), build it as a stack, set up as in the Stacks section of **using-git-worktrees**: create the stack before writing code, and start each slice that becomes its own PR with `gh stack add`.
    - For a large change, build slice by slice. When a slice is done that later slices will depend on, write the build note and report `slice`, so the devil's advocate challenges it before you build on it; you'll be told when to carry on. Report `done` once the whole change is built.
    - Hand bounded slices to **fixer** subagents when that's faster than building them yourself, in parallel only when they touch separate areas. Give each the design doc, its slice, its worktree, the TDD reference path and the style skill to load, and merge the assumptions it reports into the build note.
    - Don't stop to polish. The point is to learn what the change really involves, and the devil's advocate may still send it back for a rebuild.
 3. **Build note.** Write it to `{{note}}` right after building, while you still know what you assumed. Don't commit it. Keep it short. It covers:
-   - **Where:** each worktree's absolute path, branch and base branch. Reviewers find the change from this, so keep it accurate.
+   - **Where:** each worktree's absolute path, branch and base branch. For a stack, give the trunk as the base, leave the top layer checked out so reviewers see the whole change, and list the layers bottom first. Reviewers find the change from this, so keep it accurate.
    - **Assumptions:** things the code relies on that you did not verify.
    - **Decisions:** choices you made where the design doc was silent.
    - **Rejected options:** approaches you tried or considered, and why not.
