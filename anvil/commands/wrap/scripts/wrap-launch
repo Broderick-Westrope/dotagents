@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""Wrap up the current Anvil session in the background, then close its herdr tab.
+
+Run from inside the session (the /wrap command does this). Returns at once; a
+detached child waits for the session's current turn to finish, closes the tab,
+continues the session non-interactively with the wrap-up procedure, records the
+result in the ledger and sends a notification.
+
+  wrap-launch               background wrap-up, then close the tab
+  wrap-launch --close-only  the wrap-up already ran in the session; just close the tab and record it
+"""
+
+import os
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import hublib  # noqa: E402
+
+TURN_WAIT_SECONDS = 180
+
+WRAP_PROMPT = (
+    "This session has ended and its tab is closed; nobody is watching this turn. "
+    "Run the wrap-up procedure in {procedure} for this whole conversation, then end with its one-line report."
+)
+
+
+def main():
+    close_only = "--close-only" in sys.argv[1:]
+    session_id = os.environ.get("ANVIL_ROOT_SESSION_ID", "")
+    tab_id = os.environ.get("HERDR_TAB_ID", "")
+    if not session_id:
+        print("ANVIL_ROOT_SESSION_ID is not set: run this from inside an Anvil session.", file=sys.stderr)
+        return 2
+    if not tab_id and not close_only:
+        print("HERDR_TAB_ID is not set: outside herdr, run the wrap-up in the session instead.", file=sys.stderr)
+        return 3
+
+    hublib.ensure_dirs()
+    log_path = hublib.LOGS / "wrap-{}-{}.log".format(time.strftime("%Y%m%d-%H%M%S"), session_id[:8])
+    started = int(time.time())
+
+    if not hublib.daemonize(log_path):
+        action = "Closing the tab" if close_only else "Wrapping up in the background"
+        print("{} once this turn ends. Log: {}".format(action, log_path))
+        return 0
+
+    conn = hublib.connect()
+    deadline = time.time() + TURN_WAIT_SECONDS
+    while not hublib.turn_finished_since(conn, session_id, started):
+        if time.time() > deadline:
+            print("turn did not finish within {}s; leaving the tab open".format(TURN_WAIT_SECONDS))
+            hublib.notify("Wrap-up not started", "The session's turn never finished. Log: {}".format(log_path))
+            return 1
+        time.sleep(1)
+    session = hublib.session_row(conn, session_id)
+    conn.close()
+
+    if tab_id:
+        os.system("PATH={} herdr tab close {} >/dev/null 2>&1".format(hublib.PATH_ENV, tab_id))
+    if close_only:
+        hublib.append_ledger(session_id, "here", "ok", "wrapped in session")
+        return 0
+
+    time.sleep(2)
+    prompt = WRAP_PROMPT.format(procedure=hublib.WRAP_PROCEDURE)
+    code, last_line = hublib.run_anvil(prompt, session["working_dir"], log_path, session_id=session_id)
+    title = session["title"] or session_id[:8]
+    if code == 0:
+        hublib.append_ledger(session_id, "wrap", "ok", last_line)
+        hublib.notify("Wrapped: {}".format(title), last_line or "done")
+        return 0
+    hublib.append_ledger(session_id, "wrap", "failed:{}".format(code), last_line)
+    hublib.notify("Wrap-up failed: {}".format(title), "Exit {}. The nightly sweep will retry. Log: {}".format(code, log_path))
+    return code
+
+
+if __name__ == "__main__":
+    sys.exit(main())

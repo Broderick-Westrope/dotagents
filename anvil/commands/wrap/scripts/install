@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+"""Install what /wrap needs beyond the command itself: the wrap guard hook and the launchd jobs.
+
+Run it from the plugin checkout Anvil loads, since the hook and the jobs point at
+this script's own directory. Idempotent. It also removes the pre-plugin setup
+(a ~/.config/anvil/commands symlink into the hub, and older wrap-guard hooks).
+`install --uninstall` removes the hook and the jobs.
+"""
+
+import json
+import os
+import plistlib
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import hublib  # noqa: E402
+
+ANVIL_CONFIG = hublib.HOME / ".config" / "anvil" / "anvil.json"
+OLD_COMMANDS_LINK = hublib.HOME / ".config" / "anvil" / "commands"
+GUARD = hublib.SCRIPTS / "wrap-guard"
+GUARD_COMMAND = '"{}"'.format(GUARD)
+GUARD_MATCHER = "^(bash|edit|multiedit|write|task|call_mcp_tool|mcp_.*)$"
+AGENTS_DIR = hublib.HOME / "Library" / "LaunchAgents"
+
+JOBS = {
+    "dev.brodie.hub.sweep": {"script": "sweep", "calendar": {"Hour": 2, "Minute": 30}},
+    "dev.brodie.hub.weekly": {"script": "weekly", "calendar": {"Weekday": 1, "Hour": 4, "Minute": 0}},
+}
+
+
+def load_config():
+    return json.loads(ANVIL_CONFIG.read_text())
+
+
+def loaded_by_anvil(config):
+    for plugin in config.get("plugins", []):
+        root = Path(os.path.expanduser(plugin.get("path", ""))).resolve()
+        if root in hublib.SCRIPTS.parents:
+            return True
+    return False
+
+
+def remove_old_commands_link():
+    if OLD_COMMANDS_LINK.is_symlink() and Path(os.readlink(OLD_COMMANDS_LINK)) == hublib.HUB / "commands":
+        OLD_COMMANDS_LINK.unlink()
+        return "removed the old {} symlink into the hub".format(OLD_COMMANDS_LINK)
+    return None
+
+
+def edit_hooks(config, remove):
+    hooks = config.setdefault("hooks", {}).setdefault("PreToolUse", [])
+    kept = [hook for hook in hooks if "wrap-guard" not in hook.get("command", "")]
+    if not remove:
+        kept.append({"matcher": GUARD_MATCHER, "command": GUARD_COMMAND, "timeout": 5})
+    if kept == hooks:
+        return "guard hook already {}".format("absent" if remove else "installed")
+    config["hooks"]["PreToolUse"] = kept
+    backup = ANVIL_CONFIG.with_name("anvil.json.bak-wrap-{}".format(time.strftime("%Y%m%d%H%M%S")))
+    shutil.copy2(ANVIL_CONFIG, backup)
+    text = json.dumps(config, indent=2, ensure_ascii=False)
+    text = text.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+    ANVIL_CONFIG.write_text(text)
+    return "{} guard hook {} (backup {})".format("removed" if remove else "set", GUARD_COMMAND, backup.name)
+
+
+def launchctl(*args):
+    return subprocess.run(["launchctl"] + list(args), capture_output=True, text=True, check=False)
+
+
+def install_jobs(remove):
+    domain = "gui/{}".format(os.getuid())
+    environment = {"PATH": hublib.PATH_ENV, "HOME": str(hublib.HOME), "WRAP_HUB": str(hublib.HUB), "WRAP_WRITABLE": hublib.WRITABLE}
+    messages = []
+    for label, job in JOBS.items():
+        plist_path = AGENTS_DIR / "{}.plist".format(label)
+        launchctl("bootout", "{}/{}".format(domain, label))
+        if remove:
+            if plist_path.exists():
+                plist_path.unlink()
+            messages.append("removed {}".format(label))
+            continue
+        log = str(hublib.LOGS / "{}.launchd.log".format(job["script"]))
+        plist = {
+            "Label": label,
+            "ProgramArguments": [str(hublib.SCRIPTS / job["script"])],
+            "StartCalendarInterval": job["calendar"],
+            "EnvironmentVariables": environment,
+            "WorkingDirectory": str(hublib.RUNS_DIR),
+            "StandardOutPath": log,
+            "StandardErrorPath": log,
+            "LowPriorityIO": True,
+            "ProcessType": "Background",
+        }
+        AGENTS_DIR.mkdir(parents=True, exist_ok=True)
+        with plist_path.open("wb") as handle:
+            plistlib.dump(plist, handle)
+        result = launchctl("bootstrap", domain, str(plist_path))
+        if result.returncode != 0:
+            messages.append("failed to load {}: {}".format(label, result.stderr.strip()))
+        else:
+            messages.append("loaded {} ({})".format(label, job["calendar"]))
+    return messages
+
+
+def main():
+    remove = "--uninstall" in sys.argv[1:]
+    config = load_config()
+    if not remove and not loaded_by_anvil(config) and "--force" not in sys.argv[1:]:
+        raise SystemExit(
+            "{} is not inside a plugin Anvil loads, so the hook and jobs would point at a copy "
+            "Anvil doesn't use. Run install from the plugin checkout, or pass --force.".format(hublib.SCRIPTS)
+        )
+    hublib.ensure_dirs()
+    for script in ("wrap-launch", "sweep", "weekly", "install", "wrap-guard"):
+        (hublib.SCRIPTS / script).chmod(0o755)
+    if not remove:
+        message = remove_old_commands_link()
+        if message:
+            print(message)
+    print(edit_hooks(config, remove))
+    for message in install_jobs(remove):
+        print(message)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

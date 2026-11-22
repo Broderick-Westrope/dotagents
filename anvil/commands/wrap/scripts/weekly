@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+"""Weekly review: mine the week's corrections and check the hub's health.
+
+Runs one fresh non-interactive Anvil session that writes
+hub/reports/weekly-<date>.md and commits it in the hub repo. It proposes
+changes and applies none outside the report and the correction ledger.
+
+  weekly             run it
+  weekly --print     print the prompt instead of running it
+"""
+
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import hublib  # noqa: E402
+
+WEEKLY_PROMPT = """This is Brodie's unattended weekly review; nobody answers questions during it. Today is {today}. Write the report to {report} and commit it in the {topics} repo (stage it by path, subject `weekly review {today}`); write nothing else outside the correction ledger.
+
+1. Corrections. Load the `mining-corrections` skill and run its bulk mode from the ledger's "Last mined" date, through step 3 (Merge). Then, instead of step 4's conversation, rank the themes with new corrections this week. Done when the ledger's "Last mined" is today.
+
+2. Wrap-up health. Read {ledger}: count wraps by mode and status over the last 7 days, list failures with their log files in {logs}, and read two or three of this week's wrap commits (`git log --grep '^wrap:' --since='7 days ago'` in the topic repos) to judge whether they recorded the right things in the right places.
+
+3. Hub health. For each topic in the index in {topics}/CLAUDE.md: entry-file size against the ~100-line budget in {topics}/README.md, and whether its index line still matches the folder (dormant, done, renamed). List folders in {topics} missing from the index. For each item in {topics}/inbox.md older than 7 days, propose a home.
+
+Report format, in this order, each item one or two lines with a file path:
+- `## Do now`: clear wins under an hour each, at most five, highest value first. Each names the exact file and change: a skill or prompt rule, a hook, a CLAUDE.md trim, an index fix, an inbox move.
+- `## Bigger`: worth doing, more than an hour, with why.
+- `## Corrections this week`: top themes, new counts, the proposed enforcement rung.
+- `## Wrap-ups`: the counts, failures, and your verdict on quality.
+- `## Hub`: entry files over budget, index drift, inbox proposals.
+
+End with one line: `Weekly review: <n> do-now items, top: <first item>`."""
+
+
+def main():
+    hublib.ensure_dirs()
+    today = time.strftime("%Y-%m-%d")
+    reports_dir = hublib.HUB / "reports"
+    reports_dir.mkdir(exist_ok=True)
+    prompt = WEEKLY_PROMPT.format(
+        today=today,
+        report=reports_dir / "weekly-{}.md".format(today),
+        topics=hublib.HUB.parent,
+        ledger=hublib.LEDGER,
+        logs=hublib.LOGS,
+    )
+    if "--print" in sys.argv[1:]:
+        print(prompt)
+        return 0
+    log_path = hublib.LOGS / "weekly-{}.log".format(today.replace("-", ""))
+    code, last_line = hublib.run_anvil(prompt, hublib.RUNS_DIR, log_path, guard="weekly", timeout=3600)
+    if code == 0:
+        hublib.notify("Weekly review ready", last_line or "See hub/reports/weekly-{}.md".format(today))
+    else:
+        hublib.notify("Weekly review failed", "Exit {}. Log: {}".format(code, log_path))
+    return code
+
+
+if __name__ == "__main__":
+    sys.exit(main())

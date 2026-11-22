@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -z "${HUB_WRAP:-}" ]]; then
+  echo '{}'
+  exit 0
+fi
+
+deny() {
+  echo "Blocked in an unattended hub run ($HUB_WRAP): $1. Record it as a draft in the topic for Brodie instead." >&2
+  exit 2
+}
+
+tool="${ANVIL_TOOL_NAME:-}"
+
+case "$tool" in
+  bash)
+    cmd="${ANVIL_TOOL_INPUT_COMMAND:-}"
+    if grep -qE '(^|[;&|[:space:]])git[[:space:]]+([^;&|]*[[:space:]])?push([[:space:]]|$)' <<<"$cmd"; then
+      deny "git push"
+    fi
+    if grep -qE 'gh[[:space:]]+(pr|issue|release|repo|gist|label)[[:space:]]+(create|merge|comment|edit|close|reopen|review|delete|ready|lock)' <<<"$cmd"; then
+      deny "a gh write"
+    fi
+    if grep -qE 'gh[[:space:]]+api' <<<"$cmd" && grep -qE '(-X|--method|-f[[:space:]]|-F[[:space:]]|--field|--raw-field|--input)' <<<"$cmd"; then
+      deny "a gh api write"
+    fi
+    ;;
+  edit | multiedit | write)
+    path="${ANVIL_TOOL_INPUT_FILE_PATH:-}"
+    writable="${WRAP_WRITABLE:-$HOME/dev/topics:$HOME/vaults/personal}"
+    ledger="${CORRECTION_LEDGER:-$HOME/.agents/correction-ledger.md}"
+    allowed=0
+    IFS=':' read -r -a roots <<<"$writable:/tmp:/private/tmp"
+    for root in "${roots[@]}"; do
+      if [[ -n "$root" && "$path" == "$root"/* ]]; then allowed=1; fi
+    done
+    if [[ "$path" == "$ledger" ]]; then allowed=1; fi
+    if [[ "$allowed" != 1 ]]; then deny "editing $path, outside $writable"; fi
+    ;;
+  mcp_*)
+    if ! grep -qE '^mcp_Muninn_|_(get|list|search|read|query|find|aggregate|analyze|describe)' <<<"$tool"; then
+      deny "MCP tool $tool, which may write"
+    fi
+    ;;
+  call_mcp_tool)
+    target="$(jq -r '.tool_input.tool // ""' 2>/dev/null || true)"
+    if ! grep -qE '(^|_|-)(get|list|search|read|query|find|aggregate|analyze|describe)' <<<"$target"; then
+      deny "MCP tool $target, which may write"
+    fi
+    ;;
+  task)
+    agent="$(jq -r '.tool_input.subagent_type // ""' 2>/dev/null || true)"
+    case "$agent" in
+      explorer | librarian | "") ;;
+      *) deny "delegating to @$agent" ;;
+    esac
+    ;;
+esac
+
+echo '{}'

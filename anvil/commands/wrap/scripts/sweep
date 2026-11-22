@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""Nightly sweep: wrap up Anvil sessions nobody wrapped.
+
+Finds top-level sessions that have been idle for a while and have activity the
+ledger hasn't covered, writes a transcript extract of the uncovered part (user
+and assistant text only; no tool calls, outputs or reasoning), and runs the
+wrap-up procedure on each extract in a fresh non-interactive session.
+
+  sweep                  run it
+  sweep --dry-run        list what would be wrapped, run nothing
+  sweep --since-days N   look back N days (default 3)
+  sweep --limit N        wrap at most N sessions (default 12)
+"""
+
+import argparse
+import re
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import hublib  # noqa: E402
+
+MIN_MESSAGES = 6
+MIN_USER_TURNS = 2
+IDLE_SECONDS = 3 * 3600
+REWRAP_GRACE_SECONDS = 120
+MAX_MESSAGE_CHARS = 6000
+MAX_EXTRACT_CHARS = 200000
+EXCLUDED_DIR_PATTERNS = [
+    re.compile(r"/review-bar/benchmark/work/"),
+    re.compile(re.escape(str(hublib.RUNS_DIR))),
+    re.compile(r"^/private/tmp|^/tmp"),
+]
+MANUAL_WRAP = re.compile(r"(recorded|captured) in the topic docs", re.IGNORECASE)
+
+SWEEP_PROMPT = (
+    "You are filing the results of an earlier Anvil session; you are not that session. "
+    "Its transcript extract is at {extract}. It was titled \"{title}\", ran in {cwd}, and started {started}; "
+    "the extract covers its messages since {since}. Tool calls and their outputs are left out, so check repos, "
+    "git and gh before trusting a claim that something was done. "
+    "Run the wrap-up procedure in {procedure} for that session, using its working directory as the home, "
+    "and end with the procedure's one-line report."
+)
+
+
+def excluded(working_dir):
+    return any(pattern.search(working_dir or "") for pattern in EXCLUDED_DIR_PATTERNS)
+
+
+def candidates(conn, since_days):
+    now = int(time.time())
+    ledger = hublib.read_ledger()
+    rows = conn.execute(
+        "select id, title, working_dir, message_count, created_at, updated_at from sessions"
+        " where (parent_session_id is null or parent_session_id = '') and workflow_run_id = ''"
+        " and message_count >= ? and updated_at >= ? and updated_at <= ? order by updated_at",
+        (MIN_MESSAGES, now - since_days * 86400, now - IDLE_SECONDS),
+    ).fetchall()
+    found = []
+    for row in rows:
+        if excluded(row["working_dir"]):
+            continue
+        entry = ledger.get(row["id"])
+        covered_until = 0
+        if entry is not None:
+            if entry["status"] == "ok" or entry["status"].startswith("skipped"):
+                covered_until = entry["wrapped_at"]
+            if row["updated_at"] <= covered_until + REWRAP_GRACE_SECONDS:
+                continue
+        found.append((row, covered_until))
+    return found
+
+
+def extract(conn, session_id, since):
+    rows = conn.execute(
+        "select role, parts, created_at from messages where session_id = ? and created_at > ?"
+        " order by created_at, rowid",
+        (session_id, since),
+    ).fetchall()
+    blocks = []
+    user_turns = 0
+    last_user_text = ""
+    for row in rows:
+        if row["role"] not in ("user", "assistant"):
+            continue
+        text = hublib.text_of(hublib.parts_of(row["parts"])).strip()
+        if not text:
+            continue
+        if row["role"] == "user":
+            user_turns += 1
+            last_user_text = text
+        if len(text) > MAX_MESSAGE_CHARS:
+            text = text[:MAX_MESSAGE_CHARS] + "\n[... truncated]"
+        stamp = time.strftime("%Y-%m-%d %H:%M", time.localtime(row["created_at"]))
+        blocks.append("## {} ({})\n\n{}\n".format(row["role"], stamp, text))
+    body = "\n".join(blocks)
+    if len(body) > MAX_EXTRACT_CHARS:
+        body = "[... earlier messages cut to fit]\n\n" + body[-MAX_EXTRACT_CHARS:]
+    return body, user_turns, last_user_text
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--since-days", type=int, default=3)
+    parser.add_argument("--limit", type=int, default=12)
+    args = parser.parse_args()
+
+    hublib.ensure_dirs()
+    day = time.strftime("%Y%m%d")
+    log_path = hublib.LOGS / "sweep-{}.log".format(day)
+    extracts_dir = hublib.STATE / "extracts" / day
+    conn = hublib.connect()
+    found = candidates(conn, args.since_days)
+
+    wrapped, skipped, failed, reports = 0, 0, 0, []
+    for row, covered_until in found:
+        if wrapped + failed >= args.limit:
+            break
+        body, user_turns, last_user_text = extract(conn, row["id"], covered_until)
+        label = "{} [{}] {}".format(row["id"][:8], row["working_dir"], row["title"])
+        if user_turns < MIN_USER_TURNS:
+            print("skip (small): {}".format(label))
+            if not args.dry_run:
+                hublib.append_ledger(row["id"], "sweep", "skipped-small", "")
+            skipped += 1
+            continue
+        if MANUAL_WRAP.search(last_user_text):
+            print("skip (wrapped by hand): {}".format(label))
+            if not args.dry_run:
+                hublib.append_ledger(row["id"], "sweep", "skipped-manual", "last turn asked to record in the topic docs")
+            skipped += 1
+            continue
+        if args.dry_run:
+            print("would wrap: {} ({} user turns, {} chars)".format(label, user_turns, len(body)))
+            wrapped += 1
+            continue
+
+        extracts_dir.mkdir(parents=True, exist_ok=True)
+        extract_path = extracts_dir / "{}.md".format(row["id"][:8])
+        extract_path.write_text("# Transcript extract: {}\n\n{}".format(row["title"], body))
+        prompt = SWEEP_PROMPT.format(
+            extract=extract_path,
+            title=row["title"],
+            cwd=row["working_dir"],
+            started=time.strftime("%Y-%m-%d %H:%M", time.localtime(row["created_at"])),
+            since=time.strftime("%Y-%m-%d %H:%M", time.localtime(covered_until or row["created_at"])),
+            procedure=hublib.WRAP_PROCEDURE,
+        )
+        code, last_line = hublib.run_anvil(prompt, hublib.RUNS_DIR, log_path)
+        if code == 0:
+            hublib.append_ledger(row["id"], "sweep", "ok", last_line)
+            reports.append("{}: {}".format(row["title"], last_line))
+            wrapped += 1
+        else:
+            hublib.append_ledger(row["id"], "sweep", "failed:{}".format(code), last_line)
+            failed += 1
+        print("{} ({}): {}".format(label, code, last_line))
+    conn.close()
+
+    remaining = max(0, len(found) - wrapped - skipped - failed)
+    summary = "{} wrapped, {} skipped, {} failed, {} left for tomorrow".format(wrapped, skipped, failed, remaining)
+    print(summary)
+    if not args.dry_run and (wrapped or failed):
+        with log_path.open("a") as log:
+            log.write("\n".join(reports) + "\n" + summary + "\n")
+        hublib.notify("Nightly wrap-up", summary)
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
