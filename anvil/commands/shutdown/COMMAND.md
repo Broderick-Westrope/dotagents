@@ -7,7 +7,7 @@ The point of a shutdown is that Brodie can stop thinking about work: every threa
 
 ## 1. What was meant, what happened
 
-- `TZ=Australia/Sydney date '+%a %Y-%m-%d %H:%M'`; read today's `days/<date>.md` (the plan). If there's none, today's plan is whatever the `agentic-pipeline/in-flight.md` Next cells and Brodie's notes say.
+- `TZ=Australia/Sydney date '+%a %Y-%m-%d %H:%M'`; read today's `days/<date>.md`: its `## Plan` is what the day set out to do, and any `## Replan` sections record progress and changes of course since. If there's none, today's plan is whatever the `agentic-pipeline/in-flight.md` Next cells and Brodie's notes say.
 - Gather the day's delta: `"<command dir>/../today/github.py" <09:00 Sydney today, as UTC> (the directory of this `COMMAND.md` location; quote it)`, `git log --since=<that> --oneline` and today's log entries in each active topic in the index in `CLAUDE.md` (and in the hub itself, for wraps and the inbox), and his Linear issues updated today (MCP `list_issues`, assignee `me`).
 - Brodie's notes come first: what he says happened beats what the delta implies. If he gave none, ask one question at most ("Anything on your mind that isn't in GitHub or Linear?"), then go on with what you have.
 

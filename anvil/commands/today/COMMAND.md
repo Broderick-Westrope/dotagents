@@ -15,9 +15,10 @@ He works 9:00-17:00 Monday to Friday, Sydney time. Public holidays don't matter.
   - Workday 9:00-15:00: plan the rest of today; say how many work hours are left.
   - Workday 15:00-17:00: the rest of today is for small items and wrap-up; on Friday, suggest `/shutdown` so Monday starts easy.
   - After 17:00, or a weekend: plan the next workday, and open the brief by saying so: nothing in it needs doing tonight.
-- Pick **since**, the start of "what changed while you were away": the time of the newest `## Shutdown` in `days/`, else 17:00 Sydney on the last workday before now, converted to UTC. Read the newest `days/*.md` file: its plan and shutdown are yesterday's intent.
+- If `days/<target day>.md` already has a `## Plan`, this is a **re-plan**: Brodie has planned this day before and wants to see where it stands. That file's `## Plan` and any `## Replan` sections are the day's intent, and **since** is the time of the newest of those headings, converted to UTC.
+- Otherwise pick **since**, the start of "what changed while you were away": the time of the newest `## Shutdown` in `days/`, else 17:00 Sydney on the last workday before now, converted to UTC. Read the newest `days/*.md` file: its plan and shutdown are yesterday's intent.
 
-Done when you can state the target day, the mode and since in one line.
+Done when you can state the target day, the mode, whether it's a re-plan, and since in one line.
 
 ## 2. Gather, in parallel
 
@@ -51,7 +52,9 @@ Weigh within a bucket by date pressure (milestone targets, promises made in Slac
 
 **Work in progress:** count the threads in active build (his drafts and Building work, not PRs waiting on review). If more than three, say so, and prefer finishing one over adding one.
 
-Done when every thread from step 2 sits in exactly one bucket, or in "safe to ignore today".
+**Re-plan:** before sorting, mark each focus and unblock item from the newest plan section **done**, **moved** or **open**, from the evidence: GitHub, Linear, topic logs, and `git log --since=<since>` in the repos they belong to. Brodie's notes beat the evidence. If items are left with no evidence either way and his notes don't cover them, ask one question naming them ("Did X or Y move outside GitHub and Linear?") and use his answer. Done items leave the sort; open and moved items go into buckets like any other thread.
+
+Done when every thread from step 2 sits in exactly one bucket, or in "safe to ignore today", and on a re-plan every earlier plan item is marked.
 
 ## 4. Write the brief
 
@@ -82,11 +85,13 @@ Size it to the mode: a full day gets up to three focus items, an afternoon one o
 <in-flight rows GitHub contradicts, one line each; omit if none>
 ```
 
+A re-plan adds a `### Progress` section above Focus, one line per earlier plan item: `done`, `moved: <where it got to>` or `open`. It titles `Since you were away` as `Since the last plan (<time>)`, sizes Focus to the hours left, and keeps open items ahead of new ones of the same bucket.
+
 When priorities conflict in a way the topics can't settle (two milestones pulling, or a new ask from Slack against the plan), say which you'd pick and ask; don't silently choose.
 
 ## 5. Record it
 
-Write `days/<target day>.md` (create `days/` if missing). If it exists, replace its `## Plan` section and keep the rest. It is for the agent, so keep it short:
+Write `days/<target day>.md` (create `days/` if missing). It is for the agent, so keep it short. A first plan writes `## Plan`:
 
 ```
 # <Day YYYY-MM-DD>
@@ -99,7 +104,19 @@ Write `days/<target day>.md` (create `days/` if missing). If it exists, replace 
 - Weekly review shown: <date> (only when the brief included it)
 ```
 
-Commit only that file in the hub repo (`git -C ~/dev/topics add days/<file>`), subject `Plan <Day D Mon>`. Then show Brodie the brief.
+A re-plan appends a `## Replan` section and leaves every earlier section as written, so `/shutdown` still sees the original plan and the weekly-review marker stays where step 2 searches for it:
+
+```
+## Replan (<Sydney time written>, since <since>)
+- Progress: <earlier items, each done, moved or open>
+- Focus: <items, with links>
+- Unblock and nudge: <items>
+- Deferred on purpose: <what was dropped and why, one line>
+- Open questions: <asked in the brief>
+- Weekly review shown: <date> (only when the brief included it)
+```
+
+Commit only that file in the hub repo (`git -C ~/dev/topics add days/<file>`), subject `Plan <Day D Mon>`, or `Replan <Day D Mon>` on a re-plan. Then show Brodie the brief.
 
 If the dry run listed sessions to wrap, start `"<command dir>/../wrap/scripts/sweep"` with `run_in_background` and end the brief with one line: `Wrapping <n> leftover sessions in the background.` It notifies him when it's done.
 
