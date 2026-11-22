@@ -31,7 +31,9 @@ Quick workflows for everyday development tasks:
 | [/wtp-pruning](anvil/commands/wtp-pruning/COMMAND.md)       | Classify wtp worktrees and flag the stale ones                     |
 | [/pr-triage](anvil/commands/pr-triage/COMMAND.md)           | Sort your open PRs into merge, chase, refine, open, rework and close |
 | [/survey-architecture](anvil/commands/survey-architecture/COMMAND.md) | Rank structural problems in existing code with evidence  |
-| [/wrap](anvil/commands/wrap/COMMAND.md)                     | End a session: file what's worth keeping in your notes, close the tab; plus a nightly sweep and weekly review |
+| [/wrap](anvil/commands/wrap/COMMAND.md)                     | End a session: file what's worth keeping in your notes and close the tab |
+| [/today](anvil/commands/today/COMMAND.md)                   | Start-of-day brief across your topics, GitHub, Linear and Slack; wraps leftover sessions |
+| [/shutdown](anvil/commands/shutdown/COMMAND.md)             | End-of-day record of what moved and the first thing for next time |
 
 ### Skills
 
