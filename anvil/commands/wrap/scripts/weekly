@@ -24,12 +24,10 @@ WEEKLY_PROMPT = """This is Brodie's unattended weekly review; nobody answers que
 
 3. Hub health. For each topic in the index in {topics}/CLAUDE.md: entry-file size against the ~100-line budget in {topics}/README.md, and whether its index line still matches the folder (dormant, done, renamed). List folders in {topics} missing from the index. For each item in {topics}/inbox.md older than 7 days, propose a home.
 
-Report format, in this order, each item one or two lines with a file path:
-- `## Do now`: clear wins under an hour each, at most five, highest value first. Each names the exact file and change: a skill or prompt rule, a hook, a CLAUDE.md trim, an index fix, an inbox move.
-- `## Bigger`: worth doing, more than an hour, with why.
-- `## Corrections this week`: top themes, new counts, the proposed enforcement rung.
-- `## Wrap-ups`: the counts, failures, and your verdict on quality.
-- `## Hub`: entry files over budget, index drift, inbox proposals.
+Report format. Brodie doesn't read this file; his Monday `/today` brief shows only the first two sections, so they must stand alone, one line per item:
+- `## Do now`: at most three clear wins under an hour each, highest value first. Each names the exact file and the change (a skill or prompt rule, a hook, a CLAUDE.md trim, an index fix) so an agent could make it from that line alone.
+- `## Inbox`: each inbox item older than 7 days as `<item, shortened> -> <proposed home, or "delete">`. Write `None.` when there are none.
+- `## Detail`: everything else, for when he wants to dig in: further do-now candidates, bigger work (more than an hour, with why), correction themes with new counts and the proposed enforcement rung, wrap-up counts, failures and your verdict on their quality, and entry files over budget or index drift.
 
 End with one line: `Weekly review: <n> do-now items, top: <first item>`."""
 
