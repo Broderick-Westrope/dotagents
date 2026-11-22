@@ -24,6 +24,8 @@ WEEKLY_PROMPT = """This is Brodie's unattended weekly review; nobody answers que
 
 3. Hub health. For each topic in the index in {topics}/CLAUDE.md: entry-file size against the ~100-line budget in {topics}/README.md, and whether its index line still matches the folder (dormant, done, renamed). List folders in {topics} missing from the index. For each item in {topics}/inbox.md older than 7 days, propose a home.
 
+4. Health checks due. For each topic that has a `.anvil/commands/health-check/` and isn't marked dormant, done or reference only in the index: find its last health check (the newest log heading containing "health check", e.g. `rg -n '^## .*health check' log/`) and count commits since then (`git log --oneline --since=<that date> | wc -l`). If it was more than 14 days ago, or 30 or more commits since, make it a Do now item: "Run `/health-check` in <topic>: <n> days and <m> commits since the last one." Don't run it yourself.
+
 Report format. Brodie doesn't read this file; his Monday `/today` brief shows only the first two sections, so they must stand alone, one line per item:
 - `## Do now`: at most three clear wins under an hour each, highest value first. Each names the exact file and the change (a skill or prompt rule, a hook, a CLAUDE.md trim, an index fix) so an agent could make it from that line alone.
 - `## Inbox`: each inbox item older than 7 days as `<item, shortened> -> <proposed home, or "delete">`. Write `None.` when there are none.
