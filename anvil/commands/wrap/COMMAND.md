@@ -11,4 +11,4 @@ The scripts are in `scripts/` beside this file (the directory of the `COMMAND.md
 
 **Here** (the argument is `here`, or `HERDR_TAB_ID` is unset, or the launcher exits non-zero). Run the wrap-up yourself now by following the hub's `wrap.md`, and show Brodie its report. Then, inside herdr, run `"<command dir>/scripts/wrap-launch" --close-only`, which records the wrap in the ledger and closes the tab once your reply ends, and reply with the report line only. Outside herdr, tell him the session can be closed.
 
-`scripts/README.md` covers the nightly sweep, the weekly review, the guard hook and how they're installed.
+`scripts/README.md` covers the leftover sweep, the weekly review, the guard hook and how they're installed.

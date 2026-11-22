@@ -23,11 +23,10 @@ ANVIL_CONFIG = hublib.HOME / ".config" / "anvil" / "anvil.json"
 OLD_COMMANDS_LINK = hublib.HOME / ".config" / "anvil" / "commands"
 GUARD = hublib.SCRIPTS / "wrap-guard"
 GUARD_COMMAND = '"{}"'.format(GUARD)
-GUARD_MATCHER = "^(bash|edit|multiedit|write|task|call_mcp_tool|mcp_.*)$"
+GUARD_MATCHER = "^(bash|edit|multiedit|write|download|lsp_rename|task|call_mcp_tool|mcp_.*)$"
 AGENTS_DIR = hublib.HOME / "Library" / "LaunchAgents"
 
 JOBS = {
-    "dev.brodie.hub.sweep": {"script": "sweep", "calendar": {"Hour": 2, "Minute": 30}},
     "dev.brodie.hub.weekly": {"script": "weekly", "calendar": {"Weekday": 1, "Hour": 4, "Minute": 0}},
 }
 

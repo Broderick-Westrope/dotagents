@@ -2,7 +2,7 @@
 """Weekly review: mine the week's corrections and check the hub's health.
 
 Runs one fresh non-interactive Anvil session that writes
-hub/reports/weekly-<date>.md and commits it in the hub repo. It proposes
+hub/reports/weekly-<date>.md, uncommitted, for /today to show. It proposes
 changes and applies none outside the report and the correction ledger.
 
   weekly             run it
@@ -16,7 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import hublib  # noqa: E402
 
-WEEKLY_PROMPT = """This is Brodie's unattended weekly review; nobody answers questions during it. Today is {today}. Write the report to {report} and commit it in the {topics} repo (stage it by path, subject `weekly review {today}`); write nothing else outside the correction ledger.
+WEEKLY_PROMPT = """This is Brodie's unattended weekly review; nobody answers questions during it. Today is {today}. Write the report to {report} and don't commit it; write nothing else outside the correction ledger.
 
 1. Corrections. Load the `mining-corrections` skill and run its bulk mode from the ledger's "Last mined" date, through step 3 (Merge). Then, instead of step 4's conversation, rank the themes with new corrections this week. Done when the ledger's "Last mined" is today.
 

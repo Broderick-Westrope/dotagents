@@ -148,13 +148,14 @@ def main():
             since=time.strftime("%Y-%m-%d %H:%M", time.localtime(covered_until or row["created_at"])),
             procedure=hublib.WRAP_PROCEDURE,
         )
+        heads = hublib.repo_heads()
         code, last_line = hublib.run_anvil(prompt, hublib.RUNS_DIR, log_path)
-        if code == 0:
-            hublib.append_ledger(row["id"], "sweep", "ok", last_line)
+        status = hublib.wrap_status(code, last_line, heads)
+        hublib.append_ledger(row["id"], "sweep", status, last_line)
+        if status == "ok":
             reports.append("{}: {}".format(row["title"], last_line))
             wrapped += 1
         else:
-            hublib.append_ledger(row["id"], "sweep", "failed:{}".format(code), last_line)
             failed += 1
         print("{} ({}): {}".format(label, code, last_line))
     conn.close()

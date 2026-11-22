@@ -67,16 +67,17 @@ def main():
 
     time.sleep(2)
     prompt = WRAP_PROMPT.format(procedure=hublib.WRAP_PROCEDURE)
+    heads = hublib.repo_heads()
     code, last_line = hublib.run_anvil(prompt, session["working_dir"], log_path, session_id=session_id)
     hublib.dismiss_recovery(session_id)
     title = session["title"] or session_id[:8]
-    if code == 0:
-        hublib.append_ledger(session_id, "wrap", "ok", last_line)
+    status = hublib.wrap_status(code, last_line, heads)
+    hublib.append_ledger(session_id, "wrap", status, last_line)
+    if status == "ok":
         hublib.notify("Wrapped: {}".format(title), last_line or "done")
         return 0
-    hublib.append_ledger(session_id, "wrap", "failed:{}".format(code), last_line)
-    hublib.notify("Wrap-up failed: {}".format(title), "Exit {}. The nightly sweep will retry. Log: {}".format(code, log_path))
-    return code
+    hublib.notify("Wrap-up not saved: {}".format(title), "{}: nothing was committed. The next sweep retries it. Log: {}".format(status, log_path))
+    return 1
 
 
 if __name__ == "__main__":

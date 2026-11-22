@@ -1,61 +1,129 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env python3
+"""PreToolUse guard for /wrap's unattended runs, which auto-approve every
+permission prompt. It acts only when HUB_WRAP is set (hublib sets it) and
+allows a short list of read and commit commands; everything else is denied,
+so an unattended run can't discard or move uncommitted work, post or push.
+"""
 
-if [[ -z "${HUB_WRAP:-}" ]]; then
-  echo '{}'
-  exit 0
-fi
+import json
+import os
+import re
+import shlex
+import sys
 
-deny() {
-  echo "Blocked in an unattended hub run ($HUB_WRAP): $1. Record it as a draft in the topic for Brodie instead." >&2
-  exit 2
-}
+READ_ONLY = {"rg", "grep", "ls", "cat", "head", "tail", "wc", "sort", "uniq", "cut", "date", "echo", "printf", "pwd", "jq", "basename", "dirname", "test", "true"}
+GIT_OK = {"status", "diff", "log", "show", "rev-parse", "ls-files", "blame", "grep", "add", "commit"}
+GH_READ = {("pr", "view"), ("pr", "list"), ("pr", "diff"), ("pr", "checks"), ("issue", "view"), ("issue", "list"), ("run", "view"), ("run", "list")}
+OPERATORS = {"&&", "||", ";", "|", "&", ";;"}
+READISH = re.compile(r"(^|_|-)(get|list|search|read|query|find|aggregate|analyze|describe)")
 
-tool="${ANVIL_TOOL_NAME:-}"
 
-case "$tool" in
-  bash)
-    cmd="${ANVIL_TOOL_INPUT_COMMAND:-}"
-    if grep -qE '(^|[;&|[:space:]])git[[:space:]]+([^;&|]*[[:space:]])?push([[:space:]]|$)' <<<"$cmd"; then
-      deny "git push"
-    fi
-    if grep -qE 'gh[[:space:]]+(pr|issue|release|repo|gist|label)[[:space:]]+(create|merge|comment|edit|close|reopen|review|delete|ready|lock)' <<<"$cmd"; then
-      deny "a gh write"
-    fi
-    if grep -qE 'gh[[:space:]]+api' <<<"$cmd" && grep -qE '(-X|--method|-f[[:space:]]|-F[[:space:]]|--field|--raw-field|--input)' <<<"$cmd"; then
-      deny "a gh api write"
-    fi
-    ;;
-  edit | multiedit | write)
-    path="${ANVIL_TOOL_INPUT_FILE_PATH:-}"
-    writable="${WRAP_WRITABLE:-$HOME/dev/topics:$HOME/vaults/personal}"
-    ledger="${CORRECTION_LEDGER:-$HOME/.agents/correction-ledger.md}"
-    allowed=0
-    IFS=':' read -r -a roots <<<"$writable:/tmp:/private/tmp"
-    for root in "${roots[@]}"; do
-      if [[ -n "$root" && "$path" == "$root"/* ]]; then allowed=1; fi
-    done
-    if [[ "$path" == "$ledger" ]]; then allowed=1; fi
-    if [[ "$allowed" != 1 ]]; then deny "editing $path, outside $writable"; fi
-    ;;
-  mcp_*)
-    if ! grep -qE '^mcp_Muninn_|_(get|list|search|read|query|find|aggregate|analyze|describe)' <<<"$tool"; then
-      deny "MCP tool $tool, which may write"
-    fi
-    ;;
-  call_mcp_tool)
-    target="$(jq -r '.tool_input.tool // ""' 2>/dev/null || true)"
-    if ! grep -qE '(^|_|-)(get|list|search|read|query|find|aggregate|analyze|describe)' <<<"$target"; then
-      deny "MCP tool $target, which may write"
-    fi
-    ;;
-  task)
-    agent="$(jq -r '.tool_input.subagent_type // ""' 2>/dev/null || true)"
-    case "$agent" in
-      explorer | librarian | "") ;;
-      *) deny "delegating to @$agent" ;;
-    esac
-    ;;
-esac
+def deny(reason):
+    print("Blocked in an unattended /wrap run ({}): {}. Leave it for Brodie, as a draft in the topic if it's an action.".format(os.environ.get("HUB_WRAP"), reason), file=sys.stderr)
+    sys.exit(2)
 
-echo '{}'
+
+def segment_ok(words):
+    while words and re.match(r"^TZ=\S*$", words[0]):
+        words = words[1:]
+    if not words:
+        return True
+    head, rest = words[0], words[1:]
+    if head == "cd" or head in READ_ONLY:
+        return True
+    if head == "find":
+        return not any(w in ("-delete", "-exec", "-execdir", "-ok", "-fprint", "-fls") for w in rest)
+    if head == "sed":
+        return not any(w.startswith("-i") or w == "--in-place" for w in rest)
+    if head == "git":
+        while len(rest) >= 2 and rest[0] in ("-C", "-c"):
+            rest = rest[2:]
+        if not rest or rest[0] not in GIT_OK:
+            return False
+        if rest[0] == "add":
+            return bool(rest[1:]) and not any(w in (".", "-A", "--all", "-u", "--update", ":/") for w in rest[1:])
+        if rest[0] == "commit":
+            return not any(w in ("--all", "--amend") or (w.startswith("-") and not w.startswith("--") and "a" in w) for w in rest[1:])
+        return True
+    if head == "gh":
+        rest = [w for i, w in enumerate(rest) if w not in ("-R", "--repo") and (i == 0 or rest[i - 1] not in ("-R", "--repo"))]
+        if len(rest) >= 2 and (rest[0], rest[1]) in GH_READ:
+            return True
+        writes = ("-X", "--method", "-f", "-F", "--field", "--raw-field", "--input")
+        return bool(rest) and rest[0] == "api" and not any(w.startswith(writes) for w in rest[1:])
+    if head in ("python3", "python"):
+        return bool(rest) and rest[0].endswith("/mining-corrections/scripts/extract.py")
+    return False
+
+
+def check_bash(command):
+    if "$(" in command or "`" in command:
+        deny("command substitution (commit with `git commit -m '<message>'`)")
+    lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    try:
+        tokens = list(lexer)
+    except ValueError:
+        deny("a command that doesn't parse")
+    words = []
+    skip = False
+    for index, token in enumerate(tokens + [";"]):
+        if skip:
+            skip = False
+        elif token in OPERATORS:
+            if not segment_ok(words):
+                deny("`{}`, which isn't on the read-and-commit list".format(" ".join(words[:3])))
+            words = []
+        elif token and set(token) <= set("<>&"):
+            target = tokens[index + 1] if index + 1 < len(tokens) else ""
+            if token == ">&" and target in ("1", "2"):
+                if words and words[-1] in ("1", "2"):
+                    words.pop()
+            elif not (token == ">" and target == "/dev/null"):
+                deny("a shell redirect")
+            elif words and words[-1] in ("1", "2"):
+                words.pop()
+            skip = True
+        else:
+            words.append(token)
+
+
+def check_path(path):
+    path = os.path.normpath(os.path.abspath(os.path.expanduser(path)))
+    writable = os.environ.get("WRAP_WRITABLE", "{0}/dev/topics:{0}/vaults/personal".format(os.path.expanduser("~")))
+    roots = [r for r in writable.split(":") if r] + ["/tmp", "/private/tmp"]
+    ledger = os.path.expanduser(os.environ.get("CORRECTION_LEDGER", "~/.agents/correction-ledger.md"))
+    if path == ledger or any(path.startswith(os.path.normpath(r) + os.sep) for r in roots):
+        return
+    deny("editing {}, outside {}".format(path, writable))
+
+
+def main():
+    if not os.environ.get("HUB_WRAP"):
+        print("{}")
+        return
+    try:
+        tool_input = json.load(sys.stdin).get("tool_input") or {}
+    except ValueError:
+        tool_input = {}
+    tool = os.environ.get("ANVIL_TOOL_NAME", "")
+    if tool == "bash":
+        check_bash(os.environ.get("ANVIL_TOOL_INPUT_COMMAND") or tool_input.get("command", ""))
+    elif tool in ("edit", "multiedit", "write"):
+        check_path(os.environ.get("ANVIL_TOOL_INPUT_FILE_PATH") or tool_input.get("file_path", ""))
+    elif tool in ("download", "lsp_rename"):
+        deny(tool)
+    elif tool.startswith("mcp_"):
+        if not (tool.startswith("mcp_Muninn_") or READISH.search(tool)):
+            deny("MCP tool {}, which may write".format(tool))
+    elif tool == "call_mcp_tool":
+        if not READISH.search(tool_input.get("tool", "")):
+            deny("MCP tool {}, which may write".format(tool_input.get("tool", "")))
+    elif tool == "task":
+        if tool_input.get("subagent_type", "") not in ("explorer", "librarian", ""):
+            deny("delegating to @{}".format(tool_input.get("subagent_type")))
+    print("{}")
+
+
+if __name__ == "__main__":
+    main()
