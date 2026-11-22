@@ -61,11 +61,14 @@ def main():
         os.system("PATH={} herdr tab close {} >/dev/null 2>&1".format(hublib.PATH_ENV, tab_id))
     if close_only:
         hublib.append_ledger(session_id, "here", "ok", "wrapped in session")
+        time.sleep(3)
+        hublib.dismiss_recovery(session_id)
         return 0
 
     time.sleep(2)
     prompt = WRAP_PROMPT.format(procedure=hublib.WRAP_PROCEDURE)
     code, last_line = hublib.run_anvil(prompt, session["working_dir"], log_path, session_id=session_id)
+    hublib.dismiss_recovery(session_id)
     title = session["title"] or session_id[:8]
     if code == 0:
         hublib.append_ledger(session_id, "wrap", "ok", last_line)

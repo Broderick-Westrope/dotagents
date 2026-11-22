@@ -4,7 +4,7 @@ The machinery behind `/wrap`. The personal half lives in the hub (`$WRAP_HUB`, d
 
 | Script | When | What it does |
 |---|---|---|
-| `wrap-launch` | `/wrap` runs it | Detaches, waits for the session's turn to end, closes the herdr tab, then continues the session with `anvil run --session` so the wrap-up has the whole conversation and a warm prompt cache. `--close-only` just closes the tab and records the wrap, after `/wrap here` |
+| `wrap-launch` | `/wrap` runs it | Detaches, waits for the session's turn to end, closes the herdr tab, then continues the session with `anvil run --session` so the wrap-up has the whole conversation and a warm prompt cache. Closing the tab kills the window, so it then dismisses the session's recovery record (`anvil session recover --clear <id>`, Anvil#174) to keep it off `anvil session recover`. `--close-only` just closes the tab and records the wrap, after `/wrap here` |
 | `sweep` | Nightly, 02:30 | Wraps top-level sessions idle 3h+ whose activity the ledger hasn't covered, from a text-only transcript extract, in a fresh session each. Skips subagent, workflow, benchmark and `/tmp` sessions, sessions under 6 messages or 2 user turns, and sessions whose last turn asked to record things in the topic docs. At most 12 a night |
 | `weekly` | Mondays, 04:00 | One fresh session: `mining-corrections` in bulk, wrap-up quality, hub health and inbox proposals, written to `$WRAP_HUB/reports/weekly-<date>.md` |
 | `wrap-guard` | Every tool call; acts only when `HUB_WRAP` is set | Non-interactive runs auto-approve every permission prompt, so this blocks pushes, gh writes, MCP writes, delegation beyond @explorer and @librarian, and edits outside `$WRAP_WRITABLE` (default `~/dev/topics:~/vaults/personal`) |

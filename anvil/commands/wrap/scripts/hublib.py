@@ -135,6 +135,15 @@ def notify(title, body):
     subprocess.run(["osascript", "-e", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
 
 
+def dismiss_recovery(session_id):
+    subprocess.run(
+        ["anvil", "session", "recover", "--clear", session_id],
+        env=dict(os.environ, PATH=PATH_ENV),
+        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        timeout=30, check=False,
+    )
+
+
 def run_anvil(prompt, cwd, log_path, session_id=None, guard="wrap", timeout=1800):
     command = ["anvil", "run", "--quiet", "--cwd", str(cwd)]
     if session_id:
