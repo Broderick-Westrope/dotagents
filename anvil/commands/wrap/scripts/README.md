@@ -11,7 +11,7 @@ The machinery behind `/wrap`. The personal half lives in the hub (`$WRAP_HUB`, d
 | `install` | Once, and after changing jobs | Adds the guard to `~/.config/anvil/anvil.json` (with a backup) and writes and loads the launchd jobs, all pointing at this directory, so run it from the checkout Anvil loads. `--uninstall` removes both |
 | `hublib.py` | | Shared helpers: paths, the ledger, notifications, `anvil run` |
 
-launchd runs a calendar job missed while the laptop slept when it next wakes.
+launchd runs a calendar job missed while the laptop slept when it next wakes. Unattended runs commit unsigned (`hublib.UNSIGNED_COMMITS`), because the signing agent is locked overnight and the notes repos are never pushed.
 
 ## State in the hub
 

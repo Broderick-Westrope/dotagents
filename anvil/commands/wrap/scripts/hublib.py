@@ -24,6 +24,17 @@ ANVIL_DB = HOME / ".local" / "share" / "anvil" / "anvil.db"
 WRAP_PROCEDURE = HUB / "wrap.md"
 REPORT_PREFIXES = ("Recorded ", "Nothing to record", "Weekly review:")
 
+# Signing goes through the 1Password SSH agent, which is locked while the
+# laptop sleeps, so overnight wraps edited files but couldn't commit them.
+# The notes repos are never pushed, so their commits don't need signatures.
+UNSIGNED_COMMITS = {
+    "GIT_CONFIG_COUNT": "2",
+    "GIT_CONFIG_KEY_0": "commit.gpgsign",
+    "GIT_CONFIG_VALUE_0": "false",
+    "GIT_CONFIG_KEY_1": "tag.gpgsign",
+    "GIT_CONFIG_VALUE_1": "false",
+}
+
 PATH_ENV = ":".join([
     str(HOME / ".local" / "bin"),
     "/opt/homebrew/bin",
@@ -150,6 +161,7 @@ def run_anvil(prompt, cwd, log_path, session_id=None, guard="wrap", timeout=1800
         command += ["--session", session_id]
     command.append(prompt)
     env = dict(os.environ, PATH=PATH_ENV, HUB_WRAP=guard, WRAP_HUB=str(HUB), WRAP_WRITABLE=WRITABLE)
+    env.update(UNSIGNED_COMMITS)
     with open(log_path, "a") as log:
         log.write("\n=== {} anvil run (cwd {}, session {})\n".format(time.strftime("%Y-%m-%d %H:%M:%S"), cwd, session_id or "new"))
         log.flush()
